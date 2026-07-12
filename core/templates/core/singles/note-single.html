@@ -1,0 +1,50 @@
+{% extends 'core/base.html' %}
+
+{% block main %}
+
+<div class="grid">
+    <div class="grid-left">
+        <div class="menu-navigator">
+            <ul class="categories">
+                <h2>Note Categories</h2>
+                {% for article_category in article_categories %}
+                    <li><a href="{% url 'note_category' article_category.slug %}">{{article_category.name.capitalize}}</a>
+                        <ul class="sub-categories">
+                            {% for article_sub_category in article_category.sub_categories %}
+                                 <li><a href="{% url 'note_subcategory' article_category.slug article_sub_category.slug %}">{{article_sub_category.name.capitalize}}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <ul class="tags">
+                <h2>Note Tags</h2>
+                <div class="tags-wraper">
+                    {% for tag in article_tags %}
+                        <li><a href="{% url 'note_tag' tag.slug %}">{{tag.name}}</a></li>
+                    {% endfor %}
+                </div>
+            </ul>
+        </div>
+    </div>
+
+    <div class="grid-right">
+        <div class="grid-right-wraper">
+            <article class="single-article">
+                 <h1 class="article-title">{{article.title.capitalize}}</h1>
+                 <div class="article-content">
+                    {{article.content | safe  }}
+                 </div>
+
+            </article>         
+
+        </div>
+ 
+
+    </div>
+
+</div>
+
+
+{% endblock %}

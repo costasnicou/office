@@ -16,10 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-
+# from core.admin_site import admin_site
+from core.admin_site import admin_site  # Import your custom admin_site instance
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # path('admin/', admin.site.urls),
+    path('admin/', admin_site.urls),
     path("", include("core.urls")),
     path("ckeditor5/", include("django_ckeditor_5.urls")),
 ]

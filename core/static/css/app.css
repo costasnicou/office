@@ -6,71 +6,144 @@ html, body {
 * {
   box-sizing: border-box; }
 
+p {
+  line-height: 25px; }
+
 .header {
   padding: 20px 0;
-  border-bottom: 1px solid black;
-  background-color: whitesmoke;
-  background-color: #008cff;
+  background-color: #333;
+  background-color: #a16900;
   position: fixed;
   top: 0;
   width: 100%;
-  z-index: 100; }
-  .header .header-nav .header-menu {
+  z-index: 100;
+  -webkit-box-shadow: 2px -1px 15px 5px rgba(0, 0, 0, 0.31);
+  box-shadow: 2px -1px 15px 5px rgba(0, 0, 0, 0.31); }
+  .header .logo-icon {
+    position: absolute;
+    top: 20px;
+    left: 80px; }
+  .header .header-nav {
     display: flex;
-    justify-content: center;
-    list-style: none;
-    padding: 0;
-    margin: 0; }
-    .header .header-nav .header-menu li a:link, .header .header-nav .header-menu li a:visited {
-      text-decoration: none;
-      font-size: 18px;
-      color: #444444;
-      text-transform: uppercase;
+    justify-content: flex-start; }
+    .header .header-nav .logo p {
+      font-family: "Arizonia", cursive;
+      font-weight: 400;
+      font-style: normal;
+      font-size: 35px;
+      margin: 0;
+      margin-right: 150px;
+      margin-left: 150px;
+      line-height: 30px;
       color: whitesmoke; }
-      .header .header-nav .header-menu li a:link:hover, .header .header-nav .header-menu li a:visited:hover {
-        color: white; }
-    .header .header-nav .header-menu li:not(:last-of-type) {
-      margin-right: 40px; }
+    .header .header-nav .header-menu {
+      display: flex;
+      justify-content: center;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      align-self: center; }
+      .header .header-nav .header-menu li a:link, .header .header-nav .header-menu li a:visited {
+        text-decoration: none;
+        font-size: 18px;
+        color: #444444;
+        text-transform: uppercase;
+        color: whitesmoke; }
+        .header .header-nav .header-menu li a:link:hover, .header .header-nav .header-menu li a:visited:hover {
+          color: white; }
+      .header .header-nav .header-menu li:not(:last-of-type) {
+        margin-right: 40px; }
 
 .grid {
   display: flex;
-  min-height: 90vh;
-  margin-top: 63px; }
+  min-height: 94vh;
+  margin-top: 62px; }
   .grid-left {
     width: 20%;
-    background-color: #c7e2f8;
-    position: relative; }
+    background-color: #7fc3fa;
+    background-color: #5c5c5c;
+    position: relative;
+    color: white; }
+    .grid-left .menu-navigator {
+      position: sticky;
+      top: 120px;
+      position: sticky;
+      top: 120px;
+      width: 100%;
+      margin: 0 auto;
+      margin-left: 20px; }
+      .grid-left .menu-navigator a {
+        font-size: 18px; }
+        .grid-left .menu-navigator a:hover {
+          text-decoration: none !important; }
     .grid-left .categories {
       width: 90%;
       margin: 0 auto;
       padding: 0;
-      text-align: center;
       list-style: none;
       margin-top: 50px;
-      margin-right: 50px;
-      font-size: 17px;
-      position: sticky;
-      top: 120px; }
+      font-size: 17px; }
       .grid-left .categories h2 {
-        color: #008cff; }
+        color: #008cff;
+        color: white;
+        color: #eb9a04; }
+      .grid-left .categories li {
+        margin-bottom: 5px;
+        margin-left: 10px; }
       .grid-left .categories li a:link, .grid-left .categories li a:visited {
         text-decoration: none;
-        color: #008cff; }
+        color: #008cff;
+        color: white;
+        font-weight: bold; }
         .grid-left .categories li a:link:hover, .grid-left .categories li a:visited:hover {
-          color: #0160ae; }
+          color: #eb9a04;
+          text-decoration: underline; }
       .grid-left .categories .sub-categories {
         list-style: none;
-        margin-right: 50px; }
+        padding: 0; }
+        .grid-left .categories .sub-categories li {
+          margin-bottom: 5px;
+          margin-left: 10px; }
         .grid-left .categories .sub-categories li a:link, .grid-left .categories .sub-categories li a:visited {
           text-decoration: none;
-          color: #008cff; }
+          color: white; }
           .grid-left .categories .sub-categories li a:link:hover, .grid-left .categories .sub-categories li a:visited:hover {
-            color: #0160ae; }
+            color: #eb9a04 !important; }
+    .grid-left .tags {
+      width: 90%;
+      margin: 0 auto;
+      padding: 0;
+      list-style: none;
+      margin-top: 25px;
+      font-size: 17px; }
+      .grid-left .tags h2 {
+        color: #eb9a04; }
+      .grid-left .tags .tags-wraper {
+        display: flex;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        width: 90%;
+        margin-left: 10px;
+        margin-top: 30px; }
+        .grid-left .tags .tags-wraper li {
+          margin-bottom: 25px; }
+        .grid-left .tags .tags-wraper li a {
+          color: white;
+          text-decoration: none;
+          padding: 10px;
+          background-color: #c58103;
+          font-size: 14px;
+          border-radius: 8px; }
+          .grid-left .tags .tags-wraper li a:hover {
+            background-color: #a16900; }
+        .grid-left .tags .tags-wraper li:not(:last-of-type) {
+          margin-right: 5px; }
   .grid-right {
     width: 80%; }
     .grid-right-wraper {
-      width: 70%;
-      margin-left: 150px;
+      width: 80%;
+      margin: 0 auto;
+      margin-left: 0 auto;
       padding: 40px 0 80px 0; }
       .grid-right-wraper .post-type-title {
         text-align: center;
@@ -85,25 +158,29 @@ html, body {
         display: flex;
         justify-content: space-evenly; }
         .grid-right-wraper .preview:not(:last-of-type) {
-          margin-bottom: 20px; }
+          margin-bottom: 40px; }
         .grid-right-wraper .preview .icon {
           align-self: center; }
         .grid-right-wraper .preview .icon i {
-          font-size: 80px;
+          font-size: 100px;
           color: #a7d3f8;
-          margin-right: 20px; }
+          color: #6a87dd;
+          color: #616161;
+          margin-right: 50px; }
         .grid-right-wraper .preview .content h2 {
           margin-bottom: 0;
           font-weight: 300;
-          color: #0259a0;
           font-size: 23px; }
         .grid-right-wraper .preview .content p {
           margin: 5px 0 10px 0;
           font-size: 17px;
           font-weight: 300;
-          font-size: 19px; }
+          font-size: 19px;
+          width: 85%; }
         .grid-right-wraper .preview .content .view-single-btn:link, .grid-right-wraper .preview .content .view-single-btn:visited {
           background-color: #008cff;
+          background-color: #5c5c5c;
+          background-color: #c58103;
           color: white;
           padding: 10px 20px;
           border-radius: 8px;
@@ -111,7 +188,10 @@ html, body {
           text-decoration: none;
           display: inline-block; }
           .grid-right-wraper .preview .content .view-single-btn:link:hover, .grid-right-wraper .preview .content .view-single-btn:visited:hover {
-            background-color: #0070cc; }
+            background-color: #0070cc;
+            background-color: royalblue;
+            background-color: #333;
+            background-color: #a16900; }
 
 .pagination {
   text-align: center;
@@ -131,23 +211,31 @@ html, body {
 
 .pagination a:hover {
   background-color: #83c4e9;
-  background-color: #0099ff;
+  background-color: #333;
+  background-color: #c58103;
   color: white;
-  border-color: #007BFF; }
+  border-color: #333; }
 
 .pagination .current {
-  background-color: #0099ff;
+  background-color: #333;
   color: white;
   font-weight: bold;
-  border-color: #007BFF; }
+  border-color: #333;
+  background-color: #c58103; }
 
 /* end pagination */
 .article-content {
-  font-size: 18px;
   font-weight: 300; }
   .article-content h2, .article-content h3, .article-content h4, .article-content h5, .article-content h6, .article-content p {
-    font-weight: 300; }
+    font-weight: 300;
+    color: #4e4e4e; }
   .article-content p {
-    font-size: 19px; }
+    font-size: 19px;
+    width: 85%; }
+  .article-content a:link, .article-content a:visited {
+    color: #414141; }
+  .article-content h1, .article-content h2, .article-content h3, .article-content h4, .article-content p {
+    font-weight: 300 !important;
+    color: #2f2f2f; }
 
 /*# sourceMappingURL=app.css.map */

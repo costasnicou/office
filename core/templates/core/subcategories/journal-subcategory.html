@@ -1,0 +1,83 @@
+{% extends 'core/base.html' %}
+
+{% block main %}
+
+<div class="grid">
+    <div class="grid-left">
+        <div class="menu-navigator">
+            <ul class="categories">
+                <h2>Article Categories</h2>
+                {% for article_category in article_categories %}
+                    <li><a href="{% url 'journal_category' article_category.slug %}">{{article_category.name.capitalize}}</a>
+                        <ul class="sub-categories">
+                            {% for article_sub_category in article_category.sub_categories %}
+                                <li><a href="{% url 'journal_subcategory' article_category.slug article_sub_category.slug %}">{{article_sub_category.name.capitalize}}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <ul class="tags">
+                <h2>Article Tags</h2>
+                <div class="tags-wraper">
+                    {% for tag in article_tags %}
+                        <li><a href="{% url 'journal_tag' tag.slug %}">{{tag.name}}</a></li>
+                    {% endfor %}
+                </div>
+            </ul>
+        </div>
+    </div>
+
+    <div class="grid-right">
+        <div class="grid-right-wraper">
+            <h1 class="post-type-title">{{article_subcategory.name.capitalize}} Articles</h1>
+            {% for article in page_obj %}
+                <article class="preview">
+                    <div class="icon">
+                        <i class="fa-solid fa-book"></i>
+                    </div>
+
+                    <div class="content">
+                        <h2>{{article.title}}</h2>
+                        <p>{{article.content | safe | striptags | truncatewords:70 }}</p>
+                        <a class="view-single-btn" href="{% url 'journal_single' article.slug %}">View More</a>
+                    </div>
+
+                </article>
+            
+            {% endfor %}
+
+            {%  if page_obj.paginator.num_pages > 1 %}
+                <div class="pagination">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1&category_select={{ request.GET.category_select }}&city_select={{ request.GET.city_select }}">« First</a>
+                        <a href="?page={{ page_obj.previous_page_number }}&category_select={{ request.GET.category_select }}&city_select={{ request.GET.city_select }}">‹ Prev</a>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            {% if page_obj.number == num %}
+                                <span class="current">{{ num }}</span>
+                            {% else %}
+                                <a href="?page={{ num }}&category_select={{ request.GET.category_select }}&city_select={{ request.GET.city_select }}">{{ num }}</a>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}&category_select={{ request.GET.category_select }}&city_select={{ request.GET.city_select }}">Next ›</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}&category_select={{ request.GET.category_select }}&city_select={{ request.GET.city_select }}">Last »</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+    </div>
+ 
+
+    </div>
+
+</div>
+
+
+{% endblock %}

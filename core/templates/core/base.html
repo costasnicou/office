@@ -9,16 +9,24 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arizonia&display=swap" rel="stylesheet">  
     <script src="https://kit.fontawesome.com/d495971c43.js" crossorigin="anonymous"></script>
 </head>
 <body>
     <header class="header">
+        <img class="logo-icon" src="{% static 'imgs/papyrus.png' %}" alt="">
+        
         <nav class="header-nav">
+            <div class="logo">
+                <p>Costas Nicou - BackOffice</p>
+            </div>
             <ul class="header-menu">
                 <li><a href="{% url 'index' %}">Articles</a></li>
-                <li><a href="">Journal</a></li>
-                <li><a href="">Notes</a></li>
-                <li><a href="">Cetral Points</a></li>
+                <li><a href="{% url 'journal_index' %}">Journal</a></li>
+                <li><a href="{% url 'note_index' %}">Notes</a></li>
+                <li><a href="{% url 'centralpoint_index' %}">Central Points</a></li>
                 <li><a href="">Strategies</a></li>
                 <li><a href="">Decisions</a></li>
                 <li><a href="">Goals</a></li>
