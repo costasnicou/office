@@ -1,0 +1,153 @@
+html, body {
+  padding: 0;
+  margin: 0;
+  font-family: "Lato", sans-serif; }
+
+* {
+  box-sizing: border-box; }
+
+.header {
+  padding: 20px 0;
+  border-bottom: 1px solid black;
+  background-color: whitesmoke;
+  background-color: #008cff;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 100; }
+  .header .header-nav .header-menu {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 0; }
+    .header .header-nav .header-menu li a:link, .header .header-nav .header-menu li a:visited {
+      text-decoration: none;
+      font-size: 18px;
+      color: #444444;
+      text-transform: uppercase;
+      color: whitesmoke; }
+      .header .header-nav .header-menu li a:link:hover, .header .header-nav .header-menu li a:visited:hover {
+        color: white; }
+    .header .header-nav .header-menu li:not(:last-of-type) {
+      margin-right: 40px; }
+
+.grid {
+  display: flex;
+  min-height: 90vh;
+  margin-top: 63px; }
+  .grid-left {
+    width: 20%;
+    background-color: #c7e2f8;
+    position: relative; }
+    .grid-left .categories {
+      width: 90%;
+      margin: 0 auto;
+      padding: 0;
+      text-align: center;
+      list-style: none;
+      margin-top: 50px;
+      margin-right: 50px;
+      font-size: 17px;
+      position: sticky;
+      top: 120px; }
+      .grid-left .categories h2 {
+        color: #008cff; }
+      .grid-left .categories li a:link, .grid-left .categories li a:visited {
+        text-decoration: none;
+        color: #008cff; }
+        .grid-left .categories li a:link:hover, .grid-left .categories li a:visited:hover {
+          color: #0160ae; }
+      .grid-left .categories .sub-categories {
+        list-style: none;
+        margin-right: 50px; }
+        .grid-left .categories .sub-categories li a:link, .grid-left .categories .sub-categories li a:visited {
+          text-decoration: none;
+          color: #008cff; }
+          .grid-left .categories .sub-categories li a:link:hover, .grid-left .categories .sub-categories li a:visited:hover {
+            color: #0160ae; }
+  .grid-right {
+    width: 80%; }
+    .grid-right-wraper {
+      width: 70%;
+      margin-left: 150px;
+      padding: 40px 0 80px 0; }
+      .grid-right-wraper .post-type-title {
+        text-align: center;
+        margin-right: 150px;
+        font-weight: 300; }
+      .grid-right-wraper .article-title {
+        text-align: center;
+        margin-right: 150px;
+        font-weight: 300;
+        margin-bottom: 40px; }
+      .grid-right-wraper .preview {
+        display: flex;
+        justify-content: space-evenly; }
+        .grid-right-wraper .preview:not(:last-of-type) {
+          margin-bottom: 20px; }
+        .grid-right-wraper .preview .icon {
+          align-self: center; }
+        .grid-right-wraper .preview .icon i {
+          font-size: 80px;
+          color: #a7d3f8;
+          margin-right: 20px; }
+        .grid-right-wraper .preview .content h2 {
+          margin-bottom: 0;
+          font-weight: 300;
+          color: #0259a0;
+          font-size: 23px; }
+        .grid-right-wraper .preview .content p {
+          margin: 5px 0 10px 0;
+          font-size: 17px;
+          font-weight: 300;
+          font-size: 19px; }
+        .grid-right-wraper .preview .content .view-single-btn:link, .grid-right-wraper .preview .content .view-single-btn:visited {
+          background-color: #008cff;
+          color: white;
+          padding: 10px 20px;
+          border-radius: 8px;
+          transition: all .4s;
+          text-decoration: none;
+          display: inline-block; }
+          .grid-right-wraper .preview .content .view-single-btn:link:hover, .grid-right-wraper .preview .content .view-single-btn:visited:hover {
+            background-color: #0070cc; }
+
+.pagination {
+  text-align: center;
+  margin: 30px 0; }
+
+.pagination a,
+.pagination span {
+  display: inline-block;
+  margin: 0 4px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  color: #333;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: background-color 0.2s ease; }
+
+.pagination a:hover {
+  background-color: #83c4e9;
+  background-color: #0099ff;
+  color: white;
+  border-color: #007BFF; }
+
+.pagination .current {
+  background-color: #0099ff;
+  color: white;
+  font-weight: bold;
+  border-color: #007BFF; }
+
+/* end pagination */
+.article-content {
+  font-size: 18px;
+  font-weight: 300; }
+  .article-content h2, .article-content h3, .article-content h4, .article-content h5, .article-content h6, .article-content p {
+    font-weight: 300; }
+  .article-content p {
+    font-size: 19px; }
+
+/*# sourceMappingURL=app.css.map */
