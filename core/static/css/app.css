@@ -210,17 +210,15 @@ p {
   transition: background-color 0.2s ease; }
 
 .pagination a:hover {
-  background-color: #83c4e9;
-  background-color: #333;
   background-color: #c58103;
   color: white;
-  border-color: #333; }
+  border-color: #8c0000; }
 
 .pagination .current {
   background-color: #333;
   color: white;
   font-weight: bold;
-  border-color: #333;
+  border-color: #8c0000;
   background-color: #c58103; }
 
 /* end pagination */
@@ -237,5 +235,25 @@ p {
   .article-content h1, .article-content h2, .article-content h3, .article-content h4, .article-content p {
     font-weight: 300 !important;
     color: #2f2f2f; }
+
+.swot-analysis-wraper {
+  display: grid;
+  width: 70%;
+  margin: 0 auto;
+  margin-right: 265px;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  margin-top: 40px;
+  margin-bottom: 40px; }
+  .swot-analysis-wraper .swot-box .center {
+    text-align: center; }
+  .swot-analysis-wraper .swot-box-content {
+    margin-top: 20px;
+    min-height: 100px;
+    margin-left: 20px; }
+  .swot-analysis-wraper .border-right {
+    border-right: 0.5px solid black; }
+  .swot-analysis-wraper .border-bottom {
+    border-bottom: 0.5px solid black; }
 
 /*# sourceMappingURL=app.css.map */

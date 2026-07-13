@@ -341,18 +341,16 @@ p{
 }
 
 .pagination a:hover {
-  background-color: #83c4e9;
-    background-color: #333;
-     background-color: rgb(197, 129, 3);
+    background-color: rgb(197, 129, 3);
     color: white;
-    border-color: #333;
+    border-color: rgb(140, 0, 0);
 }
 
 .pagination .current {
   background-color: #333;
   color: white;
   font-weight: bold;
-  border-color: #333;
+  border-color: rgb(140, 0, 0);
    background-color: rgb(197, 129, 3);
 }
 /* end pagination */

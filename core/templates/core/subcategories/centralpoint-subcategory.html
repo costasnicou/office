@@ -6,7 +6,7 @@
     <div class="grid-left">
         <div class="menu-navigator">
             <ul class="categories">
-                <h2>Article Categories</h2>
+                <h2>Central Point Categories</h2>
                 {% for article_category in article_categories %}
                     <li><a href="{% url 'centralpoint_category' article_category.slug %}">{{article_category.name.capitalize}}</a>
                         <ul class="sub-categories">
@@ -19,7 +19,7 @@
             </ul>
 
             <ul class="tags">
-                <h2>Article Tags</h2>
+                <h2>Central Point Tags</h2>
                 <div class="tags-wraper">
                     {% for tag in article_tags %}
                         <li><a href="{% url 'centralpoint_tag' tag.slug %}">{{tag.name}}</a></li>
@@ -35,7 +35,7 @@
             {% for article in page_obj %}
                 <article class="preview">
                     <div class="icon">
-                        <i class="fa-regular fa-newspaper"></i>
+                        <i class="fa-solid fa-chess-knight"></i>
                     </div>
 
                     <div class="content">

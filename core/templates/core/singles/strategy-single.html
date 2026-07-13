@@ -1,0 +1,123 @@
+{% extends 'core/base.html' %}
+
+{% block main %}
+
+<div class="grid">
+    <div class="grid-left">
+        <div class="menu-navigator">
+            <ul class="categories">
+                <h2>Strategy Categories</h2>
+                {% for article_category in article_categories %}
+                    <li><a href="{% url 'strategy_category' article_category.slug %}">{{article_category.name.capitalize}}</a>
+                        <ul class="sub-categories">
+                            {% for article_sub_category in article_category.sub_categories %}
+                                 <li><a href="{% url 'strategy_subcategory' article_category.slug article_sub_category.slug %}">{{article_sub_category.name.capitalize}}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <ul class="tags">
+                <h2>Strategy Tags</h2>
+                <div class="tags-wraper">
+                    {% for tag in article_tags %}
+                        <li><a href="{% url 'strategy_tag' tag.slug %}">{{tag.name}}</a></li>
+                    {% endfor %}
+                </div>
+            </ul>
+        </div>
+    </div>
+
+    <div class="grid-right">
+        <div class="grid-right-wraper">
+            <article class="single-article">
+                 <h1 class="article-title">{{article.title}}</h1>
+                 <div class="article-content">
+                    <!-- swot analysis -->
+                     <section class="swot-analysis">
+                        <h2 style="text-align: center; margin-right: 150px;">Swot Analysis</h2>
+                        <div class="swot-analysis-wraper">
+                            <div class="swot-box swot-box-1 border-right border-bottom">
+                                <h3 class="center">Strengths</h3>
+                                <div class="swot-box-content">
+                                    {{article.strenght | safe  }}
+                                </div>
+
+                            </div>
+
+                            <div class="swot-box swot-box-2 border-left border-bottom">
+                                <h3 class="center">Weaknesses</h3>
+                                <div class="swot-box-content">
+                                    {{article.Weeknesses | safe  }}
+                                </div>
+
+                            </div>
+
+                            <div class="swot-box swot-box-3 border-right border-top">
+                                <h3 class="center">Threats</h3>
+                                <div class="swot-box-content">
+                                    {{article.threats | safe  }}
+                                </div>
+
+                            </div>
+
+                            <div class="swot-box swot-box-4 border-left border-top">
+                                <h3 class="center">Opportunities</h3>
+                                <div class="swot-box-content">
+                                    {{article.opportunities | safe  }}
+                                </div>
+
+                            </div>
+
+                        </div>
+                     </section>
+
+                    <!--  -->
+                     {% if article.strenghts_advantages and article.strenghts_advantages|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <section class="stength_advantages">
+                        <h2>How to take advantage of your strentghts</h2>
+                         {{article.strenghts_advantages | safe  }}
+                    </section>
+                    {% endif %}
+
+                    {% if article.weekness_minimization and article.weekness_minimization|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <section class="weakness_minimization">
+                        <h2>How to take improve or minimize your weaknesses?</h2>
+                        {{article.weekness_minimization | safe  }}
+                    </section>
+                    {% endif %}
+
+                    {% if article.opportunities_advantages and article.opportunities_advantages|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <section class="opportunities_advantages">
+                        <h2>How to take advantage of your opportunities?</h2>
+                        {{article.opportunities_advantages | safe  }}
+                    </section>
+                    {% endif %}
+
+                    {% if article.threats_prevention and article.threats_prevention|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <section class="threats_prevention">
+                        <h2>How to prevent threats from happening?</h2>
+                        {{article.threats_prevention | safe  }}
+                    </section>
+                    {% endif %}
+
+                    {% if  article.finalized_strategy and article.finalized_strategy|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <section class="finalized_strategy">
+                        <h2>What is your finalized Strategy?</h2>
+                        {{article.finalized_strategy | safe  }}
+                    </section>
+                    {% endif %}
+                   
+                 </div>
+
+            </article>          
+        </div>
+ 
+
+    </div>
+
+</div>
+
+
+{% endblock %}
