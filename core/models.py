@@ -455,7 +455,7 @@ class Goal(models.Model):
 
     )
     tags = models.ManyToManyField(
-        DecisionTag,
+        GoalTag,
         related_name="goals_by_tag",
         blank=True
     )

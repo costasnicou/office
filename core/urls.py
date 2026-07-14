@@ -38,4 +38,20 @@ urlpatterns = [
     path("strategies/category/<slug:cat_slug>/<slug:subcat_slug>",views.strategy_subcategory,name="strategy_subcategory"),
     path("strategies/tag/<slug:slug>",views.strategy_tag,name="strategy_tag"),
 
+
+    # decision
+    path("decisions/",views.decision_index,name="decision_index"),
+    path("decision/<slug:slug>",views.decision_single,name="decision_single"),
+    path("decisions/category/<slug:slug>",views.decision_category,name="decision_category"),
+    path("decisions/category/<slug:cat_slug>/<slug:subcat_slug>",views.decision_subcategory,name="decision_subcategory"),
+    path("decisions/tag/<slug:slug>",views.decision_tag,name="decision_tag"),
+
+
+    # goals
+    path("goals/",views.goal_index,name="goal_index"),
+    path("goal/<slug:slug>",views.goal_single,name="goal_single"),
+    path("goals/category/<slug:slug>",views.goal_category,name="goal_category"),
+    path("goals/category/<slug:cat_slug>/<slug:subcat_slug>",views.goal_subcategory,name="goal_subcategory"),
+    path("goals/tag/<slug:slug>",views.goal_tag,name="goal_tag"),
+
 ]

@@ -1,0 +1,118 @@
+{% extends 'core/base.html' %}
+
+{% block main %}
+
+<div class="grid">
+    <div class="grid-left">
+        <div class="menu-navigator">
+            <ul class="categories">
+                <h2>Article Categories</h2>
+                {% for article_category in article_categories %}
+                    <li><a href="{% url 'article_category' article_category.slug %}">{{article_category.name.capitalize}}</a>
+                        <ul class="sub-categories">
+                            {% for article_sub_category in article_category.sub_categories %}
+                                 <li><a href="{% url 'article_subcategory' article_category.slug article_sub_category.slug %}">{{article_sub_category.name.capitalize}}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <ul class="tags">
+                <h2>Article Tags</h2>
+                <div class="tags-wraper">
+                    {% for tag in article_tags %}
+                        <li><a href="{% url 'article_tag' tag.slug %}">{{tag.name}}</a></li>
+                    {% endfor %}
+                </div>
+            </ul>
+        </div>
+    </div>
+
+    <div class="grid-right">
+        <div class="grid-right-wraper">
+            <article class="single-article">
+                 <h1 class="article-title">{{article.title}}</h1>
+                 <div class="article-content">
+                    
+                    {% if article.bothering and article.bothering|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="bothering">
+                        <h2>What is bothering me? Gather all the data you can on the situation.</h2>
+                        {{article.bothering | safe }}
+                    </div>
+                    {% endif %}
+
+                    {% if article.worst_case and article.worst_case|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="worst-case">
+                        <h2>What is the worst case scenario?</h2>
+                        {{article.worst_case | safe }}
+                    </div>
+                    {% endif %}
+
+                    {% if article.root_cause and article.root_cause|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="root-cause">
+                        <h2>What might be the root cause of the problem?</h2>
+                        {{article.root_cause | safe }}
+                    </div>
+                    {% endif %}
+
+                    {% if article.likely_scenario and article.likely_scenario|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="likely-scenario">
+                        <h2>What is the likely to happen scenario?</h2>
+                        {{article.likely_scenario | safe }}
+                    </div>
+                    {% endif %}
+
+                    {% if article.best_case and article.best_case|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="best-case">
+                        <h2>What is the best case scenario?</h2>
+                        {{article.best_case | safe}}
+                    </div>
+                    {% endif %}
+
+
+                    {% if article.possible_solutions and article.possible_solutions|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="possible-solution">
+                        <h2>What are the possible solutions?</h2>
+                        {{article.possible_solutions | safe }}
+                    </div>
+                    {% endif %}
+
+
+                    {% if article.recommended_solution and article.recommended_solution|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="recommended-solution">
+                        <h2>Which is the recommended solution?</h2>
+                        {{article.recommended_solution | safe}}
+                    </div>
+                    {% endif %}
+                 </div>
+
+            </article>
+           
+         
+                <!-- <article class="preview">
+                    <div class="icon">
+                        <i class="fa-regular fa-newspaper"></i>
+                    </div>
+
+                    <div class="content">
+                        <h2>{{article.title}}</h2>
+                        <p>{{article.content | safe | striptags | truncatewords:70 }}</p>
+                        <a class="view-single-btn" href="">View More</a>
+                    </div>
+
+                </article>
+            
+     -->
+
+           
+
+        </div>
+ 
+
+    </div>
+
+</div>
+
+
+{% endblock %}

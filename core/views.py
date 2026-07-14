@@ -492,3 +492,211 @@ def strategy_tag(request,slug):
         "article_tags":article_tags,
         
     })
+
+# DECISION
+def decision_index(request):
+
+
+    articles = Decision.objects.all().order_by("-created_at")
+    paginator = Paginator(articles, 6) # Show 9 per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    article_tags = DecisionTag.objects.all()
+
+    article_categories = DecisionCategory.objects.all()
+    for category in article_categories:
+        category.sub_categories = category.subcategories.all()
+    
+  
+  
+
+    return render(request,"core/view/decision.html",{
+        "articles":articles,
+        "page_obj":page_obj,
+        "article_categories":article_categories,  
+        "article_tags":article_tags,
+    })
+
+def decision_single(request,slug):
+    article = Decision.objects.get(slug=slug)
+    article_categories = DecisionCategory.objects.all()
+    article_tags = DecisionTag.objects.all()
+    for category in article_categories:
+        category.sub_categories = category.subcategories.all()
+
+    return render(request,"core/singles/decision-single.html",{
+        "article":article,
+        "article_categories":article_categories,
+        "article_tags":article_tags,
+        
+        
+    })
+
+def decision_category(request,slug):
+
+    article_categories = DecisionCategory.objects.all()
+    article_category = DecisionCategory.objects.get(slug=slug)
+    articles = Decision.objects.filter(category=article_category).order_by("-created_at")
+    paginator = Paginator(articles, 6) # Show 9 per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    article_tags = DecisionTag.objects.all()
+
+
+    article_categories = DecisionCategory.objects.all()
+    for category in article_categories:
+        category.sub_categories = category.subcategories.all()
+
+    return render(request,"core/categories/decision-category.html",{
+        "page_obj":page_obj,
+        "article_category":article_category,
+        "article_categories":article_categories,
+        "article_tags":article_tags,
+        
+    })
+
+def decision_subcategory(request,cat_slug,subcat_slug):
+    article_categories = DecisionCategory.objects.all()
+    article_subcategory = DecisionSubcategory.objects.get(slug=subcat_slug)
+    article_tags = DecisionTag.objects.all()
+    articles = Decision.objects.filter(subcategory=article_subcategory).order_by("-created_at")
+    paginator = Paginator(articles, 6) # Show 9 per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+   
+    for category in article_categories:
+        category.sub_categories = category.subcategories.all()
+    return render(request,"core/subcategories/decision-subcategory.html",{
+        "page_obj":page_obj,
+        "article_category":article_category,
+        "article_categories":article_categories,
+        "article_subcategory":article_subcategory,
+        "article_tags":article_tags,
+        
+    })
+
+def decision_tag(request,slug):
+    article_categories = DecisionCategory.objects.all()
+    article_tags = DecisionTag.objects.all()
+    article_tag = DecisionTag.objects.get(slug=slug)
+    articles = Decision.objects.filter(tags=article_tag).order_by("-created_at")
+    paginator = Paginator(articles, 6) # Show 9 per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+   
+    for category in article_categories:
+        category.sub_categories = category.subcategories.all()
+    return render(request,"core/tags/decision-tags.html",{
+        "page_obj":page_obj,
+        "article_category":article_category,
+        "article_categories":article_categories,
+        "article_tag":article_tag,
+        "article_tags":article_tags,
+        
+    })
+
+# GOAL
+def goal_index(request):
+
+
+    articles = Goal.objects.all().order_by("-created_at")
+    paginator = Paginator(articles, 6) # Show 9 per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    article_tags = GoalTag.objects.all()
+
+    article_categories = GoalCategory.objects.all()
+    for category in article_categories:
+        category.sub_categories = category.subcategories.all()
+    
+  
+  
+
+    return render(request,"core/view/goal.html",{
+        "articles":articles,
+        "page_obj":page_obj,
+        "article_categories":article_categories,  
+        "article_tags":article_tags,
+    })
+
+def goal_single(request,slug):
+    article = Goal.objects.get(slug=slug)
+    article_categories = GoalCategory.objects.all()
+    article_tags = GoalTag.objects.all()
+    for category in article_categories:
+        category.sub_categories = category.subcategories.all()
+
+    return render(request,"core/singles/goal-single.html",{
+        "article":article,
+        "article_categories":article_categories,
+        "article_tags":article_tags,
+        
+        
+    })
+
+def goal_category(request,slug):
+
+    article_categories = GoalCategory.objects.all()
+    article_category = GoalCategory.objects.get(slug=slug)
+    articles = Goal.objects.filter(category=article_category).order_by("-created_at")
+    paginator = Paginator(articles, 6) # Show 9 per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    article_tags = GoalTag.objects.all()
+
+
+    article_categories = GoalCategory.objects.all()
+    for category in article_categories:
+        category.sub_categories = category.subcategories.all()
+
+    return render(request,"core/categories/goal-category.html",{
+        "page_obj":page_obj,
+        "article_category":article_category,
+        "article_categories":article_categories,
+        "article_tags":article_tags,
+        
+    })
+
+def goal_subcategory(request,cat_slug,subcat_slug):
+    article_categories = GoalCategory.objects.all()
+    article_subcategory = GoalSubcategory.objects.get(slug=subcat_slug)
+    article_tags = GoalTag.objects.all()
+    articles = Goal.objects.filter(subcategory=article_subcategory).order_by("-created_at")
+    paginator = Paginator(articles, 6) # Show 9 per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+   
+    for category in article_categories:
+        category.sub_categories = category.subcategories.all()
+    return render(request,"core/subcategories/goal-subcategory.html",{
+        "page_obj":page_obj,
+        "article_category":article_category,
+        "article_categories":article_categories,
+        "article_subcategory":article_subcategory,
+        "article_tags":article_tags,
+        
+    })
+
+def goal_tag(request,slug):
+    article_categories = GoalCategory.objects.all()
+    article_tags = GoalTag.objects.all()
+    article_tag = GoalTag.objects.get(slug=slug)
+    articles = Goal.objects.filter(tags=article_tag).order_by("-created_at")
+    paginator = Paginator(articles, 6) # Show 9 per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+   
+    for category in article_categories:
+        category.sub_categories = category.subcategories.all()
+    return render(request,"core/tags/goal-tags.html",{
+        "page_obj":page_obj,
+        "article_category":article_category,
+        "article_categories":article_categories,
+        "article_tag":article_tag,
+        "article_tags":article_tags,
+        
+    })
