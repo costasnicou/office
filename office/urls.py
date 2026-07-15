@@ -21,7 +21,7 @@ from core.admin_site import admin_site  # Import your custom admin_site instance
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
-    path('admin/', admin_site.urls),
+    path('admin/', admin_site.urls,name="admin"),
     path("", include("core.urls")),
     path("ckeditor5/", include("django_ckeditor_5.urls")),
 ]

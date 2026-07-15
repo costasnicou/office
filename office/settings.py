@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
-
+AUTH_USER_MODEL = 'core.User'
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -26,8 +26,8 @@ SECRET_KEY = 'django-insecure-hwk0^d$4$m2(y@xjjqopzneky%m_bwx-q@4ry(#83p&abqx0$n
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
-
+AUTH_USER_MODEL = "core.User"
+LOGIN_URL = "login"
 # Application definition
 
 INSTALLED_APPS = [
@@ -136,11 +136,11 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-gb'
 
 TIME_ZONE = 'UTC'
 
-USE_I18N = True
+
 
 USE_TZ = True
 
@@ -149,3 +149,20 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+# 1. Ensure L10N (Localization) is enabled
+USE_L10N = True  
+
+# 2. Define the default input and output formats
+DATE_FORMAT = 'd/m/Y'  # For displaying dates (e.g., 25/12/2026)
+SHORT_DATE_FORMAT = 'd/m/Y'
+
+# 3. If you want to control how dates are entered in forms:
+DATE_INPUT_FORMATS = [
+    '%d/%m/%Y',  # '25/12/2026'
+    '%d-%m-%Y',  # '25-12-2026'
+    # Keep the default fallback format just in case
+    '%d-%m-%Y',  # '2026-12-25'
+]
+
+USE_I18N = False  # Deactivates automatic locale-based overrides
+

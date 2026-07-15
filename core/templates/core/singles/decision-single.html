@@ -6,12 +6,12 @@
     <div class="grid-left">
         <div class="menu-navigator">
             <ul class="categories">
-                <h2>Article Categories</h2>
+                <h2>Decision Categories</h2>
                 {% for article_category in article_categories %}
-                    <li><a href="{% url 'article_category' article_category.slug %}">{{article_category.name.capitalize}}</a>
+                    <li><a href="{% url 'decision_category' article_category.slug %}">{{article_category.name.capitalize}}</a>
                         <ul class="sub-categories">
                             {% for article_sub_category in article_category.sub_categories %}
-                                 <li><a href="{% url 'article_subcategory' article_category.slug article_sub_category.slug %}">{{article_sub_category.name.capitalize}}</a></li>
+                                 <li><a href="{% url 'decision_subcategory' article_category.slug article_sub_category.slug %}">{{article_sub_category.name.capitalize}}</a></li>
                             {% endfor %}
                         </ul>
                     </li>
@@ -19,10 +19,10 @@
             </ul>
 
             <ul class="tags">
-                <h2>Article Tags</h2>
+                <h2>Decision Tags</h2>
                 <div class="tags-wraper">
                     {% for tag in article_tags %}
-                        <li><a href="{% url 'article_tag' tag.slug %}">{{tag.name}}</a></li>
+                        <li><a href="{% url 'decision_tag' tag.slug %}">{{tag.name}}</a></li>
                     {% endfor %}
                 </div>
             </ul>

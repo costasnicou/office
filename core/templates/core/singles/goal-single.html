@@ -1,0 +1,174 @@
+{% extends 'core/base.html' %}
+
+{% block main %}
+
+<div class="grid">
+    <div class="grid-left">
+        <div class="menu-navigator">
+            <ul class="categories">
+                <h2>Goal Categories</h2>
+                {% for article_category in article_categories %}
+                    <li><a href="{% url 'goal_category' article_category.slug %}">{{article_category.name.capitalize}}</a>
+                        <ul class="sub-categories">
+                            {% for article_sub_category in article_category.sub_categories %}
+                                 <li><a href="{% url 'goal_subcategory' article_category.slug article_sub_category.slug %}">{{article_sub_category.name.capitalize}}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <ul class="tags">
+                <h2>Goal Tags</h2>
+                <div class="tags-wraper">
+                    {% for tag in article_tags %}
+                        <li><a href="{% url 'goal_tag' tag.slug %}">{{tag.name}}</a></li>
+                    {% endfor %}
+                </div>
+            </ul>
+        </div>
+    </div>
+
+    <div class="grid-right">
+        <div class="grid-right-wraper">
+            <article class="single-article">
+                 <h1 class="article-title">{{article.title}}</h1>
+                 <div class="article-content">
+                    
+                    {% if article.outcome and article.outcome|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="outcome">
+                        <h2>What do I want to accomplish? What is my Outcome?</h2>
+                        {{article.outcome | safe }}
+                    </div>
+                    {% endif %}
+
+                    {% if article.purpose and article.purpose|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="purpose">
+                        <h2>Why do I want to achieve this goal?</h2>
+                        {{article.purpose | safe }}
+                    </div>
+                    {% endif %}
+
+                    {% if article.involved_who and article.involved_who|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="involved_who">
+                        <h2>Who is involved in this goal?</h2>
+                        {{article.involved_who | safe }}
+                    </div>
+                    {% endif %}
+
+                    {% if article.where and article.where|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="likely-scenario">
+                        <h2>Where is this goal to be achieved?</h2>
+                        {{article.where | safe }}
+                    </div>
+                    {% endif %}
+
+                    {% if article.when_conditions and article.when_conditions|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="when_conditions">
+                        <h2>When do I want to achieve this goal? Specify ideal conditions.</h2>
+                        {{article.when_conditions | safe}}
+                    </div>
+                    {% endif %}
+
+
+                    {% if article.how_much_many and article.how_much_many|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="how_much_many">
+                        <h2>How much/many?</h2>
+                        {{article.how_much_many | safe }}
+                    </div>
+                    {% endif %}
+
+
+                    {% if article.progress_indicator and article.progress_indicator|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="progress_indicator">
+                        <h2>How do I know if I have reached my goal?</h2>
+                        {{article.progress_indicator | safe}}
+                    </div>
+                    {% endif %}
+
+                     {% if article.have_resources_missing and article.have_resources_missing|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="have_resources_missing">
+                        <h2>Do I have the resources and capabilities to achieve the goal? If not what I am missing?</h2>
+                        {{article.have_resources_missing | safe}}
+                    </div>
+                    {% endif %}
+
+                     {% if article.before_success and article.before_success|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="before_success">
+                        <h2>Have others done it successfully before, if yes what strategies have they used to do so?</h2>
+                        {{article.before_success | safe}}
+                    </div>
+                    {% endif %}
+
+                    {% if article.why_is_realistic and article.why_is_realistic|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="why_is_realistic">
+                        <h2>Is this goal realistic and within reach?</h2>
+                        {{article.why_is_realistic | safe}}
+                    </div>
+                    {% endif %}
+
+                    <!--  -->
+                    {% if article.time_resources_reachable and article.time_resources_reachable|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="time_resources_reachable">
+                        <h2>Is this goal reachable given the time and resources?</h2>
+                        {{article.time_resources_reachable | safe}}
+                    </div>
+                    {% endif %}
+                    
+                    {% if article.relevance and article.relevance|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="relevance">
+                        <h2>Is this goal relevant to your other goals, how it can relate?</h2>
+                        {{article.relevance | safe}}
+                    </div>
+                    {% endif %}
+
+                    {% if article.deadline and article.deadline|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="deadline">
+                        <h2>What is the deadline?</h2>
+                        <strong>{{article.deadline|date:"d/m/Y" | safe}}</strong>
+                    </div>
+                    {% endif %}
+
+                    {% if article.pains_linked and article.pains_linked|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="pains_linked">
+                        <h2>Which pain or pains have a linked?</h2>
+                        {{article.pains_linked | safe}}
+                    </div>
+                    {% endif %}
+
+                    <!--  -->
+                    {% if article.pleasures_not_action and article.pleasures_not_action|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="pleasures_not_action">
+                        <h2>What pleasure or pleasures have I gained by not taking action?</h2>
+                        {{article.pleasures_not_action | safe}}
+                    </div>
+                    {% endif %}
+
+
+                     {% if article.cost_not_action and article.cost_not_action|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="cost_not_action">
+                        <h2>What will be the cost if I dont change or take action?</h2>
+                        {{article.cost_not_action | safe}}
+                    </div>
+                    {% endif %}
+
+  
+                     {% if article.pleasures_action and article.pleasures_action|striptags|cut:" "|cut:"&nbsp;" != "" %}
+                    <div class="pleasures_action">
+                        <h2>What pleasures I will gain by following through?</h2>
+                        {{article.pleasures_action | safe}}
+                    </div>
+                    {% endif %}
+
+                 </div>
+
+            </article>       
+        </div>
+ 
+
+    </div>
+
+</div>
+
+
+{% endblock %}

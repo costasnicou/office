@@ -1,12 +1,43 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from django.core.paginator import Paginator
 from .models import *
+from django.urls import reverse
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, HttpResponseRedirect
 # Create your views here.
 
 
-# ARTICLES
-def index(request):
 
+def login_view(request):
+    if request.method == "POST":
+
+        # Attempt to sign user in
+        username = request.POST["username"]
+        password = request.POST["password"]
+        user = authenticate(request, username=username, password=password)
+
+        # Check if authentication successful
+        if user is not None:
+            login(request, user)
+            return HttpResponseRedirect(reverse("index"))
+        else:
+            return render(request, "core/login.html", {
+                "message": "Invalid username and/or password."
+            })
+    else:
+        return render(request, "core/login.html")
+
+
+def logout_view(request):
+    logout(request)
+    return HttpResponseRedirect(reverse("index"))
+
+
+# ARTICLES
+@login_required
+def index(request):
     articles = Article.objects.all().order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
@@ -24,6 +55,7 @@ def index(request):
         "article_tags":article_tags     
     })
 
+@login_required
 def article_single(request,slug):
     article = Article.objects.get(slug=slug)
     article_categories = ArticleCategory.objects.all()
@@ -39,6 +71,7 @@ def article_single(request,slug):
         
     })
 
+@login_required
 def article_category(request,slug):
     article_categories = ArticleCategory.objects.all()
     article_category = ArticleCategory.objects.get(slug=slug)
@@ -59,6 +92,7 @@ def article_category(request,slug):
         
     })
 
+@login_required
 def article_subcategory(request,cat_slug,subcat_slug):
     article_categories = ArticleCategory.objects.all()
     article_subcategory = ArticleSubcategory.objects.get(slug=subcat_slug)
@@ -80,6 +114,7 @@ def article_subcategory(request,cat_slug,subcat_slug):
         
     })
 
+@login_required
 def article_tag(request,slug):
     article_categories = ArticleCategory.objects.all()
     article_tags = ArticleTag.objects.all()
@@ -102,6 +137,7 @@ def article_tag(request,slug):
     })
 
 # JOURNALS
+@login_required
 def journal_index(request):
 
     journals = Journal.objects.all().order_by("-created_at")
@@ -121,6 +157,7 @@ def journal_index(request):
         "article_tags":journal_tags     
     })
 
+@login_required
 def journal_single(request,slug):
     article = Journal.objects.get(slug=slug)
     journal_categories = JournalCategory.objects.all()
@@ -136,6 +173,7 @@ def journal_single(request,slug):
         
     })
 
+@login_required
 def journal_category(request,slug):
     journal_categories = JournalCategory.objects.all()
     journal_category = JournalCategory.objects.get(slug=slug)
@@ -156,6 +194,7 @@ def journal_category(request,slug):
         
     })
 
+@login_required
 def journal_subcategory(request,cat_slug,subcat_slug):
     journal_categories = JournalCategory.objects.all()
     journal_subcategory = JournalSubcategory.objects.get(slug=subcat_slug)
@@ -175,7 +214,7 @@ def journal_subcategory(request,cat_slug,subcat_slug):
         "article_tags":journal_tags,
         
     })
-
+@login_required
 def journal_tag(request,slug):
     article_categories = JournalCategory.objects.all()
     article_tags = JournalTag.objects.all()
@@ -198,6 +237,7 @@ def journal_tag(request,slug):
     })
 
 # NOTES
+@login_required
 def note_index(request):
 
     notes = Note.objects.all().order_by("-created_at")
@@ -216,6 +256,7 @@ def note_index(request):
         "article_tags":note_tags     
     })
 
+@login_required
 def note_single(request,slug):
     article = Note.objects.get(slug=slug)
     note_categories = NoteCategory.objects.all()
@@ -231,6 +272,7 @@ def note_single(request,slug):
         
     })
 
+@login_required
 def note_category(request,slug):
     note_categories = NoteCategory.objects.all()
     note_category = NoteCategory.objects.get(slug=slug)
@@ -251,6 +293,7 @@ def note_category(request,slug):
         
     })
 
+@login_required
 def note_subcategory(request,cat_slug,subcat_slug):
     note_categories = NoteCategory.objects.all()
     note_subcategory = NoteSubcategory.objects.get(slug=subcat_slug)
@@ -271,6 +314,7 @@ def note_subcategory(request,cat_slug,subcat_slug):
         
     })
 
+@login_required
 def note_tag(request,slug):
     article_categories = NoteCategory.objects.all()
     article_tags = NoteTag.objects.all()
@@ -293,6 +337,8 @@ def note_tag(request,slug):
     })
 
 # CENTRAL POINT
+
+@login_required
 def centralpoint_index(request):
 
     articles = CentralPoint.objects.all().order_by("-created_at")
@@ -312,6 +358,7 @@ def centralpoint_index(request):
         "article_tags":article_tags     
     })
 
+@login_required
 def centralpoint_single(request,slug):
     article = CentralPoint.objects.get(slug=slug)
     article_categories = CentralPointCategory.objects.all()
@@ -327,6 +374,7 @@ def centralpoint_single(request,slug):
         
     })
 
+@login_required
 def centralpoint_category(request,slug):
     article_categories = CentralPointCategory.objects.all()
     article_category = CentralPointCategory.objects.get(slug=slug)
@@ -347,6 +395,7 @@ def centralpoint_category(request,slug):
         
     })
 
+@login_required
 def centralpoint_subcategory(request,cat_slug,subcat_slug):
     article_categories = CentralPointCategory.objects.all()
     article_subcategory = CentralPointSubcategory.objects.get(slug=subcat_slug)
@@ -368,6 +417,7 @@ def centralpoint_subcategory(request,cat_slug,subcat_slug):
         
     })
 
+@login_required
 def centralpoint_tag(request,slug):
     article_categories = CentralPointCategory.objects.all()
     article_tags = CentralPointTag.objects.all()
@@ -390,6 +440,7 @@ def centralpoint_tag(request,slug):
     })
 
 # STRATEGY
+@login_required
 def strategy_index(request):
 
 
@@ -412,7 +463,7 @@ def strategy_index(request):
         "article_categories":article_categories,  
         "article_tags":article_tags,
     })
-
+@login_required
 def strategy_single(request,slug):
     article = Strategy.objects.get(slug=slug)
     article_categories = StrategyCategory.objects.all()
@@ -427,7 +478,7 @@ def strategy_single(request,slug):
         
         
     })
-
+@login_required
 def strategy_category(request,slug):
 
     article_categories = StrategyCategory.objects.all()
@@ -450,7 +501,7 @@ def strategy_category(request,slug):
         "article_tags":article_tags,
         
     })
-
+@login_required
 def strategy_subcategory(request,cat_slug,subcat_slug):
     article_categories = StrategyCategory.objects.all()
     article_subcategory = StrategySubcategory.objects.get(slug=subcat_slug)
@@ -471,7 +522,7 @@ def strategy_subcategory(request,cat_slug,subcat_slug):
         "article_tags":article_tags,
         
     })
-
+@login_required
 def strategy_tag(request,slug):
     article_categories = StrategyCategory.objects.all()
     article_tags = StrategyTag.objects.all()
@@ -494,6 +545,7 @@ def strategy_tag(request,slug):
     })
 
 # DECISION
+@login_required
 def decision_index(request):
 
 
@@ -516,7 +568,7 @@ def decision_index(request):
         "article_categories":article_categories,  
         "article_tags":article_tags,
     })
-
+@login_required
 def decision_single(request,slug):
     article = Decision.objects.get(slug=slug)
     article_categories = DecisionCategory.objects.all()
@@ -531,7 +583,7 @@ def decision_single(request,slug):
         
         
     })
-
+@login_required
 def decision_category(request,slug):
 
     article_categories = DecisionCategory.objects.all()
@@ -554,7 +606,7 @@ def decision_category(request,slug):
         "article_tags":article_tags,
         
     })
-
+@login_required
 def decision_subcategory(request,cat_slug,subcat_slug):
     article_categories = DecisionCategory.objects.all()
     article_subcategory = DecisionSubcategory.objects.get(slug=subcat_slug)
@@ -575,7 +627,7 @@ def decision_subcategory(request,cat_slug,subcat_slug):
         "article_tags":article_tags,
         
     })
-
+@login_required
 def decision_tag(request,slug):
     article_categories = DecisionCategory.objects.all()
     article_tags = DecisionTag.objects.all()
@@ -598,6 +650,7 @@ def decision_tag(request,slug):
     })
 
 # GOAL
+@login_required
 def goal_index(request):
 
 
@@ -620,7 +673,7 @@ def goal_index(request):
         "article_categories":article_categories,  
         "article_tags":article_tags,
     })
-
+@login_required
 def goal_single(request,slug):
     article = Goal.objects.get(slug=slug)
     article_categories = GoalCategory.objects.all()
@@ -635,7 +688,7 @@ def goal_single(request,slug):
         
         
     })
-
+@login_required
 def goal_category(request,slug):
 
     article_categories = GoalCategory.objects.all()
@@ -658,7 +711,7 @@ def goal_category(request,slug):
         "article_tags":article_tags,
         
     })
-
+@login_required
 def goal_subcategory(request,cat_slug,subcat_slug):
     article_categories = GoalCategory.objects.all()
     article_subcategory = GoalSubcategory.objects.get(slug=subcat_slug)
@@ -679,7 +732,7 @@ def goal_subcategory(request,cat_slug,subcat_slug):
         "article_tags":article_tags,
         
     })
-
+@login_required
 def goal_tag(request,slug):
     article_categories = GoalCategory.objects.all()
     article_tags = GoalTag.objects.all()

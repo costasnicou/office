@@ -1,0 +1,53 @@
+.main-login{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 85vh;
+    h1{
+        text-align: center;
+          font-family: "Arizonia", cursive;
+          text-align: center;
+          font-weight: 300;
+        //   color: rgb(44, 93, 150);;
+    }
+}
+
+.login-logo{
+    margin-bottom: 20px;
+    i{
+        color:  rgb(65, 140, 225);
+        font-size: 100px;
+    }
+}
+
+.login-form{
+    width: 50%;
+    text-align: center;
+    .form-group{
+        width: 50%;
+        margin: 0 auto;
+
+        .form-control{
+            margin: 10px;
+            width: 100%;
+            padding: 10px;
+           
+            margin-bottom: 10px;
+            
+        }
+    }
+
+    .btn.btn-primary{
+        background-color: rgb(65, 140, 225);
+        color: white;
+        padding: 10px 20px;
+        transition: all .4s;
+        border-radius: 8px;
+        border: none;
+        margin-top: 10px;
+        &:hover{
+            background-color: darken(rgb(65, 140, 225), 5%);
+        }
+    }
+}

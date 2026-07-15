@@ -3,6 +3,9 @@ from . import views
 
 urlpatterns = [
 
+    path("login", views.login_view, name="login"),
+    path("logout", views.logout_view, name="logout"),
+
     # articles
     path("", views.index, name="index"),
     path("article/<slug:slug>",views.article_single,name="article_single"),

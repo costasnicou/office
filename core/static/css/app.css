@@ -25,7 +25,9 @@ p {
     left: 80px; }
   .header .header-nav {
     display: flex;
-    justify-content: flex-start; }
+    justify-content: flex-start;
+    align-items: center;
+    position: relative; }
     .header .header-nav .logo p {
       font-family: "Arizonia", cursive;
       font-weight: 400;
@@ -53,6 +55,21 @@ p {
           color: white; }
       .header .header-nav .header-menu li:not(:last-of-type) {
         margin-right: 40px; }
+    .header .header-nav .logout {
+      position: absolute;
+      top: 50%;
+      right: 30px;
+      transform: translateY(-50%); }
+      .header .header-nav .logout a {
+        padding: 5px 20px 10px 20px;
+        text-decoration: none;
+        border-radius: 4px;
+        color: white; }
+        .header .header-nav .logout a i {
+          font-size: 30px;
+          color: white; }
+          .header .header-nav .logout a i:hover {
+            font-size: 35px; }
 
 .grid {
   display: flex;
@@ -255,5 +272,45 @@ p {
     border-right: 0.5px solid black; }
   .swot-analysis-wraper .border-bottom {
     border-bottom: 0.5px solid black; }
+
+.main-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 85vh; }
+  .main-login h1 {
+    text-align: center;
+    font-family: "Arizonia", cursive;
+    text-align: center;
+    font-weight: 300; }
+
+.login-logo {
+  margin-bottom: 20px; }
+  .login-logo i {
+    color: #418ce1;
+    font-size: 100px; }
+
+.login-form {
+  width: 50%;
+  text-align: center; }
+  .login-form .form-group {
+    width: 50%;
+    margin: 0 auto; }
+    .login-form .form-group .form-control {
+      margin: 10px;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px; }
+  .login-form .btn.btn-primary {
+    background-color: #418ce1;
+    color: white;
+    padding: 10px 20px;
+    transition: all .4s;
+    border-radius: 8px;
+    border: none;
+    margin-top: 10px; }
+    .login-form .btn.btn-primary:hover {
+      background-color: #2b7fde; }
 
 /*# sourceMappingURL=app.css.map */
