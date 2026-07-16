@@ -1,0 +1,131 @@
+@media (min-width:320px) and (max-width: 500px) {
+
+    .header .logo-icon {
+        position: absolute;
+        top: 20px;
+        left: 80px;
+        display: none;
+    }
+
+    .header .header-nav {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        position: relative;
+        flex-direction: column;
+    }
+
+    .header .header-nav .logo p {
+        font-family: "Arizonia", cursive;
+        font-weight: 400;
+        font-style: normal;
+        font-size: 30px;
+        margin: 0;
+        margin-right: 150px;
+        margin-left: 150px;
+        line-height: 29px;
+        color: whitesmoke;
+        width: 100%;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .header {
+        padding: 5px 0;
+        background-color: #333;
+        background-color: #a16900;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 100;
+        -webkit-box-shadow: 2px -1px 15px 5px rgba(0, 0, 0, 0.31);
+        box-shadow: 2px -1px 15px 5px rgba(0, 0, 0, 0.31);
+    }
+
+
+
+
+    // main area
+    .grid-left {
+        display: none;
+    }
+
+    .grid-right {
+        width: 95%;
+    }
+
+    .grid-right-wraper {
+        width: 95%;
+        margin: 0 auto;
+        margin-left: 0 auto;
+        padding: 40px 0 80px 0;
+    }
+
+    .grid-right-wraper .post-type-title {
+        text-align: center;
+        margin-right: 0;
+        font-weight: 300;
+    }
+
+    .grid-right-wraper .preview {
+        display: flex;
+        justify-content: space-evenly;
+        flex-direction: column;
+    }
+    .grid-right-wraper .preview .content h2 {
+        margin-bottom: 0;
+        font-weight: 300;
+        font-size: 23px;
+        text-align: center;
+        line-height: 40px;
+        margin-top: 5px;
+    }
+
+    .grid-right-wraper .preview .icon i {
+        font-size: 60px;
+        color: #616161;
+        margin-right: 0;
+    }
+
+
+    .grid-right-wraper .preview .content p {
+        font-size: 17px;
+        font-weight: 300;
+        font-size: 19px;
+        width: 90%;
+        margin: 0 auto;
+        text-align: center;
+        height: 100px;
+        overflow-y: hidden;
+    }
+
+    .grid-right-wraper .preview .content h2 {
+        margin-bottom: 0;
+        font-weight: 300;
+        font-size: 23px;
+        text-align: center;
+        line-height: 40px;
+    }
+
+    .content{
+        text-align: center;
+    }
+
+    .grid-right-wraper .preview .content .view-single-btn:link, .grid-right-wraper .preview .content .view-single-btn:visited {
+        background-color: #008cff;
+        background-color: #5c5c5c;
+        background-color: #c58103;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        transition: all .4s;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        margin-top: 20px
+        ;
+    }
+
+
+
+}

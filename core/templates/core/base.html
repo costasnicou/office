@@ -17,11 +17,19 @@
 <body>
     <header class="header">
         <img class="logo-icon" src="{% static 'imgs/papyrus.png' %}" alt="">
-        
+        <label for="toggle">&#9776;</label>
+        <input type="checkbox" name="checkbox" id="toggle">
+
         <nav class="header-nav">
             <div class="logo">
                 <p>Costas Nicou - BackOffice</p>
             </div>
+            
+          
+
+
+            
+            <div class="menu-wraper">
             <ul class="header-menu">
                 <li><a href="{% url 'index' %}">Articles</a></li>
                 <li><a href="{% url 'journal_index' %}">Journal</a></li>
@@ -37,6 +45,7 @@
                     <a href="{% url 'logout' %}"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
 
             </div>
+            
             
         </nav>
 
