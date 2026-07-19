@@ -9,10 +9,6 @@ html, body {
 p, li {
   line-height: 25px; }
 
-h1, h2, h3, h4, p {
-  font-weight: 300;
-  color: #2f2f2f; }
-
 .header {
   padding: 20px 0;
   background-color: #333;
@@ -166,6 +162,9 @@ h1, h2, h3, h4, p {
       margin: 0 auto;
       margin-left: 0 auto;
       padding: 40px 0 80px 0; }
+      .grid-right-wraper h1, .grid-right-wraper h2, .grid-right-wraper h3, .grid-right-wraper h4, .grid-right-wraper p {
+        font-weight: 300;
+        color: #2f2f2f; }
       .grid-right-wraper .post-type-title {
         text-align: center;
         margin-right: 150px;
