@@ -9,7 +9,7 @@ html, body {
 p, li {
   line-height: 25px; }
 
-p strong, p b {
+p strong, p b, h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 strong, h6 b, h6 strong {
   color: #7d7d7d !important; }
 
 .header {
