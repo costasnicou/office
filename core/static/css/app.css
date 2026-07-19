@@ -9,6 +9,10 @@ html, body {
 p, li {
   line-height: 25px; }
 
+h1, h2, h3, h4, p, li {
+  font-weight: 300 !important;
+  color: #2f2f2f !important; }
+
 .header {
   padding: 20px 0;
   background-color: #333;
@@ -249,9 +253,6 @@ p, li {
     font-size: 19px; }
   .article-content a:link, .article-content a:visited {
     color: #414141; }
-  .article-content h1, .article-content h2, .article-content h3, .article-content h4, .article-content p, .article-content li {
-    font-weight: 300 !important;
-    color: #2f2f2f; }
 
 .swot-analysis-wraper {
   display: grid;
