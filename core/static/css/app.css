@@ -9,6 +9,9 @@ html, body {
 p, li {
   line-height: 25px; }
 
+p strong, p b {
+  color: #4e4e4e; }
+
 .header {
   padding: 20px 0;
   background-color: #333;
