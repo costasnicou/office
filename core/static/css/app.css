@@ -10,7 +10,7 @@ p, li {
   line-height: 25px; }
 
 p strong, p b {
-  color: #7d7d7d; }
+  color: #7d7d7d !important; }
 
 .header {
   padding: 20px 0;
