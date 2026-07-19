@@ -240,13 +240,13 @@ p {
 
 /* end pagination */
 .article-content {
-  font-weight: 300; }
+  font-weight: 300;
+  width: 85%; }
   .article-content h2, .article-content h3, .article-content h4, .article-content h5, .article-content h6, .article-content p {
     font-weight: 300;
     color: #4e4e4e; }
-  .article-content p {
-    font-size: 19px;
-    width: 85%; }
+  .article-content p, .article-content li, .article-content ol {
+    font-size: 19px; }
   .article-content a:link, .article-content a:visited {
     color: #414141; }
   .article-content h1, .article-content h2, .article-content h3, .article-content h4, .article-content p {
