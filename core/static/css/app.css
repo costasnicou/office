@@ -9,9 +9,9 @@ html, body {
 p, li {
   line-height: 25px; }
 
-h1, h2, h3, h4, p, li {
-  font-weight: 300 !important;
-  color: #2f2f2f !important; }
+h1, h2, h3, h4, p {
+  font-weight: 300;
+  color: #2f2f2f; }
 
 .header {
   padding: 20px 0;
@@ -184,8 +184,6 @@ h1, h2, h3, h4, p, li {
           align-self: center; }
         .grid-right-wraper .preview .icon i {
           font-size: 100px;
-          color: #a7d3f8;
-          color: #6a87dd;
           color: #616161;
           margin-right: 50px; }
         .grid-right-wraper .preview .content h2 {
@@ -197,7 +195,8 @@ h1, h2, h3, h4, p, li {
           font-size: 17px;
           font-weight: 300;
           font-size: 19px;
-          width: 85%; }
+          width: 85%;
+          color: #2f2f2f; }
         .grid-right-wraper .preview .content .view-single-btn:link, .grid-right-wraper .preview .content .view-single-btn:visited {
           background-color: #008cff;
           background-color: #5c5c5c;
@@ -251,6 +250,9 @@ h1, h2, h3, h4, p, li {
     color: #4e4e4e; }
   .article-content p, .article-content li, .article-content ol, .article-content ul {
     font-size: 19px; }
+  .article-content li {
+    font-weight: 300;
+    color: #2f2f2f; }
   .article-content a:link, .article-content a:visited {
     color: #414141; }
 

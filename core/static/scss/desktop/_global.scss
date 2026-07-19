@@ -10,9 +10,9 @@ html,body{
 p,li{
     line-height: 25px;
 }
-h1,h2,h3,h4,p,li{
-    font-weight: 300 !important;
-    color: #2f2f2f !important;
+h1,h2,h3,h4,p{
+    font-weight: 300;
+    color: #2f2f2f;
 }
 
 
@@ -325,8 +325,6 @@ h1,h2,h3,h4,p,li{
                 }
                 .icon i{
                     font-size: 100px;
-                    color: rgb(167, 211, 248);
-                    color: rgb(106, 135, 221);
                     color: #616161;
                     margin-right: 50px;
                 }
@@ -349,6 +347,7 @@ h1,h2,h3,h4,p,li{
                         font-size: 19px;
                         // font-size: 20px;
                         width: 85%;
+                        color: #2f2f2f;
                     }
 
                    
