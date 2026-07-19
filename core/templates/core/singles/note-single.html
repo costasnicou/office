@@ -8,10 +8,10 @@
             <ul class="categories">
                 <h2>Note Categories</h2>
                 {% for article_category in article_categories %}
-                    <li><a href="{% url 'note_category' article_category.slug %}">{{article_category.name.capitalize}}</a>
+                    <li><a href="{% url 'note_category' article_category.slug %}">{{article_category.name}}</a>
                         <ul class="sub-categories">
                             {% for article_sub_category in article_category.sub_categories %}
-                                 <li><a href="{% url 'note_subcategory' article_category.slug article_sub_category.slug %}">{{article_sub_category.name.capitalize}}</a></li>
+                                 <li><a href="{% url 'note_subcategory' article_category.slug article_sub_category.slug %}">{{article_sub_category.name}}</a></li>
                             {% endfor %}
                         </ul>
                     </li>
@@ -32,7 +32,7 @@
     <div class="grid-right">
         <div class="grid-right-wraper">
             <article class="single-article">
-                 <h1 class="article-title">{{article.title.capitalize}}</h1>
+                 <h1 class="article-title">{{article.title}}</h1>
                  <div class="article-content">
                     {{article.content | safe  }}
                  </div>

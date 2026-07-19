@@ -8,10 +8,10 @@
             <ul class="categories">
                 <h2>Article Categories</h2>
                 {% for article_category in article_categories %}
-                    <li><a href="{% url 'article_category' article_category.slug %}">{{article_category.name.capitalize}}</a>
+                    <li><a href="{% url 'article_category' article_category.slug %}">{{article_category.name}}</a>
                         <ul class="sub-categories">
                             {% for article_sub_category in article_category.sub_categories %}
-                                 <li><a href="{% url 'article_subcategory' article_category.slug article_sub_category.slug %}">{{article_sub_category.name.capitalize}}</a></li>
+                                 <li><a href="{% url 'article_subcategory' article_category.slug article_sub_category.slug %}">{{article_sub_category.name}}</a></li>
                             {% endfor %}
                         </ul>
                     </li>
@@ -39,21 +39,7 @@
 
             </article>
            
-         
-                <!-- <article class="preview">
-                    <div class="icon">
-                        <i class="fa-regular fa-newspaper"></i>
-                    </div>
 
-                    <div class="content">
-                        <h2>{{article.title}}</h2>
-                        <p>{{article.content | safe | striptags | truncatewords:70 }}</p>
-                        <a class="view-single-btn" href="">View More</a>
-                    </div>
-
-                </article>
-            
-     -->
 
            
 

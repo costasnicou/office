@@ -8,10 +8,10 @@
             <ul class="categories">
                 <h2>Central Point Categories</h2>
                 {% for article_category in article_categories %}
-                    <li><a href="{% url 'centralpoint_category' article_category.slug %}">{{article_category.name.capitalize}}</a>
+                    <li><a href="{% url 'centralpoint_category' article_category.slug %}">{{article_category.name}}</a>
                         <ul class="sub-categories">
                             {% for article_sub_category in article_category.sub_categories %}
-                                <li><a href="{% url 'centralpoint_subcategory' article_category.slug article_sub_category.slug %}">{{article_sub_category.name.capitalize}}</a></li>
+                                <li><a href="{% url 'centralpoint_subcategory' article_category.slug article_sub_category.slug %}">{{article_sub_category.name}}</a></li>
                             {% endfor %}
                         </ul>
                     </li>
@@ -31,7 +31,7 @@
 
     <div class="grid-right">
         <div class="grid-right-wraper">
-            <h1 class="post-type-title">{{article_subcategory.name.capitalize}} Central Points</h1>
+            <h1 class="post-type-title">{{article_subcategory.name}} Central Points</h1>
             {% for article in page_obj %}
                 <article class="preview">
                     <div class="icon">

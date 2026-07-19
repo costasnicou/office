@@ -8,11 +8,11 @@
             <ul class="categories">
                 <h2>Goal Categories</h2>
                 {% for article_category in article_categories %}
-                    <li><a href="{% url 'goal_category' article_category.slug %}">{{article_category.name.capitalize}}</a>
+                    <li><a href="{% url 'goal_category' article_category.slug %}">{{article_category.name}}</a>
                         <ul class="sub-categories">
                             {% if article_category.sub_categories  %}
                                 {% for article_sub_category in article_category.sub_categories %}
-                                    <li><a href="{% url 'goal_subcategory' article_category.slug article_sub_category.slug %}">{{article_sub_category.name.capitalize}}</a></li>
+                                    <li><a href="{% url 'goal_subcategory' article_category.slug article_sub_category.slug %}">{{article_sub_category.name}}</a></li>
                                 {% endfor %}
                             {% endif %}
                         </ul>
@@ -33,7 +33,7 @@
 
     <div class="grid-right">
         <div class="grid-right-wraper">
-            <h1 class="post-type-title">{{article_category.name.capitalize}} Goals</h1>
+            <h1 class="post-type-title">{{article_category.name}} Goals</h1>
             {% for article in page_obj %}
                 <article class="preview">
                     <div class="icon">
