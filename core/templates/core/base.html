@@ -16,37 +16,41 @@
 </head>
 <body>
     <header class="header">
-        <img class="logo-icon" src="{% static 'imgs/papyrus.png' %}" alt="">
-        <!-- <label for="toggle">&#9776;</label>
-        <input type="checkbox" name="checkbox" id="toggle"> -->
-
         <nav class="header-nav">
             <div class="logo">
+                <img class="logo-icon" src="{% static 'imgs/papyrus.png' %}" alt="">
                 <p>Costas Nicou - BackOffice</p>
             </div>
-            
-          
 
+            <input class="menu-toggle" type="checkbox" id="menu-toggle">
+            <label class="hamburger" for="menu-toggle">
+                <span class="sr-only">Toggle navigation menu</span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </label>
 
-            
+            <button class="sidebar-toggle" type="button" aria-expanded="false" aria-label="Toggle categories and tags">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
             <div class="menu-wraper">
-            <ul class="header-menu">
-                <li><a href="{% url 'index' %}">Articles</a></li>
-                <li><a href="{% url 'journal_index' %}">Journal</a></li>
-                <li><a href="{% url 'note_index' %}">Notes</a></li>
-                <li><a href="{% url 'centralpoint_index' %}">Central Points</a></li>
-                <li><a href="{% url 'strategy_index' %}">Strategies</a></li>
-                <li><a href="{% url 'decision_index' %}">Decisions</a></li>
-                <li><a href="{% url 'goal_index' %}">Goals</a></li>
-            </ul>
+                <ul class="header-menu">
+                    <li><a href="{% url 'index' %}">Articles</a></li>
+                    <li><a href="{% url 'journal_index' %}">Journal</a></li>
+                    <li><a href="{% url 'note_index' %}">Notes</a></li>
+                    <li><a href="{% url 'centralpoint_index' %}">Central Points</a></li>
+                    <li><a href="{% url 'strategy_index' %}">Strategies</a></li>
+                    <li><a href="{% url 'decision_index' %}">Decisions</a></li>
+                    <li><a href="{% url 'goal_index' %}">Goals</a></li>
+                </ul>
+            </div>
 
             <div class="logout">
-                
-                    <a href="{% url 'logout' %}"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
-
+                <a href="{% url 'logout' %}" aria-label="Log out"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
             </div>
-            
-            
         </nav>
 
     </header>
@@ -64,6 +68,6 @@
 
     </footer>
 
-    
+    <script src="{% static 'js/mobile-navigation.js' %}" defer></script>
 </body>
 </html>
