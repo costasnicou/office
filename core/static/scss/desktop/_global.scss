@@ -4,6 +4,13 @@ html,body{
     font-family: "Lato", sans-serif;
 }
 
+:root {
+    --add-record-bar-height: 42px;
+    --header-height: 58px;
+    --header-content-gap: 20px;
+    --page-top-offset: calc(var(--add-record-bar-height) + var(--header-height) + var(--header-content-gap));
+}
+
 *{
     box-sizing: border-box;
 }
@@ -21,12 +28,12 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
 
 .header{
     // background-color: black;
-    padding: 20px 0;
+    padding: 15px;
     // border-bottom: 1px solid black;
     background-color: #333;
     background-color: rgb(161, 105, 0);
      position: fixed;
-     top: 0;
+     top: var(--add-record-bar-height);
      width: 100%;
      z-index: 100;
     -webkit-box-shadow: 2px -1px 15px 5px rgba(0,0,0,0.31); 
@@ -143,7 +150,8 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
 .grid{
     display: flex;
     min-height: 94vh;
-    margin-top: 62px;   
+    margin-top: 110px;
+
     
     &-left{
         width: 20%;

@@ -6,7 +6,36 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
+from .forms import (
+    ArticleForm, CentralPointForm, DecisionForm, GoalForm,
+    JournalForm, NoteForm, StrategyForm,
+)
 # Create your views here.
+
+
+CREATE_FORMS = {
+    "article": (ArticleForm, "article_single", "Article"),
+    "journal": (JournalForm, "journal_single", "Journal entry"),
+    "note": (NoteForm, "note_single", "Note"),
+    "centralpoint": (CentralPointForm, "centralpoint_single", "Central point"),
+    "strategy": (StrategyForm, "strategy_single", "Strategy"),
+    "decision": (DecisionForm, "decision_single", "Decision"),
+    "goal": (GoalForm, "goal_single", "Goal"),
+}
+
+
+@login_required
+def record_create(request, record_type):
+    form_class, detail_url, label = CREATE_FORMS[record_type]
+    form = form_class(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        record = form.save()
+        return redirect(detail_url, slug=record.slug)
+    return render(request, "core/forms/record-form.html", {
+        "form": form,
+        "record_type": record_type,
+        "record_label": label,
+    })
 
 
 

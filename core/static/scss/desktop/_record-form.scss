@@ -1,0 +1,172 @@
+.record-form-page {
+    width: 70%;
+    margin: 150px auto 40px;
+}
+
+.record-form-card {
+    width: 100%;
+    padding: 42px clamp(24px, 6vw, 72px);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, .12);
+
+    h1,
+    .form-intro {
+        text-align: center;
+    }
+}
+
+.form-intro {
+    margin-bottom: 32px;
+    color: #666;
+}
+
+.record-form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin: 0 0 24px;
+
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+        display: block;
+        width: 100%;
+        min-height: 48px;
+        padding: 12px 14px;
+        border: 1px solid #aaa;
+        border-radius: 5px;
+        background: #fff;
+        font: inherit;
+    }
+
+    select[multiple] {
+        min-height: 150px;
+        padding: 6px;
+
+        option {
+            padding: 8px 10px;
+        }
+    }
+
+    textarea {
+        min-height: 150px;
+        resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+        border-color: #a16900;
+        outline: 2px solid rgba(161, 105, 0, .2);
+    }
+
+    small {
+        display: block;
+        width: 100%;
+        margin-top: 7px;
+        color: #666;
+        line-height: 1.45;
+    }
+
+    .errorlist {
+        width: 100%;
+        margin: 7px 0 0;
+        padding-left: 20px;
+        color: #a40000;
+    }
+}
+
+.form-field .ck-editor,
+.form-field .django-ckeditor-widget {
+    width: 100% !important;
+}
+
+.form-field > div:has(.tag-choice-input) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    width: 100%;
+
+    > div {
+        min-width: 0;
+    }
+
+    label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 48px;
+        padding: 10px 12px;
+        border: 1px solid #aaa;
+        border-radius: 5px;
+        background: #fff;
+        cursor: pointer;
+        overflow-wrap: anywhere;
+    }
+
+    label:has(input:checked) {
+        border-color: #a16900;
+        background: rgba(161, 105, 0, .1);
+    }
+
+    input[type="checkbox"] {
+        flex: 0 0 auto;
+        width: 22px;
+        height: 22px;
+        margin: 0;
+        accent-color: #a16900;
+    }
+}
+
+.form-errors {
+    margin-bottom: 20px;
+    color: #a40000;
+}
+
+.form-submit {
+    align-self: center;
+    min-width: 190px;
+    padding: 13px 24px;
+    border: 0;
+    border-radius: 5px;
+    color: #fff;
+    background: #8b5b00;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.form-submit:hover,
+.form-submit:focus-visible {
+    background: #a16900;
+}
+
+@media (max-width: 700px) {
+    .record-form-page {
+        width: 85%;
+        margin: 135px auto 40px auto;
+    }
+
+    .record-form-card {
+        padding: 28px 18px;
+    }
+
+    .form-field > div:has(.tag-choice-input) {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 500px) {
+    .record-form-page {
+        width: 95%;
+        margin: 135px auto 40px auto;
+    }
+}

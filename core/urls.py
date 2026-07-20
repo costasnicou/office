@@ -12,6 +12,7 @@ urlpatterns = [
     path("articles/category/<slug:slug>",views.article_category,name="article_category"),
     path("article/category/<slug:cat_slug>/<slug:subcat_slug>",views.article_subcategory,name="article_subcategory"),
     path("article/tag/<slug:slug>",views.article_tag,name="article_tag"),
+    path("articles/add/", views.record_create, {"record_type": "article"}, name="article_create"),
 
     # journal
     path("journals/",views.journal_index,name="journal_index"),
@@ -19,6 +20,7 @@ urlpatterns = [
     path("journals/category/<slug:slug>",views.journal_category,name="journal_category"),
     path("journals/category/<slug:cat_slug>/<slug:subcat_slug>",views.journal_subcategory,name="journal_subcategory"),
     path("journals/tag/<slug:slug>",views.journal_tag,name="journal_tag"),
+    path("journals/add/", views.record_create, {"record_type": "journal"}, name="journal_create"),
 
     # note
     path("notes/",views.note_index,name="note_index"),
@@ -26,6 +28,7 @@ urlpatterns = [
     path("notes/category/<slug:slug>",views.note_category,name="note_category"),
     path("notes/category/<slug:cat_slug>/<slug:subcat_slug>",views.note_subcategory,name="note_subcategory"),
     path("notes/tag/<slug:slug>",views.note_tag,name="note_tag"),
+    path("notes/add/", views.record_create, {"record_type": "note"}, name="note_create"),
 
     # cental point
     path("centralpoints/",views.centralpoint_index,name="centralpoint_index"),
@@ -33,6 +36,7 @@ urlpatterns = [
     path("centralpoints/category/<slug:slug>",views.centralpoint_category,name="centralpoint_category"),
     path("centralpoints/category/<slug:cat_slug>/<slug:subcat_slug>",views.centralpoint_subcategory,name="centralpoint_subcategory"),
     path("centralpoints/tag/<slug:slug>",views.centralpoint_tag,name="centralpoint_tag"),
+    path("centralpoints/add/", views.record_create, {"record_type": "centralpoint"}, name="centralpoint_create"),
 
     # strategy
     path("strategies/",views.strategy_index,name="strategy_index"),
@@ -40,6 +44,7 @@ urlpatterns = [
     path("strategies/category/<slug:slug>",views.strategy_category,name="strategy_category"),
     path("strategies/category/<slug:cat_slug>/<slug:subcat_slug>",views.strategy_subcategory,name="strategy_subcategory"),
     path("strategies/tag/<slug:slug>",views.strategy_tag,name="strategy_tag"),
+    path("strategies/add/", views.record_create, {"record_type": "strategy"}, name="strategy_create"),
 
 
     # decision
@@ -48,6 +53,7 @@ urlpatterns = [
     path("decisions/category/<slug:slug>",views.decision_category,name="decision_category"),
     path("decisions/category/<slug:cat_slug>/<slug:subcat_slug>",views.decision_subcategory,name="decision_subcategory"),
     path("decisions/tag/<slug:slug>",views.decision_tag,name="decision_tag"),
+    path("decisions/add/", views.record_create, {"record_type": "decision"}, name="decision_create"),
 
 
     # goals
@@ -56,5 +62,6 @@ urlpatterns = [
     path("goals/category/<slug:slug>",views.goal_category,name="goal_category"),
     path("goals/category/<slug:cat_slug>/<slug:subcat_slug>",views.goal_subcategory,name="goal_subcategory"),
     path("goals/tag/<slug:slug>",views.goal_tag,name="goal_tag"),
+    path("goals/add/", views.record_create, {"record_type": "goal"}, name="goal_create"),
 
 ]

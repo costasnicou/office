@@ -15,6 +15,25 @@
     <script src="https://kit.fontawesome.com/d495971c43.js" crossorigin="anonymous"></script>
 </head>
 <body>
+    <div class="add-record-bar">
+        <div class="add-record-menu">
+            <button class="add-record-button" type="button" aria-expanded="false" aria-controls="add-record-dropdown">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                <span>Add record</span>
+                <i class="fa-solid fa-chevron-down add-record-chevron" aria-hidden="true"></i>
+            </button>
+            <ul class="add-record-dropdown" id="add-record-dropdown" hidden>
+                <li><a href="{% url 'article_create' %}">Add Article</a></li>
+                <li><a href="{% url 'journal_create' %}">Add Journal Entry</a></li>
+                <li><a href="{% url 'note_create' %}">Add Note</a></li>
+                <li><a href="{% url 'centralpoint_create' %}">Add Central Point</a></li>
+                <li><a href="{% url 'strategy_create' %}">Add Strategy</a></li>
+                <li><a href="{% url 'decision_create' %}">Add Decision</a></li>
+                <li><a href="{% url 'goal_create' %}">Add Goal</a></li>
+            </ul>
+        </div>
+    </div>
+
     <header class="header">
         <nav class="header-nav">
             <div class="logo">
@@ -69,5 +88,6 @@
     </footer>
 
     <script src="{% static 'js/mobile-navigation.js' %}" defer></script>
+    <script src="{% static 'js/add-record-menu.js' %}" defer></script>
 </body>
 </html>

@@ -1,0 +1,114 @@
+.add-record-bar {
+    display: flex;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    // CKEditor panels use elevated stacking layers; keep this fixed utility
+    // bar above all editor content and toolbars.
+    z-index: 10000;
+    justify-content: flex-end;
+    height: var(--add-record-bar-height);
+    padding: 0 30px;
+    background: rgb(255, 111, 0);
+    background-color: darken(#a16900, 8%) 
+}
+
+.add-record-menu {
+    position: relative;
+}
+
+.add-record-button {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    height: 42px;
+    padding: 0 14px;
+    border: 0;
+    color: #fff;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+
+    &:hover,
+    &:focus-visible,
+    &[aria-expanded="true"] {
+        outline: none;
+        background: #5b5b5b;
+    }
+
+    .fa-plus {
+        display: grid;
+        width: 22px;
+        height: 22px;
+        place-items: center;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        font-size: 12px;
+    }
+}
+
+.add-record-chevron {
+    font-size: 11px;
+    transition: transform .2s ease;
+
+    [aria-expanded="true"] & {
+        transform: rotate(180deg);
+    }
+}
+
+.add-record-dropdown {
+    position: absolute;
+    z-index: 120;
+    top: calc(100% + 7px);
+    right: 0;
+    width: 220px;
+    margin: 0;
+    padding: 7px 0;
+    list-style: none;
+    border: 1px solid #696969;
+    border-radius: 4px;
+    background: #484848;
+    box-shadow: 0 9px 24px rgba(0, 0, 0, .35);
+
+    &[hidden] { display: none; }
+    li { margin: 0; }
+
+    a,
+    a:link,
+    a:visited {
+        display: block;
+        padding: 10px 16px;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    a:hover,
+    a:focus-visible {
+        outline: none;
+        color: #fff;
+        background: #606060;
+    }
+}
+
+@media (max-width: 1366px) {
+    .add-record-bar {
+        padding: 0 16px;
+    }
+
+    .add-record-dropdown {
+        width: min(280px, calc(100vw - 32px));
+    }
+}
+
+@media (max-width: 700px) {
+    .add-record-dropdown {
+        position: fixed;
+        top: calc(var(--add-record-bar-height) + 6px);
+        right: 12px;
+        left: 12px;
+        width: auto;
+    }
+}

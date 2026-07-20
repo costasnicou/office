@@ -1,7 +1,12 @@
 // Responsive overrides. Desktop styles remain the default; tablets and phones
 // progressively simplify the two-column layout and navigation.
 
-@media (max-width: 1024px) {
+@media (max-width: 1366px) {
+    :root {
+        --header-height: 60px;
+        --header-content-gap: 14px;
+    }
+
     html,
     body {
         max-width: 100%;
@@ -166,7 +171,7 @@
             }
 
             .menu-toggle:checked ~ .menu-wraper {
-                max-height: calc(100vh - 60px);
+                max-height: calc(100dvh - var(--add-record-bar-height) - var(--header-height));
                 overflow-y: auto;
                 visibility: visible;
                 opacity: 1;
@@ -190,13 +195,13 @@
     }
 
     .grid {
-        margin-top: 60px;
+        margin-top: var(--page-top-offset);
 
         &-left {
             display: block;
             position: fixed;
             inset: 0;
-            z-index: 110;
+            z-index: 10020;
             width: 100%;
             height: 100dvh;
             overflow-y: auto;
@@ -228,7 +233,7 @@
             width: 100%;
 
             &-wraper {
-                width: min(90%, 820px);
+                width: min(92%, 1080px);
                 margin: 0 auto;
                 padding: 40px 0 64px;
 
@@ -298,7 +303,7 @@
         overflow: hidden;
 
         .header {
-            z-index: 120;
+            z-index: 10030;
             background: transparent;
             box-shadow: none;
             pointer-events: none;
@@ -313,9 +318,9 @@
 
         .header .header-nav .sidebar-toggle {
             position: fixed;
-            top: 30px;
+            top: calc(var(--add-record-bar-height) + (var(--header-height) / 2));
             left: 16px;
-            z-index: 130;
+            z-index: 10040;
             visibility: visible;
             pointer-events: auto;
 
@@ -341,6 +346,10 @@
 }
 
 @media (max-width: 700px) {
+    :root {
+        --header-height: 54px;
+    }
+
     .header {
         padding: 8px 12px;
 
@@ -388,7 +397,7 @@
 
     .grid {
         min-height: calc(100vh - 54px);
-        margin-top: 54px;
+        margin-top: var(--page-top-offset);
 
         &-right-wraper {
             width: 100%;
