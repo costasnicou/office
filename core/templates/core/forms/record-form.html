@@ -17,7 +17,9 @@
                 <div class="form-field{% if field.errors %} has-errors{% endif %}">
                     {{ field }}
                     {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
-                    {{ field.errors }}
+                    {% if field.errors %}
+                        <div class="field-errors">{{ field.errors }}</div>
+                    {% endif %}
                 </div>
             {% endfor %}
 

@@ -16,6 +16,21 @@ class ArticleCreateTests(TestCase):
             f'{reverse("login")}?next={reverse("article_create")}',
         )
 
+    def test_create_page_does_not_render_empty_error_lists(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("article_create"))
+
+        self.assertNotContains(response, 'class="field-errors"')
+
+    def test_create_page_renders_actual_field_errors(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(reverse("article_create"), {"title": ""})
+
+        self.assertContains(response, 'class="field-errors"')
+        self.assertContains(response, "This field is required.")
+
     def test_creates_record_and_new_taxonomy_values(self):
         self.client.force_login(self.user)
         response = self.client.post(reverse("article_create"), {
