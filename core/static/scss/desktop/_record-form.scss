@@ -7,8 +7,8 @@
     width: 100%;
     padding: 42px clamp(24px, 6vw, 72px);
     border-radius: 8px;
-    background: #fff;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, .12);
+    background: $color-surface;
+    box-shadow: 0 4px 18px $color-shadow-soft;
 
     h1,
     .form-intro {
@@ -18,7 +18,7 @@
 
 .form-intro {
     margin-bottom: 32px;
-    color: #666;
+    color: $color-text-subtle;
 }
 
 .record-form {
@@ -42,9 +42,9 @@
         width: 100%;
         min-height: 48px;
         padding: 12px 14px;
-        border: 1px solid #aaa;
+        border: 1px solid $color-border-strong;
         border-radius: 5px;
-        background: #fff;
+        background: $color-surface;
         font: inherit;
     }
 
@@ -65,15 +65,15 @@
     input:focus,
     select:focus,
     textarea:focus {
-        border-color: #a16900;
-        outline: 2px solid rgba(161, 105, 0, .2);
+        border-color: $color-form-focus;
+        outline: 2px solid rgba($color-form-focus, .2);
     }
 
     small {
         display: block;
         width: 100%;
         margin-top: 7px;
-        color: #666;
+        color: $color-text-subtle;
         line-height: 1.45;
     }
 
@@ -81,7 +81,7 @@
         width: 100%;
         margin: 7px 0 0;
         padding-left: 20px;
-        color: #a40000;
+        color: $color-error;
     }
 }
 
@@ -106,16 +106,16 @@
         gap: 10px;
         min-height: 48px;
         padding: 10px 12px;
-        border: 1px solid #aaa;
+        border: 1px solid $color-border-strong;
         border-radius: 5px;
-        background: #fff;
+        background: $color-surface;
         cursor: pointer;
         overflow-wrap: anywhere;
     }
 
     label:has(input:checked) {
-        border-color: #a16900;
-        background: rgba(161, 105, 0, .1);
+        border-color: $color-form-focus;
+        background: rgba($color-form-focus, .1);
     }
 
     input[type="checkbox"] {
@@ -123,13 +123,13 @@
         width: 22px;
         height: 22px;
         margin: 0;
-        accent-color: #a16900;
+        accent-color: $color-form-focus;
     }
 }
 
 .form-errors {
     margin-bottom: 20px;
-    color: #a40000;
+    color: $color-error;
 }
 
 .form-submit {
@@ -138,15 +138,17 @@
     padding: 13px 24px;
     border: 0;
     border-radius: 5px;
-    color: #fff;
-    background: #8b5b00;
+    color: $color-text-on-dark;
+    background: $color-primary;
     cursor: pointer;
     font-size: 16px;
+    transition: all .8s;
 }
 
 .form-submit:hover,
 .form-submit:focus-visible {
-    background: #a16900;
+    background: $color-form-focus;
+    background-color: darken($color-primary, 10%);
 }
 
 .form-actions {
@@ -161,15 +163,16 @@
     padding: 13px 24px;
     border: 0;
     border-radius: 5px;
-    color: #fff;
-    background: #9d1c1c;
+    color: $color-text-on-dark;
+    background: $color-danger;
     cursor: pointer;
     font-size: 16px;
+    transition: all .8s;
 }
 
 .form-delete:hover,
 .form-delete:focus-visible {
-    background: #bd2424;
+    background-color: darken($color-danger, 10%);
 }
 
 @media (max-width: 700px) {

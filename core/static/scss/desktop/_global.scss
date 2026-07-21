@@ -1,3 +1,34 @@
+$color-primary: rgb(189, 141, 51);
+$color-accent: rgb(235, 154, 4);
+$color-link: rgb(0, 140, 255);
+$color-login-primary: rgb(218, 165, 68);
+$color-surface: #fff;
+$color-text: #333;
+$color-text-body: #4e4e4e;
+$color-text-heading: #2f2f2f;
+$color-text-emphasis: #7d7d7d;
+$color-heading-emphasis: #6b6b6b;
+$color-text-muted: #777;
+$color-text-subtle: #666;
+$color-text-icon: #616161;
+$color-text-link: #414141;
+$color-text-on-dark: white;
+$color-border: #ccc;
+$color-border-strong: #aaa;
+$color-sidebar: darken(whitesmoke, 60%);
+$color-error: #a40000;
+$color-danger: #9e4646;
+$color-form-focus: #a16900;
+$color-dropdown: #484848;
+$color-dropdown-hover: #606060;
+$color-dropdown-control: #5b5b5b;
+$color-dropdown-border: #696969;
+$color-pagination-active: rgb(197, 129, 3);
+$color-pagination-border: rgb(140, 0, 0);
+$color-shadow: rgba(0, 0, 0, .31);
+$color-shadow-soft: rgba(0, 0, 0, .12);
+$color-shadow-strong: rgba(0, 0, 0, .35);
+
 html,body{
     padding: 0;
     margin: 0;
@@ -26,25 +57,26 @@ p,li{
 }
 
 p strong,p b{
-     color: #7d7d7d !important;
+     color: $color-text-emphasis !important;
 }
 
 h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,h6 b, h6 strong{
-     color: #6b6b6b !important;
+     color: $color-heading-emphasis !important;
 }
 
 .header{
     // background-color: black;
     padding: 15px;
     // border-bottom: 1px solid black;
-    background-color: #333;
-    background-color: rgb(161, 105, 0);
+    background-color: $color-text;
+    background-color: $color-primary;
+    background-color: darken($color-primary, 5%);
      position: fixed;
      top: var(--add-record-bar-height);
      width: 100%;
      z-index: 100;
-    -webkit-box-shadow: 2px -1px 15px 5px rgba(0,0,0,0.31); 
-    box-shadow: 2px -1px 15px 5px rgba(0,0,0,0.31);
+    -webkit-box-shadow: 2px -1px 15px 5px $color-shadow;
+    box-shadow: 2px -1px 15px 5px $color-shadow;
 
     .header-nav{
         display: flex;
@@ -71,7 +103,7 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
                 font-size: 35px;
                 margin: 0;
                 line-height: 30px;
-                color: whitesmoke;
+                color: $color-text-on-dark;
                 white-space: nowrap;
             }
         }
@@ -104,11 +136,11 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
             li a:link,li a:visited{
                 text-decoration: none;
                 font-size: 18px;
-                color: rgb(68, 68, 68);
+                color: $color-text;
                 text-transform: uppercase;
-                color: whitesmoke;
+                color: $color-text-on-dark;
                 &:hover{
-                    color: white;
+                    color: $color-text-on-dark;
                 }
 
 
@@ -137,13 +169,13 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
 
                 text-decoration: none;
                 border-radius: 4px;
-                color: white;
+                color: $color-text-on-dark;
                 // background-color: #d35908;
 
                 i{
                     font-size: 30px;
                     // color: rgb(48, 48, 48);
-                    color: white;
+                    color: $color-text-on-dark;
 
                     &:hover{
                         font-size: 35px;
@@ -162,8 +194,8 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
     
     &-left{
         width: 20%;
-        background-color: rgb(127, 195, 250);
-          background-color:darken(whitesmoke,60%);
+        background-color: $color-link;
+          background-color: $color-sidebar;
         // background-color: #a7d3f8;
         // background-color: rgb(33, 119, 189);
 
@@ -172,7 +204,7 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
         //  background-color: orangered;
         position: relative;
         // background-color: #282828;
-        color: white;
+        color: $color-text-on-dark;
 
         .menu-navigator{
             position:sticky;
@@ -203,10 +235,10 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
             font-size: 17px;
             
             h2{
-                color: rgb(0, 140, 255);
+                color: $color-link;
                 // color: rgb(0, 97, 182);
-                color: white;   
-               color: rgb(235, 154, 4);
+                color: $color-text-on-dark;
+               color: $color-accent;
             }
             li{
                 margin-bottom: 5px;    
@@ -215,14 +247,14 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
             }
             li a:link,li a:visited{
                 text-decoration: none;
-                color: rgb(0, 140, 255);
+                color: $color-link;
                 // color: rgb(0, 97, 182);
-                color: white;
+                color: $color-text-on-dark;
                 font-weight: bold;
                 &:hover{
                     // color: rgb(0, 88, 166);
                     // color: whitesmoke;
-                    color: rgb(235, 154, 4);
+                    color: $color-accent;
                     text-decoration: underline;
                 }
 
@@ -240,11 +272,11 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
                 }
                 li a:link,li a:visited{
                     text-decoration: none;
-                    color: white;
+                    color: $color-text-on-dark;
 
                     &:hover{
                       
-                        color: rgb(235, 154, 4) !important;
+                        color: $color-accent !important;
                     }
 
 
@@ -266,7 +298,7 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
             font-size: 17px;
 
             h2{
-                color: rgb(235, 154, 4);
+                color: $color-accent;
             }
             .tags-wraper{
                 display: flex;
@@ -279,17 +311,17 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
                      margin-bottom: 25px;
                 }
                 li a{
-                    color: white;
+                    color: $color-text-on-dark;
                     text-decoration: none;
                     padding: 10px;
-                    background-color: rgb(197, 129, 3);
+                    background-color: $color-primary;
                     // background-color: #cd6b03;
                     // background-color: orangered;
                     font-size: 14px;
                     border-radius: 8px;
 
                     &:hover{
-                        background-color: rgb(161, 105, 0);
+                        background-color: darken($color-primary, 10%);
                     }
                    
 
@@ -324,7 +356,7 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
 
             h1,h2,h3,h4{
                 font-weight: 300;
-                color: #2f2f2f;
+                color: $color-text-heading;
             }
             .post-type-title{
                 text-align: center;
@@ -351,7 +383,7 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
                 }
                 .icon i{
                     font-size: 100px;
-                    color: #616161;
+                    color: $color-text-icon;
                     margin-right: 50px;
                 }
 
@@ -372,18 +404,18 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
                         font-weight: 300;
                         font-size: 19px;
                         width: 85%;
-                        color: #4e4e4e;
+                        color: $color-text-body;
                     }
 
                    
 
                     .view-single-btn:link,.view-single-btn:visited{
-                        background-color: rgb(0, 140, 255);
+                        background-color: $color-link;
                         // background-color: rgb(82, 118, 226);
-                       background-color:darken(whitesmoke,60%);
-                        background-color: rgb(197, 129, 3);
+                       background-color: $color-sidebar;
+                        background-color: $color-primary;
                      
-                        color: white;
+                        color: $color-text-on-dark;
                         padding: 10px 20px;
                         border-radius: 8px;
                         transition: all .4s;
@@ -391,10 +423,10 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
                         display: inline-block;
                         
                         &:hover{
-                            background-color: darken(rgb(0, 140, 255),10%);
+                            background-color: darken($color-link, 10%);
                             background-color: royalblue;
-                             background-color: #333;
-                             background-color: rgb(161, 105, 0);
+                             background-color: $color-text;
+                             background-color: darken($color-primary, 10%)
                            
                         }
                     }
@@ -416,8 +448,8 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
   display: inline-block;
   margin: 0 4px;
   padding: 8px 12px;
-  border: 1px solid #ccc;
-  color: #333;
+  border: 1px solid $color-border;
+  color: $color-text;
 //   color: #ccc;;
   text-decoration: none;
   border-radius: 4px;
@@ -426,16 +458,16 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
 }
 
 .pagination a:hover {
-    background-color: rgb(197, 129, 3);
-    color: white;
-    border-color: rgb(140, 0, 0);
+    background-color: $color-pagination-active;
+    color: $color-text-on-dark;
+    border-color: $color-pagination-border;
 }
 
 .pagination .current {
-  background-color: #333;
-  color: white;
+  background-color: $color-text;
+  color: $color-text-on-dark;
   font-weight: bold;
-  border-color: rgb(140, 0, 0);
-   background-color: rgb(197, 129, 3);
+  border-color: $color-pagination-border;
+   background-color: $color-pagination-active;
 }
 /* end pagination */

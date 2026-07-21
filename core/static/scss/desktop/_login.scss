@@ -10,13 +10,16 @@
           text-align: center;
           font-weight: 300;
         //   color: rgb(44, 93, 150);;
+        //  color: darken($color-login-primary, 20%);
+        color: #474747;
     }
 }
 
 .login-logo{
     margin-bottom: 20px;
     i{
-        color:  rgb(65, 140, 225);
+        color: $color-login-primary;
+        color: darken($color-login-primary, 15%);
         font-size: 100px;
     }
 }
@@ -39,15 +42,15 @@
     }
 
     .btn.btn-primary{
-        background-color: rgb(65, 140, 225);
-        color: white;
+         background-color: darken($color-login-primary, 10%);
+        color: $color-text-on-dark;
         padding: 10px 20px;
         transition: all .4s;
         border-radius: 8px;
         border: none;
         margin-top: 10px;
         &:hover{
-            background-color: darken(rgb(65, 140, 225), 5%);
+            background-color: darken($color-login-primary, 15%);
         }
     }
 }

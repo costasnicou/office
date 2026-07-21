@@ -28,7 +28,8 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
 .header {
   padding: 15px;
   background-color: #333;
-  background-color: #a16900;
+  background-color: #bd8d33;
+  background-color: #a97e2e;
   position: fixed;
   top: var(--add-record-bar-height);
   width: 100%;
@@ -56,7 +57,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
         font-size: 35px;
         margin: 0;
         line-height: 30px;
-        color: whitesmoke;
+        color: white;
         white-space: nowrap; }
     .header .header-nav .menu-toggle,
     .header .header-nav .hamburger,
@@ -82,9 +83,9 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
       .header .header-nav .header-menu li a:link, .header .header-nav .header-menu li a:visited {
         text-decoration: none;
         font-size: 18px;
-        color: #444444;
+        color: #333;
         text-transform: uppercase;
-        color: whitesmoke; }
+        color: white; }
         .header .header-nav .header-menu li a:link:hover, .header .header-nav .header-menu li a:visited:hover {
           color: white; }
       .header .header-nav .header-menu li:not(:last-of-type) {
@@ -111,7 +112,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
   margin-top: 110px; }
   .grid-left {
     width: 20%;
-    background-color: #7fc3fa;
+    background-color: #008cff;
     background-color: #5c5c5c;
     position: relative;
     color: white; }
@@ -182,11 +183,11 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
           color: white;
           text-decoration: none;
           padding: 10px;
-          background-color: #c58103;
+          background-color: #bd8d33;
           font-size: 14px;
           border-radius: 8px; }
           .grid-left .tags .tags-wraper li a:hover {
-            background-color: #a16900; }
+            background-color: #956f28; }
         .grid-left .tags .tags-wraper li:not(:last-of-type) {
           margin-right: 5px; }
   .grid-right {
@@ -234,7 +235,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
         .grid-right-wraper .preview .content .view-single-btn:link, .grid-right-wraper .preview .content .view-single-btn:visited {
           background-color: #008cff;
           background-color: #5c5c5c;
-          background-color: #c58103;
+          background-color: #bd8d33;
           color: white;
           padding: 10px 20px;
           border-radius: 8px;
@@ -245,7 +246,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
             background-color: #0070cc;
             background-color: royalblue;
             background-color: #333;
-            background-color: #a16900; }
+            background-color: #956f28; }
 
 .pagination {
   text-align: center;
@@ -347,9 +348,9 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
     min-height: 100px;
     margin-left: 20px; }
   .swot-analysis-wraper .border-right {
-    border-right: 0.5px solid black; }
+    border-right: 0.5px solid #333; }
   .swot-analysis-wraper .border-bottom {
-    border-bottom: 0.5px solid black; }
+    border-bottom: 0.5px solid #333; }
 
 .main-login {
   display: flex;
@@ -361,12 +362,14 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
     text-align: center;
     font-family: "Arizonia", cursive;
     text-align: center;
-    font-weight: 300; }
+    font-weight: 300;
+    color: #474747; }
 
 .login-logo {
   margin-bottom: 20px; }
   .login-logo i {
-    color: #418ce1;
+    color: #daa544;
+    color: #af7d23;
     font-size: 100px; }
 
 .login-form {
@@ -381,7 +384,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
       padding: 10px;
       margin-bottom: 10px; }
   .login-form .btn.btn-primary {
-    background-color: #418ce1;
+    background-color: #c48d27;
     color: white;
     padding: 10px 20px;
     transition: all .4s;
@@ -389,7 +392,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
     border: none;
     margin-top: 10px; }
     .login-form .btn.btn-primary:hover {
-      background-color: #2b7fde; }
+      background-color: #af7d23; }
 
 .add-record-bar {
   display: flex;
@@ -401,8 +404,8 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
   justify-content: space-between;
   height: var(--add-record-bar-height);
   padding: 0 30px;
-  background: #ff6f00;
-  background-color: #784e00; }
+  background: #eb9a04;
+  background-color: #816023; }
 
 .record-search-form {
   display: flex;
@@ -453,7 +456,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
   height: 42px;
   padding: 0 14px;
   border: 0;
-  color: #fff;
+  color: white;
   background: transparent;
   cursor: pointer;
   font-family: inherit;
@@ -499,12 +502,12 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
   .add-record-dropdown a:visited {
     display: block;
     padding: 10px 16px;
-    color: #fff;
+    color: white;
     text-decoration: none; }
   .add-record-dropdown a:hover,
   .add-record-dropdown a:focus-visible {
     outline: none;
-    color: #fff;
+    color: white;
     background: #606060; }
 
 @media (max-width: 1366px) {
@@ -642,14 +645,16 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
   padding: 13px 24px;
   border: 0;
   border-radius: 5px;
-  color: #fff;
-  background: #8b5b00;
+  color: white;
+  background: #bd8d33;
   cursor: pointer;
-  font-size: 16px; }
+  font-size: 16px;
+  transition: all .8s; }
 
 .form-submit:hover,
 .form-submit:focus-visible {
-  background: #a16900; }
+  background: #a16900;
+  background-color: #956f28; }
 
 .form-actions {
   display: flex;
@@ -662,14 +667,15 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
   padding: 13px 24px;
   border: 0;
   border-radius: 5px;
-  color: #fff;
-  background: #9d1c1c;
+  color: white;
+  background: #9e4646;
   cursor: pointer;
-  font-size: 16px; }
+  font-size: 16px;
+  transition: all .8s; }
 
 .form-delete:hover,
 .form-delete:focus-visible {
-  background: #bd2424; }
+  background-color: #7b3636; }
 
 @media (max-width: 700px) {
   .record-form-page {
@@ -1035,7 +1041,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
       min-height: 40px; }
 
   .main-login {
-    min-height: 100svh;
+    min-height: 85vh;
     height: auto;
     padding: 32px 18px; }
 
