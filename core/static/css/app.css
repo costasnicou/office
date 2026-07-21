@@ -935,7 +935,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
       .header .header-nav .logo {
         gap: 7px;
         position: relative;
-        right: 10px; }
+        right: 5px; }
         .header .header-nav .logo .logo-icon {
           width: 30px;
           height: 30px; }
