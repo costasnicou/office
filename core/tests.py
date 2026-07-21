@@ -112,10 +112,10 @@ class RecordSearchTests(TestCase):
         self.user = User.objects.create_user(username="searcher", password="test-password")
         self.client.force_login(self.user)
 
-    def test_searches_every_rich_text_field_and_links_to_the_correct_single_view(self):
+    def test_searches_titles_across_post_types_and_links_to_the_correct_single_view(self):
         strategy = Strategy.objects.create(
-            title="Growth plan",
-            threats="A uniquely searchable competitor",
+            title="Competitor growth plan",
+            threats="A market threat",
             finalized_strategy="Expand carefully",
         )
 
@@ -124,16 +124,28 @@ class RecordSearchTests(TestCase):
         self.assertContains(response, strategy.title)
         self.assertContains(response, reverse("strategy_single", args=[strategy.slug]))
 
+    def test_does_not_search_post_content(self):
+        strategy = Strategy.objects.create(
+            title="Growth plan",
+            threats="A uniquely searchable competitor",
+            finalized_strategy="Expand carefully",
+        )
+
+        response = self.client.get(reverse("record_search"), {"q": "competitor"})
+
+        self.assertNotContains(response, strategy.title)
+        self.assertNotContains(response, reverse("strategy_single", args=[strategy.slug]))
+
     def test_combines_post_types_in_reverse_chronological_order(self):
         category = ArticleCategory.objects.create(name="Work")
         article = Article.objects.create(
             title="Earlier shared record",
-            content="shared phrase",
+            content="Article body",
             category=category,
         )
         strategy = Strategy.objects.create(
             title="Later shared record",
-            finalized_strategy="shared phrase",
+            finalized_strategy="Strategy body",
         )
 
         response = self.client.get(reverse("record_search"), {"q": "shared"})

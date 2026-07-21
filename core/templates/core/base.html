@@ -17,8 +17,8 @@
 <body>
     <div class="add-record-bar">
         <form class="record-search-form" action="{% url 'record_search' %}" method="get" role="search">
-            <label class="sr-only" for="record-search">Search all records</label>
-            <input id="record-search" name="q" type="search" value="{{ request.GET.q }}" placeholder="Search all records..." required>
+            <label class="sr-only" for="record-search">Search all post titles</label>
+            <input id="record-search" name="q" type="search" value="{{ request.GET.q }}" placeholder="Search all post titles..." required>
             <button type="submit" aria-label="Search">
                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
             </button>

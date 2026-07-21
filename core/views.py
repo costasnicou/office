@@ -1,6 +1,5 @@
 from django.shortcuts import get_object_or_404, render,redirect
 from django.core.paginator import Paginator
-from django.db.models import Q
 from .models import *
 from django.urls import reverse
 from django.contrib.auth.models import User
@@ -43,15 +42,7 @@ def record_search(request):
 
     if query:
         for model, detail_url, icon_class, preview_field in SEARCH_RECORD_TYPES:
-            searchable_fields = ["title"] + [
-                field.name for field in model._meta.fields
-                if field.get_internal_type() == "TextField"
-            ]
-            search_filter = Q()
-            for field_name in searchable_fields:
-                search_filter |= Q(**{f"{field_name}__icontains": query})
-
-            for record in model.objects.filter(search_filter):
+            for record in model.objects.filter(title__icontains=query):
                 results.append({
                     "record": record,
                     "detail_url": detail_url,
