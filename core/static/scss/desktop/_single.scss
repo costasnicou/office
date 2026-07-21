@@ -43,8 +43,8 @@
     .edit-record-btn:link,
     .edit-record-btn:visited {
     position: absolute;
-    top: 0;
-    right: 5%;
+    top: -16px;
+    right: 1%;
     padding: 8px;
     color: #777;
     background: transparent;
@@ -53,7 +53,7 @@
     }
 }
 
-@media (max-width:700px)  {
+@media (min-width:501) and (max-width:700px)  {
     .edit-record-btn,
     .edit-record-btn:link,
     .edit-record-btn:visited {
