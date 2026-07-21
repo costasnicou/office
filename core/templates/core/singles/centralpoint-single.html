@@ -33,6 +33,7 @@
         <div class="grid-right-wraper">
             <article class="single-article">
                  <h1 class="article-title">{{article.title}}</h1>
+                 <a class="edit-record-btn" href="{% url 'centralpoint_edit' article.slug %}" aria-label="Edit Central Point" title="Edit Central Point"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
                  <div class="article-content">
                     {{article.content | safe  }}
                  </div>

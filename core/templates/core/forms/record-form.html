@@ -3,7 +3,7 @@
 {% block main %}
 <div class="record-form-page">
     <div class="record-form-card">
-        <h1>Add {{ record_label }}</h1>
+        <h1>{% if is_edit %}Edit{% else %}Add{% endif %} {{ record_label }}</h1>
         <p class="form-intro">Choose existing categories and tags, or create missing ones below.</p>
 
         <form method="post" class="record-form">
@@ -23,7 +23,12 @@
                 </div>
             {% endfor %}
 
-            <button type="submit" class="form-submit">Save {{ record_label }}</button>
+            <div class="form-actions">
+                <button type="submit" class="form-submit">Save {{ record_label }}</button>
+                {% if is_edit %}
+                    <button type="submit" name="action" value="delete" class="form-delete" formnovalidate onclick="return confirm('Delete this {{ record_label|escapejs }} permanently?');">Delete {{ record_label }}</button>
+                {% endif %}
+            </div>
         </form>
     </div>
 </div>

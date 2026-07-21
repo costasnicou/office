@@ -25,6 +25,57 @@
 
 }
 
+.edit-record-btn,
+.edit-record-btn:link,
+.edit-record-btn:visited {
+    position: absolute;
+    top: 32px;
+    right: 10%;
+    padding: 8px;
+    color: #777;
+    background: transparent;
+    text-decoration: none;
+    font-size: 24px;
+}
+
+@media (max-width:500px)  {
+    .edit-record-btn,
+    .edit-record-btn:link,
+    .edit-record-btn:visited {
+    position: absolute;
+    top: 0;
+    right: 5%;
+    padding: 8px;
+    color: #777;
+    background: transparent;
+    text-decoration: none;
+    font-size: 24px;
+    }
+}
+
+@media (max-width:700px)  {
+    .edit-record-btn,
+    .edit-record-btn:link,
+    .edit-record-btn:visited {
+    position: absolute;
+    top: 0;
+    right: 5%;
+    padding: 8px;
+    color: #777;
+    background: transparent;
+    text-decoration: none;
+    font-size: 24px;
+    }
+}
+
+
+
+.edit-record-btn:hover,
+.edit-record-btn:focus-visible {
+    color: #4e4e4e;
+    background: transparent;
+}
+
 .swot-analysis{
     //  margin-top: 40px;
 }

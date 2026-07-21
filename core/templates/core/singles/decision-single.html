@@ -33,6 +33,7 @@
         <div class="grid-right-wraper">
             <article class="single-article">
                  <h1 class="article-title">{{article.title}}</h1>
+                 <a class="edit-record-btn" href="{% url 'decision_edit' article.slug %}" aria-label="Edit Decision" title="Edit Decision"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
                  <div class="article-content">
                     
                     {% if article.bothering and article.bothering|striptags|cut:" "|cut:"&nbsp;" != "" %}

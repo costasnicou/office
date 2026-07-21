@@ -3,6 +3,10 @@ html, body {
   margin: 0;
   font-family: "Lato", sans-serif; }
 
+@media (min-width: 1367px) {
+  .menu-wraper {
+    position: relative;
+    left: 6%; } }
 :root {
   --add-record-bar-height: 42px;
   --header-height: 58px;
@@ -186,6 +190,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
         .grid-left .tags .tags-wraper li:not(:last-of-type) {
           margin-right: 5px; }
   .grid-right {
+    position: relative;
     width: 80%; }
     .grid-right-wraper {
       width: 80%;
@@ -284,6 +289,47 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
     color: #4e4e4e; }
   .article-content a:link, .article-content a:visited {
     color: #414141; }
+
+.edit-record-btn,
+.edit-record-btn:link,
+.edit-record-btn:visited {
+  position: absolute;
+  top: 32px;
+  right: 10%;
+  padding: 8px;
+  color: #777;
+  background: transparent;
+  text-decoration: none;
+  font-size: 24px; }
+
+@media (max-width: 500px) {
+  .edit-record-btn,
+  .edit-record-btn:link,
+  .edit-record-btn:visited {
+    position: absolute;
+    top: 0;
+    right: 5%;
+    padding: 8px;
+    color: #777;
+    background: transparent;
+    text-decoration: none;
+    font-size: 24px; } }
+@media (max-width: 700px) {
+  .edit-record-btn,
+  .edit-record-btn:link,
+  .edit-record-btn:visited {
+    position: absolute;
+    top: 0;
+    right: 5%;
+    padding: 8px;
+    color: #777;
+    background: transparent;
+    text-decoration: none;
+    font-size: 24px; } }
+.edit-record-btn:hover,
+.edit-record-btn:focus-visible {
+  color: #4e4e4e;
+  background: transparent; }
 
 .swot-analysis-wraper {
   display: grid;
@@ -604,6 +650,26 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
 .form-submit:hover,
 .form-submit:focus-visible {
   background: #a16900; }
+
+.form-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px; }
+
+.form-delete {
+  min-width: 190px;
+  padding: 13px 24px;
+  border: 0;
+  border-radius: 5px;
+  color: #fff;
+  background: #9d1c1c;
+  cursor: pointer;
+  font-size: 16px; }
+
+.form-delete:hover,
+.form-delete:focus-visible {
+  background: #bd2424; }
 
 @media (max-width: 700px) {
   .record-form-page {

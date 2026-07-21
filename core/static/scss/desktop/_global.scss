@@ -4,6 +4,13 @@ html,body{
     font-family: "Lato", sans-serif;
 }
 
+@media (min-width: 1367px) {
+    .menu-wraper {
+        position: relative;
+        left: 6%;
+    }
+}
+
 :root {
     --add-record-bar-height: 42px;
     --header-height: 58px;
@@ -302,6 +309,7 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
     }
 
     &-right{
+        position: relative;
         width: 80%;
         // background-color: #303030;
         // color: white;

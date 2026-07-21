@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import get_object_or_404, render,redirect
 from django.core.paginator import Paginator
 from django.db.models import Q
 from .models import *
@@ -14,14 +14,14 @@ from .forms import (
 # Create your views here.
 
 
-CREATE_FORMS = {
-    "article": (ArticleForm, "article_single", "Article"),
-    "journal": (JournalForm, "journal_single", "Journal entry"),
-    "note": (NoteForm, "note_single", "Note"),
-    "centralpoint": (CentralPointForm, "centralpoint_single", "Central point"),
-    "strategy": (StrategyForm, "strategy_single", "Strategy"),
-    "decision": (DecisionForm, "decision_single", "Decision"),
-    "goal": (GoalForm, "goal_single", "Goal"),
+RECORD_FORMS = {
+    "article": (Article, ArticleForm, "article_single", "index", "Article"),
+    "journal": (Journal, JournalForm, "journal_single", "journal_index", "Journal entry"),
+    "note": (Note, NoteForm, "note_single", "note_index", "Note"),
+    "centralpoint": (CentralPoint, CentralPointForm, "centralpoint_single", "centralpoint_index", "Central point"),
+    "strategy": (Strategy, StrategyForm, "strategy_single", "strategy_index", "Strategy"),
+    "decision": (Decision, DecisionForm, "decision_single", "decision_index", "Decision"),
+    "goal": (Goal, GoalForm, "goal_single", "goal_index", "Goal"),
 }
 
 
@@ -70,7 +70,7 @@ def record_search(request):
 
 @login_required
 def record_create(request, record_type):
-    form_class, detail_url, label = CREATE_FORMS[record_type]
+    _, form_class, detail_url, _, label = RECORD_FORMS[record_type]
     form = form_class(request.POST or None)
     if request.method == "POST" and form.is_valid():
         record = form.save()
@@ -79,6 +79,30 @@ def record_create(request, record_type):
         "form": form,
         "record_type": record_type,
         "record_label": label,
+        "is_edit": False,
+    })
+
+
+@login_required
+def record_update(request, record_type, slug):
+    model, form_class, detail_url, index_url, label = RECORD_FORMS[record_type]
+    record = get_object_or_404(model, slug=slug)
+
+    if request.method == "POST" and request.POST.get("action") == "delete":
+        record.delete()
+        return redirect(index_url)
+
+    form = form_class(request.POST or None, instance=record)
+    if request.method == "POST" and form.is_valid():
+        record = form.save()
+        return redirect(detail_url, slug=record.slug)
+
+    return render(request, "core/forms/record-form.html", {
+        "form": form,
+        "record": record,
+        "record_type": record_type,
+        "record_label": label,
+        "is_edit": True,
     })
 
 

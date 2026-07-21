@@ -154,3 +154,74 @@ class RecordSearchTests(TestCase):
             response,
             f'{reverse("login")}?next={reverse("record_search")}%3Fq%3Danything',
         )
+
+
+class RecordUpdateTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="editor", password="test-password")
+        self.category = ArticleCategory.objects.create(name="Work")
+        self.article = Article.objects.create(
+            title="Original title",
+            content="Original body",
+            category=self.category,
+        )
+
+    def test_edit_page_requires_login(self):
+        edit_url = reverse("article_edit", args=[self.article.slug])
+
+        response = self.client.get(edit_url)
+
+        self.assertRedirects(response, f'{reverse("login")}?next={edit_url}')
+
+    def test_edit_page_prefills_existing_record(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("article_edit", args=[self.article.slug]))
+
+        self.assertContains(response, 'value="Original title"')
+        self.assertContains(response, "Original body")
+        self.assertContains(response, "Delete Article")
+
+    def test_updates_record_and_redirects_to_single_page(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(reverse("article_edit", args=[self.article.slug]), {
+            "title": "Updated title",
+            "content": "Updated body",
+            "category": self.category.pk,
+        })
+
+        self.article.refresh_from_db()
+        self.assertEqual(self.article.title, "Updated title")
+        self.assertEqual(self.article.content, "Updated body")
+        self.assertRedirects(
+            response,
+            reverse("article_single", args=[self.article.slug]),
+        )
+
+    def test_deletes_record_with_post_and_redirects_to_index(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(reverse("article_edit", args=[self.article.slug]), {
+            "action": "delete",
+        })
+
+        self.assertFalse(Article.objects.filter(pk=self.article.pk).exists())
+        self.assertRedirects(response, reverse("index"))
+
+    def test_every_single_template_has_its_edit_link(self):
+        edit_routes = {
+            "article": "article_edit",
+            "journal": "journal_edit",
+            "note": "note_edit",
+            "centralpoint": "centralpoint_edit",
+            "strategy": "strategy_edit",
+            "decision": "decision_edit",
+            "goal": "goal_edit",
+        }
+
+        for record_type, route_name in edit_routes.items():
+            with self.subTest(record_type=record_type):
+                template_path = f"core/templates/core/singles/{record_type}-single.html"
+                with open(template_path, encoding="utf-8") as template:
+                    self.assertIn(f"{{% url '{route_name}' article.slug %}}", template.read())
