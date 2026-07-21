@@ -2,7 +2,9 @@ from django.test import TestCase
 from django.urls import reverse
 
 from .forms import ArticleForm
-from .models import Article, ArticleCategory, ArticleSubcategory, ArticleTag, User
+from .models import (
+    Article, ArticleCategory, ArticleSubcategory, ArticleTag, Strategy, User,
+)
 
 
 class ArticleCreateTests(TestCase):
@@ -103,3 +105,52 @@ class ArticleCreateTests(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn("subcategory", form.errors)
+
+
+class RecordSearchTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="searcher", password="test-password")
+        self.client.force_login(self.user)
+
+    def test_searches_every_rich_text_field_and_links_to_the_correct_single_view(self):
+        strategy = Strategy.objects.create(
+            title="Growth plan",
+            threats="A uniquely searchable competitor",
+            finalized_strategy="Expand carefully",
+        )
+
+        response = self.client.get(reverse("record_search"), {"q": "competitor"})
+
+        self.assertContains(response, strategy.title)
+        self.assertContains(response, reverse("strategy_single", args=[strategy.slug]))
+
+    def test_combines_post_types_in_reverse_chronological_order(self):
+        category = ArticleCategory.objects.create(name="Work")
+        article = Article.objects.create(
+            title="Earlier shared record",
+            content="shared phrase",
+            category=category,
+        )
+        strategy = Strategy.objects.create(
+            title="Later shared record",
+            finalized_strategy="shared phrase",
+        )
+
+        response = self.client.get(reverse("record_search"), {"q": "shared"})
+
+        self.assertContains(response, reverse("article_single", args=[article.slug]))
+        self.assertContains(response, reverse("strategy_single", args=[strategy.slug]))
+        self.assertLess(
+            response.content.index(strategy.title.encode()),
+            response.content.index(article.title.encode()),
+        )
+
+    def test_search_requires_login(self):
+        self.client.logout()
+
+        response = self.client.get(reverse("record_search"), {"q": "anything"})
+
+        self.assertRedirects(
+            response,
+            f'{reverse("login")}?next={reverse("record_search")}%3Fq%3Danything',
+        )

@@ -352,11 +352,50 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
   right: 0;
   left: 0;
   z-index: 10000;
-  justify-content: flex-end;
+  justify-content: space-between;
   height: var(--add-record-bar-height);
   padding: 0 30px;
   background: #ff6f00;
   background-color: #784e00; }
+
+.record-search-form {
+  display: flex;
+  align-items: center;
+  width: min(420px, 45vw);
+  margin-right: 12px;
+  align-self: center; }
+  .record-search-form label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0; }
+  .record-search-form input {
+    min-width: 0;
+    width: 100%;
+    height: 30px;
+    padding: 0 38px 0 11px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 4px;
+    outline: none;
+    color: #333;
+    background: #fff;
+    font: inherit; }
+    .record-search-form input:focus {
+      border-color: #fff;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25); }
+  .record-search-form button {
+    width: 38px;
+    height: 30px;
+    margin-left: -38px;
+    border: 0;
+    color: #5b5b5b;
+    background: transparent;
+    cursor: pointer; }
 
 .add-record-menu {
   position: relative; }
@@ -429,6 +468,20 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
   .add-record-dropdown {
     width: min(280px, calc(100vw - 32px)); } }
 @media (max-width: 700px) {
+  .add-record-bar {
+    padding: 0 8px; }
+
+  .record-search-form {
+    flex: 1;
+    width: auto;
+    margin-right: 4px; }
+
+  .add-record-button {
+    padding: 0 9px; }
+    .add-record-button span,
+    .add-record-button .add-record-chevron {
+      display: none; }
+
   .add-record-dropdown {
     position: fixed;
     top: calc(var(--add-record-bar-height) + 6px);

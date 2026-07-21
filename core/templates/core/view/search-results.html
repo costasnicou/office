@@ -1,0 +1,71 @@
+{% extends 'core/base.html' %}
+
+{% block main %}
+<div class="grid">
+    <div class="grid-left">
+        <div class="menu-navigator">
+            <ul class="categories">
+                <h2>Search</h2>
+                <li>Articles</li>
+                <li>Journals</li>
+                <li>Notes</li>
+                <li>Central Points</li>
+                <li>Strategies</li>
+                <li>Decisions</li>
+                <li>Goals</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="grid-right">
+        <div class="grid-right-wraper">
+            <h1 class="post-type-title">Search results{% if query %} for “{{ query }}”{% endif %}</h1>
+
+            {% for result in page_obj %}
+                <article class="preview">
+                    <div class="icon">
+                        <i class="{{ result.icon_class }}"></i>
+                    </div>
+
+                    <div class="content">
+                        <h2>{{ result.record.title }}</h2>
+                        <p>{{ result.preview | safe | striptags | truncatewords:70 }}</p>
+                        <a class="view-single-btn" href="{% url result.detail_url result.record.slug %}">View More</a>
+                    </div>
+
+                </article>
+            {% empty %}
+                {% if query %}
+                    <p>No records matched your search.</p>
+                {% else %}
+                    <p>Enter a search term to search all records.</p>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.paginator.num_pages > 1 %}
+                <div class="pagination">
+                    {% if page_obj.has_previous %}
+                        <a href="?q={{ query|urlencode }}&page=1">« First</a>
+                        <a href="?q={{ query|urlencode }}&page={{ page_obj.previous_page_number }}">‹ Prev</a>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            {% if page_obj.number == num %}
+                                <span class="current">{{ num }}</span>
+                            {% else %}
+                                <a href="?q={{ query|urlencode }}&page={{ num }}">{{ num }}</a>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <a href="?q={{ query|urlencode }}&page={{ page_obj.next_page_number }}">Next ›</a>
+                        <a href="?q={{ query|urlencode }}&page={{ page_obj.paginator.num_pages }}">Last »</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

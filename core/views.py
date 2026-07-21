@@ -1,5 +1,6 @@
 from django.shortcuts import render,redirect
 from django.core.paginator import Paginator
+from django.db.models import Q
 from .models import *
 from django.urls import reverse
 from django.contrib.auth.models import User
@@ -22,6 +23,49 @@ CREATE_FORMS = {
     "decision": (DecisionForm, "decision_single", "Decision"),
     "goal": (GoalForm, "goal_single", "Goal"),
 }
+
+
+SEARCH_RECORD_TYPES = (
+    (Article, "article_single", "fa-regular fa-newspaper", "content"),
+    (Journal, "journal_single", "fa-solid fa-book", "content"),
+    (Note, "note_single", "fa-solid fa-pen-to-square", "content"),
+    (CentralPoint, "centralpoint_single", "fa-solid fa-chess-knight", "content"),
+    (Strategy, "strategy_single", "fa-solid fa-chess-king", "finalized_strategy"),
+    (Decision, "decision_single", "fa-solid fa-gavel", "recommended_solution"),
+    (Goal, "goal_single", "fa-solid fa-medal", "outcome"),
+)
+
+
+@login_required
+def record_search(request):
+    query = request.GET.get("q", "").strip()
+    results = []
+
+    if query:
+        for model, detail_url, icon_class, preview_field in SEARCH_RECORD_TYPES:
+            searchable_fields = ["title"] + [
+                field.name for field in model._meta.fields
+                if field.get_internal_type() == "TextField"
+            ]
+            search_filter = Q()
+            for field_name in searchable_fields:
+                search_filter |= Q(**{f"{field_name}__icontains": query})
+
+            for record in model.objects.filter(search_filter):
+                results.append({
+                    "record": record,
+                    "detail_url": detail_url,
+                    "icon_class": icon_class,
+                    "preview": getattr(record, preview_field, ""),
+                })
+
+        results.sort(key=lambda result: result["record"].created_at, reverse=True)
+
+    page_obj = Paginator(results, 6).get_page(request.GET.get("page"))
+    return render(request, "core/view/search-results.html", {
+        "page_obj": page_obj,
+        "query": query,
+    })
 
 
 @login_required
