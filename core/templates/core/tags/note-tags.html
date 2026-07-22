@@ -51,6 +51,8 @@
 
                 </article>
             
+            {% empty %}
+                <p style="text-align: center; margin-top: 2rem; margin-right: 150px; color: #2f2f2f;">No entries yet to show...</p>
             {% endfor %}
 
             {%  if page_obj.paginator.num_pages > 1 %}

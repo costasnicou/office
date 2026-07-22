@@ -321,9 +321,12 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
   color: #4e4e4e;
   background: transparent; }
 
+.swot-analysis h2 {
+  margin-right: 45px; }
+
 .swot-analysis-wraper {
   display: grid;
-  width: 70%;
+  width: 95%;
   margin: 0 auto;
   margin-right: 265px;
   grid-template-columns: 1fr 1fr;
@@ -333,9 +336,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
   .swot-analysis-wraper .swot-box .center {
     text-align: center; }
   .swot-analysis-wraper .swot-box-content {
-    margin-top: 20px;
-    min-height: 100px;
-    margin-left: 20px; }
+    margin: 20px; }
   .swot-analysis-wraper .border-right {
     border-right: 0.5px solid #333; }
   .swot-analysis-wraper .border-bottom {

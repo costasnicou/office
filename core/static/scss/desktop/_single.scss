@@ -78,11 +78,14 @@
 
 .swot-analysis{
     //  margin-top: 40px;
+    h2{
+        margin-right: 45px;
+    }
 }
 .swot-analysis-wraper{
     // background-color: rgb(157, 157, 157);
     display: grid;
-    width: 70%;
+    width: 95%;
     margin: 0 auto;
     margin-right: 265px;
     // margin-right: 75px;
@@ -97,10 +100,7 @@
         }
 
         &-content{
-            margin-top: 20px;
-            min-height: 100px;
-            // text-align: center;
-            margin-left: 20px;
+          margin: 20px;
         }
     }
 
