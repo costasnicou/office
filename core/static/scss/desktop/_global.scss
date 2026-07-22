@@ -38,10 +38,29 @@ html,body{
     background: linear-gradient(-45deg,cornsilk,rgb(252, 246, 220));
 }
 
+// Google Translate injects a fixed page banner and an inline body offset.
+// Keep the in-sidebar selector, but prevent the banner from shifting the UI.
+body {
+    top: 0 !important;
+}
+
+body > .skiptranslate,
+.goog-te-banner-frame.skiptranslate,
+iframe.VIpgJd-ZVi9od-ORHb-OEVmcd {
+    display: none !important;
+}
+
 @media (min-width: 1367px) {
     .menu-wraper {
         position: relative;
         left: 6%;
+    }
+
+    html[lang="el"]{
+        .menu-wraper {
+            position: relative;
+            left: 10%;
+        }
     }
 }
 
@@ -51,6 +70,16 @@ html,body{
     --header-content-gap: 20px;
     --page-top-offset: calc(var(--add-record-bar-height) + var(--header-height) + var(--header-content-gap));
 }
+.no-entries{
+    text-align: center; margin-top: 2rem; margin-right: 125px; color: #2f2f2f;
+}
+
+@media (max-width:1366px){
+    .no-entries{
+        text-align: center; margin-top: 2rem; margin-right: 0; color: #2f2f2f; margin-left: 15px;
+    }
+}
+
 
 *{
     box-sizing: border-box;
@@ -184,12 +213,14 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
 
 .grid{
     display: flex;
-    min-height: 94vh;
-    margin-top: 110px;
+    min-height: calc(100dvh - var(--page-top-offset));
+    margin-top: var(--page-top-offset);
+    align-items: stretch;
 
     
     &-left{
         width: 20%;
+        min-height: calc(100dvh - var(--page-top-offset));
         background-color: $color-link;
           background-color: $color-sidebar;
         // background-color: #a7d3f8;
@@ -198,18 +229,54 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
         //  background-color: rgb(0, 140, 255);
         //  background-color: rgb(76, 103, 134);
         //  background-color: orangered;
-        position: relative;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        overflow-y: auto;
         // background-color: #282828;
         color: $color-text-on-dark;
 
         .menu-navigator{
-            position:sticky;
-            top: 120px;
             position: sticky;
             top: 160px;
-            width: 100%;
+            width: 94%;
             margin: 0 auto;
             margin-left: 20px;
+            height: 78vh;
+            overflow-y: auto;
+            .language-selector {
+                width: 90%;
+                margin: 0 auto 0 auto;
+                padding: 0;
+                position: relative;
+                top: 20px;
+
+                p {
+                    margin: 0 0 8px;
+                    color: $color-accent;
+                    font-size: 17px;
+                    font-weight: bold;
+                }
+
+                .goog-te-gadget {
+                    color: $color-text-on-dark;
+                }
+
+                .goog-te-combo {
+                    width: 100%;
+                    max-width: 220px;
+                    min-height: 20px;
+                    margin: 0;
+                    padding: 5px;
+                    border: 1px solid rgba(255, 255, 255, 0.35);
+                    border-radius: 6px;
+                    background-color: white;
+                    color: #333;
+                    font: inherit;
+                }
+            }
+
             a{
                 font-size: 18px;
 
@@ -339,6 +406,7 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
     &-right{
         position: relative;
         width: 80%;
+        margin-left: 20%;
         // background-color: #303030;
         // color: white;
         // background-color: ;
@@ -432,6 +500,48 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
             }
 
 
+        }
+    }
+}
+
+html[lang="el"] {
+    .header .header-nav {
+        .logo {
+            margin-right: 45px;
+            margin-left: 45px;
+        }
+
+        .header-menu {
+            flex-wrap: wrap;
+            row-gap: 8px;
+
+            li a:link,
+            li a:visited {
+                font-size: 15px;
+                white-space: normal;
+            }
+
+            li:not(:last-of-type) {
+                margin-right: 22px;
+            }
+        }
+    }
+
+    .grid-left {
+        width: 24%;
+
+        .categories,
+        .tags {
+            overflow-wrap: anywhere;
+        }
+    }
+
+    .grid-right {
+        width: 76%;
+        margin-left: 24%;
+
+        .view-single-btn {
+            white-space: normal;
         }
     }
 }

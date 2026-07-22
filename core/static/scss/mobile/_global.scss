@@ -215,6 +215,10 @@
                 position: static;
                 width: min(100%, 620px);
                 margin: 0 auto;
+
+                .language-selector {
+                    width: 100%;
+                }
             }
 
             .categories,
@@ -231,6 +235,7 @@
 
         &-right {
             width: 100%;
+            margin-left: 0;
 
             &-wraper {
                 width: min(92%, 1080px);
@@ -259,6 +264,18 @@
                 }
             }
         }
+    }
+
+    html[lang="el"] .grid {
+        &-left,
+        &-right {
+            width: 100%;
+            margin-left: 0;
+        }
+
+
+
+
     }
 
     .article-content {

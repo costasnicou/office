@@ -65,7 +65,7 @@
             <div class="menu-wraper">
                 <ul class="header-menu">
                     <li><a href="{% url 'index' %}">Articles</a></li>
-                    <li><a href="{% url 'journal_index' %}">Journal</a></li>
+                    <li><a href="{% url 'journal_index' %}">Journals</a></li>
                     <li><a href="{% url 'note_index' %}">Notes</a></li>
                     <li><a href="{% url 'centralpoint_index' %}">Central Points</a></li>
                     <li><a href="{% url 'strategy_index' %}">Strategies</a></li>
@@ -96,5 +96,7 @@
 
     <script src="{% static 'js/mobile-navigation.js' %}" defer></script>
     <script src="{% static 'js/add-record-menu.js' %}" defer></script>
+    <script src="{% static 'js/google-translate.js' %}"></script>
+    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 </body>
 </html>

@@ -5,6 +5,7 @@
 <div class="grid">
     <div class="grid-left">
         <div class="menu-navigator">
+            {% include "core/includes/language-selector.html" %}
             <ul class="categories">
                 <h2>Article Categories</h2>
                 {% for article_category in article_categories %}
@@ -47,7 +48,7 @@
                 </article>
             
             {% empty %}
-                <p style="text-align: center; margin-top: 2rem; margin-right: 150px; color: #2f2f2f;">No entries yet to show...</p>
+                <p class="no-entries">No entries yet to show...</p>
             {% endfor %}
 
             {%  if page_obj.paginator.num_pages > 1 %}
