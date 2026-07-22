@@ -920,7 +920,8 @@ html[lang="el"] .grid-right {
         width: min(100%, 620px);
         margin: 0 auto; }
         .grid-left .menu-navigator .language-selector {
-          width: 100%; }
+          width: 100%;
+          padding: 10px 0 20px 0; }
       .grid-left .categories,
       .grid-left .tags {
         width: 100%;
