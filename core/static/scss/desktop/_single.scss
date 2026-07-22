@@ -38,12 +38,12 @@
     font-size: 24px;
 }
 
-@media (max-width:500px)  {
+@media (max-width:700px)  {
     .edit-record-btn,
     .edit-record-btn:link,
     .edit-record-btn:visited {
     position: absolute;
-    top: -16px;
+    top: -10px;
     right: 1%;
     padding: 8px;
     color: $color-text-muted;
@@ -53,20 +53,20 @@
     }
 }
 
-@media (min-width:501) and (max-width:700px)  {
-    .edit-record-btn,
-    .edit-record-btn:link,
-    .edit-record-btn:visited {
-    position: absolute;
-    top: 0;
-    right: 5%;
-    padding: 8px;
-    color: $color-text-muted;
-    background: transparent;
-    text-decoration: none;
-    font-size: 24px;
-    }
-}
+// @media (min-width:501) and (max-width:700px)  {
+//     .edit-record-btn,
+//     .edit-record-btn:link,
+//     .edit-record-btn:visited {
+//     position: absolute;
+//     top: 0;
+//     right: 5%;
+//     padding: 8px;
+//     color: $color-text-muted;
+//     background: transparent;
+//     text-decoration: none;
+//     font-size: 24px;
+//     }
+// }
 
 
 

@@ -60,7 +60,7 @@
                 overflow: hidden;
                 visibility: hidden;
                 opacity: 0;
-                background-color: rgb(161, 105, 0);
+                background-color: lighten($color-primary, 5%);
                 box-shadow: 0 8px 12px rgba(0, 0, 0, .24);
                 transition: max-height .35s ease, opacity .25s ease, visibility 0s linear .35s;
             }

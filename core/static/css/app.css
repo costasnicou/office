@@ -1,7 +1,8 @@
 html, body {
   padding: 0;
   margin: 0;
-  font-family: "Lato", sans-serif; }
+  font-family: "Lato", sans-serif;
+  background: linear-gradient(-45deg, cornsilk, #fcf6dc); }
 
 @media (min-width: 1367px) {
   .menu-wraper {
@@ -28,8 +29,8 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
 .header {
   padding: 15px;
   background-color: #333;
-  background-color: #bd8d33;
-  background-color: #a97e2e;
+  background-color: #bc9346;
+  background-color: #ab853e;
   position: fixed;
   top: var(--add-record-bar-height);
   width: 100%;
@@ -85,7 +86,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
         font-size: 18px;
         color: #333;
         text-transform: uppercase;
-        color: white; }
+        color: whitesmoke; }
         .header .header-nav .header-menu li a:link:hover, .header .header-nav .header-menu li a:visited:hover {
           color: white; }
       .header .header-nav .header-menu li:not(:last-of-type) {
@@ -102,9 +103,10 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
         color: white; }
         .header .header-nav .logout a i {
           font-size: 30px;
-          color: white; }
+          color: white;
+          transition: all .4s; }
           .header .header-nav .logout a i:hover {
-            font-size: 35px; }
+            font-size: 31px; }
 
 .grid {
   display: flex;
@@ -138,7 +140,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
       .grid-left .categories h2 {
         color: #008cff;
         color: white;
-        color: #eb9a04; }
+        color: #eaaa31; }
       .grid-left .categories li {
         margin-bottom: 5px;
         margin-left: 10px; }
@@ -148,8 +150,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
         color: white;
         font-weight: bold; }
         .grid-left .categories li a:link:hover, .grid-left .categories li a:visited:hover {
-          color: #eb9a04;
-          text-decoration: underline; }
+          color: #eaaa31; }
       .grid-left .categories .sub-categories {
         list-style: none;
         padding: 0; }
@@ -160,7 +161,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
           text-decoration: none;
           color: white; }
           .grid-left .categories .sub-categories li a:link:hover, .grid-left .categories .sub-categories li a:visited:hover {
-            color: #eb9a04 !important; }
+            color: #eaaa31 !important; }
     .grid-left .tags {
       width: 90%;
       margin: 0 auto;
@@ -169,7 +170,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
       margin-top: 25px;
       font-size: 17px; }
       .grid-left .tags h2 {
-        color: #eb9a04; }
+        color: #eaaa31; }
       .grid-left .tags .tags-wraper {
         display: flex;
         justify-content: flex-start;
@@ -183,11 +184,11 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
           color: white;
           text-decoration: none;
           padding: 10px;
-          background-color: #bd8d33;
+          background-color: #bc9346;
           font-size: 14px;
           border-radius: 8px; }
           .grid-left .tags .tags-wraper li a:hover {
-            background-color: #956f28; }
+            background-color: #987637; }
         .grid-left .tags .tags-wraper li:not(:last-of-type) {
           margin-right: 5px; }
   .grid-right {
@@ -235,7 +236,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
         .grid-right-wraper .preview .content .view-single-btn:link, .grid-right-wraper .preview .content .view-single-btn:visited {
           background-color: #008cff;
           background-color: #5c5c5c;
-          background-color: #bd8d33;
+          background-color: #bc9346;
           color: white;
           padding: 10px 20px;
           border-radius: 8px;
@@ -246,7 +247,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
             background-color: #0070cc;
             background-color: royalblue;
             background-color: #333;
-            background-color: #956f28; }
+            background-color: #987637; }
 
 .pagination {
   text-align: center;
@@ -265,16 +266,16 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
   transition: background-color 0.2s ease; }
 
 .pagination a:hover {
-  background-color: #c58103;
+  background-color: #bc9346;
   color: white;
-  border-color: #8c0000; }
+  border-color: #ffa200; }
 
 .pagination .current {
   background-color: #333;
   color: white;
   font-weight: bold;
-  border-color: #8c0000;
-  background-color: #c58103; }
+  border-color: #ffa200;
+  background-color: #bc9346; }
 
 /* end pagination */
 .article-content {
@@ -303,25 +304,13 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
   text-decoration: none;
   font-size: 24px; }
 
-@media (max-width: 500px) {
+@media (max-width: 700px) {
   .edit-record-btn,
   .edit-record-btn:link,
   .edit-record-btn:visited {
     position: absolute;
-    top: -16px;
+    top: -10px;
     right: 1%;
-    padding: 8px;
-    color: #777;
-    background: transparent;
-    text-decoration: none;
-    font-size: 24px; } }
-@media (min-width: 501) and (max-width: 700px) {
-  .edit-record-btn,
-  .edit-record-btn:link,
-  .edit-record-btn:visited {
-    position: absolute;
-    top: 0;
-    right: 5%;
     padding: 8px;
     color: #777;
     background: transparent;
@@ -404,8 +393,8 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
   justify-content: space-between;
   height: var(--add-record-bar-height);
   padding: 0 30px;
-  background: #eb9a04;
-  background-color: #816023; }
+  background: #eaaa31;
+  background-color: #856830; }
 
 .record-search-form {
   display: flex;
@@ -646,7 +635,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
   border: 0;
   border-radius: 5px;
   color: white;
-  background: #bd8d33;
+  background: #bc9346;
   cursor: pointer;
   font-size: 16px;
   transition: all .8s; }
@@ -654,7 +643,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
 .form-submit:hover,
 .form-submit:focus-visible {
   background: #a16900;
-  background-color: #956f28; }
+  background-color: #987637; }
 
 .form-actions {
   display: flex;
@@ -738,7 +727,7 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
         overflow: hidden;
         visibility: hidden;
         opacity: 0;
-        background-color: #a16900;
+        background-color: #c39e59;
         box-shadow: 0 8px 12px rgba(0, 0, 0, 0.24);
         transition: max-height .35s ease, opacity .25s ease, visibility 0s linear .35s; }
       .header .header-nav .header-menu {
