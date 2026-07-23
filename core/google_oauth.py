@@ -18,8 +18,8 @@ class GoogleOAuthError(Exception):
 
 
 def _credentials():
-    client_id = settings.GOOGLE_OAUTH_CLIENT_ID
-    client_secret = settings.GOOGLE_OAUTH_CLIENT_SECRET
+    client_id = getattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "")
+    client_secret = getattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", "")
     if not client_id or not client_secret:
         raise ImproperlyConfigured(
             "Set GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET."

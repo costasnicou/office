@@ -132,11 +132,11 @@ def register_view(request):
         login(request, user, backend="django.contrib.auth.backends.ModelBackend")
         messages.success(request, "Welcome! Your account has been created.")
         return redirect("index")
+    google_client_id = getattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "")
+    google_client_secret = getattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", "")
     return render(request, "core/register.html", {
         "form": form,
-        "google_enabled": bool(
-            settings.GOOGLE_OAUTH_CLIENT_ID and settings.GOOGLE_OAUTH_CLIENT_SECRET
-        ),
+        "google_enabled": bool(google_client_id and google_client_secret),
     })
 
 
