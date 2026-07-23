@@ -831,13 +831,50 @@ html[lang="el"] .workspace-page {
     }
 
     .workspace-page .grid-right-wraper .preview .content .view-single-btn:link, .workspace-page .grid-right-wraper .preview .content .view-single-btn:visited
- {
-    padding: 14px;
-    border: 1px solid #d9c9ac;
-    border-radius: 8px;
-    color: #825407;
-    background: #fffaf1;
-    font-size: 13px;
-    font-weight: 900;
+    {
+        padding: 14px;
+        border: 1px solid #d9c9ac;
+        border-radius: 8px;
+        color: #825407;
+        background: #fffaf1;
+        font-size: 13px;
+        font-weight: 900;
+    }
+
+    .workspace-page .edit-record-btn, .workspace-page .edit-record-btn:link, .workspace-page .edit-record-btn:visited {
+        top: -19px;
+        right: 10px;
+        display: grid;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        place-items: center;
+        border: 1px solid var(--workspace-line);
+        border-radius: 10px;
+        color: #ffffff;
+        background: #545454;
+        font-size: 17px;
+    }
 }
+
+@media (min-width:320px) and (max-width: 375px) {
+    .workspace-page .header .header-nav .logo p {
+        color: var(--workspace-ink);
+        font-size: 20px;
+    }
+
+    .workspace-page .edit-record-btn, .workspace-page .edit-record-btn:link, .workspace-page .edit-record-btn:visited {
+        top: -19px;
+        right: 10px;
+        display: grid;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        place-items: center;
+        border: 1px solid var(--workspace-line);
+        border-radius: 10px;
+        color: #ffffff;
+        background: #545454;
+        font-size: 17px;
+    }
 }
