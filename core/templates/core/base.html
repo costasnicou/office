@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Costas Nicou - Backoffice</title>
+    <title>Meritocracy Pad Meritocracy Pad- Backoffice</title>
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,9 +12,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Arizonia&display=swap" rel="stylesheet">  
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tangerine:wght@400;700&display=swap" rel="stylesheet">
+
+
+
     <script src="https://kit.fontawesome.com/d495971c43.js" crossorigin="anonymous"></script>
 </head>
-<body>
+<body class="workspace-page">
     <div class="add-record-bar">
         <form class="record-search-form" action="{% url 'record_search' %}" method="get" role="search">
             <label class="sr-only" for="record-search">Search all post titles</label>
@@ -43,10 +49,10 @@
 
     <header class="header">
         <nav class="header-nav">
-            <div class="logo">
+            <a class="logo" href="{% url 'index' %}" aria-label="BackOffice home">
                 <img class="logo-icon" src="{% static 'imgs/papyrus.png' %}" alt="">
-                <p>Costas Nicou - BackOffice</p>
-            </div>
+                <p>Meritocracy Pad</p>
+            </a>
 
             <input class="menu-toggle" type="checkbox" id="menu-toggle">
             <label class="hamburger" for="menu-toggle">
@@ -74,8 +80,19 @@
                 </ul>
             </div>
 
-            <div class="logout">
-                <a href="{% url 'logout' %}" aria-label="Log out"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+            <div class="workspace-account">
+                <div class="user-badge" title="{{ request.user.get_full_name|default:request.user.username }}">
+                    <span class="user-avatar" aria-hidden="true">{{ request.user.username|first|upper }}</span>
+                    <span class="user-details">
+                        <small>Signed in as</small>
+                        <strong>{{ request.user.first_name|default:request.user.username }}</strong>
+                    </span>
+                </div>
+                <div class="logout">
+                    <a href="{% url 'logout' %}" aria-label="Log out" title="Log out">
+                        <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                    </a>
+                </div>
             </div>
         </nav>
 
@@ -89,10 +106,6 @@
 
     </main>
 
-
-    <footer class="footer">
-
-    </footer>
 
     <script src="{% static 'js/mobile-navigation.js' %}" defer></script>
     <script src="{% static 'js/add-record-menu.js' %}" defer></script>

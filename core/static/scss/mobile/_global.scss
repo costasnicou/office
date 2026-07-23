@@ -336,7 +336,7 @@
 
         .header .header-nav .sidebar-toggle {
             position: fixed;
-            top: calc(var(--add-record-bar-height) + (var(--header-height) / 2));
+            top: 20px;
             left: 16px;
             z-index: 10040;
             visibility: visible;

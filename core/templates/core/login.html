@@ -4,37 +4,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta name="description" content="Sign in to your BackOffice workspace.">
+    <title>Sign in | Costas Nicou BackOffice</title>
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
-    <script src="https://kit.fontawesome.com/d495971c43.js" crossorigin="anonymous"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Arizonia&display=swap" rel="stylesheet">  
+    <link href="https://fonts.googleapis.com/css2?family=Tangerine:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body>
-
-    <main class="main-login">
-        <h1>Costas Nicou <br> BackOffice</h1>
-        <div class="login-logo">
-            <i class="fa-solid fa-user-tie"></i>
-        </div>
-        <form class="login-form" action="{% url 'login' %}" method="post">
-            {% csrf_token %}
-            <div class="form-group">
-                <input autofocus class="form-control" type="text" name="username" placeholder="Username">
+<body class="auth-page">
+    <main class="register-shell login-shell">
+        <section class="register-intro login-intro" aria-labelledby="login-title">
+            <a class="register-brand" href="{% url 'login' %}">
+                <img src="{% static 'imgs/papyrus.png' %}" alt="">
+            <span>Meritocracy Pad</span>
+            </a>
+            <div>
+                <p class="register-eyebrow">Welcome back</p>
+                <h1 id="login-title">Pick up where your best thinking left off.</h1>
+                <p>Your notes, strategies, decisions and goals are ready when you are.</p>
             </div>
-            <div class="form-group">
-                <input class="form-control" type="password" name="password" placeholder="Password">
-            </div>
-            <input class="btn btn-primary" type="submit" value="Login">
-        </form>
+        </section>
 
+        <section class="register-panel login-panel" aria-label="Sign in">
+            <div class="register-card login-card">
+                <header>
+                    <p class="register-kicker">Your workspace</p>
+                    <h2>Sign in</h2>
+                    <p>Enter your details to continue.</p>
+                </header>
+
+                {% if message %}
+                    <div class="auth-alert" role="alert">{{ message }}</div>
+                {% endif %}
+                {% if messages %}
+                    {% for notification in messages %}
+                        <div class="auth-alert auth-alert-success" role="status">{{ notification }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <form class="register-form login-form-modern" action="{% url 'login' %}" method="post">
+                    {% csrf_token %}
+                    <div class="auth-field">
+                        <label for="login-username">Username</label>
+                        <input
+                            autofocus
+                            class="auth-input"
+                            id="login-username"
+                            type="text"
+                            name="username"
+                            placeholder="Your username"
+                            autocomplete="username"
+                            required
+                        >
+                    </div>
+                    <div class="auth-field">
+                        <label for="login-password">Password</label>
+                        <input
+                            class="auth-input"
+                            id="login-password"
+                            type="password"
+                            name="password"
+                            placeholder="Your password"
+                            autocomplete="current-password"
+                            required
+                        >
+                    </div>
+                    <button class="register-submit" type="submit">Sign in</button>
+                </form>
+
+                <div class="login-divider" aria-hidden="true"></div>
+                <p class="auth-switch">New here? <a href="{% url 'register' %}">Create an account</a></p>
+            </div>
+        </section>
     </main>
-
-    
-    
 </body>
 </html>

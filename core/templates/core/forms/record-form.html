@@ -3,6 +3,7 @@
 {% block main %}
 <div class="record-form-page">
     <div class="record-form-card">
+        <p class="form-eyebrow">{% if is_edit %}Update record{% else %}New record{% endif %}</p>
         <h1>{% if is_edit %}Edit{% else %}Add{% endif %} {{ record_label }}</h1>
         <p class="form-intro">Choose existing categories and tags, or create missing ones below.</p>
 
@@ -15,6 +16,7 @@
 
             {% for field in form %}
                 <div class="form-field{% if field.errors %} has-errors{% endif %}">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                     {{ field }}
                     {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
                     {% if field.errors %}

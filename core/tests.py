@@ -1,7 +1,8 @@
 from django.test import TestCase
 from django.urls import reverse
+from unittest.mock import patch
 
-from .forms import ArticleForm
+from .forms import ArticleForm, RegistrationForm
 from .models import (
     Article, ArticleCategory, ArticleSubcategory, ArticleTag, Strategy, User,
 )
@@ -105,6 +106,88 @@ class ArticleCreateTests(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn("subcategory", form.errors)
+
+
+class RegistrationTests(TestCase):
+    def test_registration_page_is_public_and_responsive(self):
+        response = self.client.get(reverse("register"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="viewport"')
+        self.assertContains(response, 'class="register-grid"')
+        self.assertContains(response, reverse("google_login"))
+
+    def test_creates_and_signs_in_a_local_user(self):
+        response = self.client.post(reverse("register"), {
+            "first_name": "Ada",
+            "last_name": "Lovelace",
+            "username": "ada",
+            "email": "ADA@example.com",
+            "password1": "A-complex-password-1865",
+            "password2": "A-complex-password-1865",
+        })
+
+        user = User.objects.get(username="ada")
+        self.assertEqual(user.first_name, "Ada")
+        self.assertEqual(user.last_name, "Lovelace")
+        self.assertEqual(user.email, "ada@example.com")
+        self.assertEqual(self.client.session["_auth_user_id"], str(user.pk))
+        self.assertRedirects(response, reverse("index"))
+
+    def test_rejects_an_email_that_is_already_registered(self):
+        User.objects.create_user(
+            username="existing",
+            email="person@example.com",
+            password="A-complex-password-1865",
+        )
+        form = RegistrationForm(data={
+            "first_name": "New",
+            "last_name": "Person",
+            "username": "new-person",
+            "email": "PERSON@example.com",
+            "password1": "A-complex-password-1865",
+            "password2": "A-complex-password-1865",
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("email", form.errors)
+
+    @patch("core.views.fetch_profile")
+    def test_google_callback_creates_and_signs_in_user(self, fetch_profile):
+        fetch_profile.return_value = {
+            "email": "grace@example.com",
+            "email_verified": True,
+            "given_name": "Grace",
+            "family_name": "Hopper",
+        }
+        session = self.client.session
+        session["google_oauth_state"] = "secure-state"
+        session.save()
+
+        response = self.client.get(reverse("google_callback"), {
+            "state": "secure-state",
+            "code": "google-code",
+        })
+
+        user = User.objects.get(email="grace@example.com")
+        self.assertEqual(user.first_name, "Grace")
+        self.assertFalse(user.has_usable_password())
+        self.assertEqual(self.client.session["_auth_user_id"], str(user.pk))
+        self.assertRedirects(response, reverse("index"))
+
+    @patch("core.views.fetch_profile")
+    def test_google_callback_rejects_an_invalid_state(self, fetch_profile):
+        session = self.client.session
+        session["google_oauth_state"] = "expected-state"
+        session.save()
+
+        response = self.client.get(reverse("google_callback"), {
+            "state": "wrong-state",
+            "code": "google-code",
+        })
+
+        fetch_profile.assert_not_called()
+        self.assertRedirects(response, reverse("register"))
 
 
 class RecordSearchTests(TestCase):
