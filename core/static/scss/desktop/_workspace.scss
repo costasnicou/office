@@ -593,8 +593,10 @@ html[lang="el"] .workspace-page {
 @media(max-width:500px){
     html[lang="el"] .workspace-page .header .header-nav .logo {
         margin-right: clamp(18px, 2.5vw, 42px);
-        margin-left: 0;
+        margin-left: 22%;
     }
+
+    
 }
 
 @media (max-width: 1366px) {
@@ -653,7 +655,7 @@ html[lang="el"] .workspace-page {
     }
 }
 
-@media (max-width: 700px) {
+@media (min-width:501px) and (max-width: 700px) {
     .workspace-page {
         .record-search-form {
             width: auto;
@@ -666,7 +668,7 @@ html[lang="el"] .workspace-page {
                 padding-inline: 88px 46px;
 
                 .logo p {
-                    font-size: 25px;
+                    font-size: 34px;
                 }
             }
         }
@@ -724,43 +726,21 @@ html[lang="el"] .workspace-page {
             padding: 20px;
         }
     }
-}
 
-@media (max-width: 500px) {
-    .workspace-page .header .header-nav .logo {
-        .logo-icon {
-            width: 30px;
-            height: 30px;
-        }
-
-        p {
-            max-width: 150px;
-            // overflow: hidden;
-            font-size: 32px;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-    }
-
-    .header .header-nav {
-        padding: 0 94px;
-
-        .logo {
-            margin: 0;
-            margin-right: 9%;
-        }
-    }
-
-    .workspace-page .grid-left .menu-navigator .language-selector {
-        top: 0;
-        width: 100%;
-        margin-bottom: 15px;
-        margin-top: 60px;
+    .workspace-page .grid-right-wraper .preview .content .view-single-btn:link, .workspace-page .grid-right-wraper .preview .content .view-single-btn:visited {
+        padding: 14px 14px;
+        border:1px solid #d9c9ac;
+        border-radius: 8px;
+        color: #825407;
+        background: #fffaf1;
+        font-size: 13px;
+        font-weight: 900;
     }
 }
 
 
-@media (max-width: 1366px){
+
+@media (min-width:1024px) and (max-width: 1366px){
     .workspace-page{
          .record-form-page {
             width: 90%;
@@ -814,4 +794,50 @@ html[lang="el"] .workspace-page {
         }
     }
 
+}
+
+@media (min-width:320px) and (max-width: 500px) {
+    .workspace-page .record-form-page {
+        width: min(100% - 40px, 920px);
+        margin: 115px auto 56px;
+        padding: 20px 10px;
+        width: 100%;
+    }
+
+    .workspace-page .record-form-card {
+        padding: clamp(28px, 5vw, 60px);
+        border: 1px solid var(--workspace-line);
+        border-radius: 16px;
+        background: var(--workspace-paper);
+        box-shadow: 0 12px 40px rgba(51, 42, 27, 0.07);
+        padding: 20px 10px;
+    }
+
+    .workspace-page .header .header-nav .logo p {
+        color: var(--workspace-ink);
+        font-size: 28px;
+    }
+
+    .workspace-page .header .header-nav .logo {
+        margin: 0;
+        margin-right: 0%;
+    }
+
+    .workspace-page .grid-right-wraper {
+        width: min(100% - 64px, 1050px);
+        margin: 0 auto;
+        padding: 52px 0 90px;
+        width: 90%;
+    }
+
+    .workspace-page .grid-right-wraper .preview .content .view-single-btn:link, .workspace-page .grid-right-wraper .preview .content .view-single-btn:visited
+ {
+    padding: 14px;
+    border: 1px solid #d9c9ac;
+    border-radius: 8px;
+    color: #825407;
+    background: #fffaf1;
+    font-size: 13px;
+    font-weight: 900;
+}
 }
