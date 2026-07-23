@@ -318,13 +318,13 @@ html[lang="el"] .header .header-nav .header-menu {
   html[lang="el"] .header .header-nav .header-menu li:not(:last-of-type) {
     margin-right: 22px; }
 html[lang="el"] .grid-left {
-  width: 24%; }
+  width: 20%; }
   html[lang="el"] .grid-left .categories,
   html[lang="el"] .grid-left .tags {
     overflow-wrap: anywhere; }
 html[lang="el"] .grid-right {
-  width: 76%;
-  margin-left: 24%; }
+  width: 80%;
+  margin-left: 20%; }
   html[lang="el"] .grid-right .view-single-btn {
     white-space: normal; }
 
