@@ -1,4 +1,6 @@
-#!/home/cnicou/Desktop/CS50/office/venv/bin/python3
+#!/bin/sh
+'''exec' "/home/cnicou/Desktop/Git Repositories/office/venv/bin/python3" "$0" "$@"
+' '''
 # -*- coding: utf-8 -*-
 import re
 import sys
