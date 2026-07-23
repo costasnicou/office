@@ -1,15 +1,19 @@
 from django.shortcuts import get_object_or_404, render,redirect
+from django.conf import settings
+from django.contrib import messages
+from django.core.exceptions import ImproperlyConfigured
 from django.core.paginator import Paginator
 from .models import *
 from django.urls import reverse
-from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
+import secrets
 from .forms import (
     ArticleForm, CentralPointForm, DecisionForm, GoalForm,
-    JournalForm, NoteForm, StrategyForm,
+    JournalForm, NoteForm, RegistrationForm, StrategyForm,
 )
+from .google_oauth import GoogleOAuthError, authorization_url, fetch_profile
 # Create your views here.
 
 
@@ -116,6 +120,78 @@ def login_view(request):
             })
     else:
         return render(request, "core/login.html")
+
+
+def register_view(request):
+    if request.user.is_authenticated:
+        return redirect("index")
+
+    form = RegistrationForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        user = form.save()
+        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+        messages.success(request, "Welcome! Your account has been created.")
+        return redirect("index")
+    return render(request, "core/register.html", {
+        "form": form,
+        "google_enabled": bool(
+            settings.GOOGLE_OAUTH_CLIENT_ID and settings.GOOGLE_OAUTH_CLIENT_SECRET
+        ),
+    })
+
+
+def google_login(request):
+    callback_url = request.build_absolute_uri(reverse("google_callback"))
+    try:
+        return redirect(authorization_url(request, callback_url))
+    except ImproperlyConfigured:
+        messages.error(request, "Google registration has not been configured yet.")
+        return redirect("register")
+
+
+def google_callback(request):
+    returned_state = request.GET.get("state", "")
+    expected_state = request.session.pop("google_oauth_state", "")
+    if not expected_state or not secrets.compare_digest(returned_state, expected_state):
+        messages.error(request, "The Google sign-in request expired. Please try again.")
+        return redirect("register")
+    if request.GET.get("error"):
+        messages.error(request, "Google sign-in was cancelled.")
+        return redirect("register")
+
+    code = request.GET.get("code")
+    if not code:
+        messages.error(request, "Google did not provide an authorization code.")
+        return redirect("register")
+
+    callback_url = request.build_absolute_uri(reverse("google_callback"))
+    try:
+        profile = fetch_profile(code, callback_url)
+    except (GoogleOAuthError, ImproperlyConfigured):
+        messages.error(request, "Google sign-in could not be completed. Please try again.")
+        return redirect("register")
+
+    email = profile["email"].strip().lower()
+    user = User.objects.filter(email__iexact=email).first()
+    if user is None:
+        base_username = (email.split("@", 1)[0] or "google-user")[:140]
+        username = base_username
+        suffix = 1
+        while User.objects.filter(username=username).exists():
+            suffix += 1
+            username = f"{base_username[:145 - len(str(suffix))]}-{suffix}"
+        user = User(
+            username=username,
+            email=email,
+            first_name=profile.get("given_name", "")[:150],
+            last_name=profile.get("family_name", "")[:150],
+        )
+        user.set_unusable_password()
+        user.save()
+
+    login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+    messages.success(request, "You are signed in with Google.")
+    return redirect("index")
 
 
 def logout_view(request):

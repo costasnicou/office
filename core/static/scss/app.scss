@@ -1,8 +1,12 @@
 @import "desktop/global";
 @import "desktop/single";
 @import "desktop/login";
+@import "desktop/register";
 @import "desktop/add-record-menu";
 @import "desktop/record-form";
 
 // mobile
 @import "mobile/global";
+
+// authenticated workspace skin (loaded last to override legacy layout rules)
+@import "desktop/workspace";

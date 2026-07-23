@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.forms import UserCreationForm
 from django.db import transaction
 
 from .models import (
@@ -9,7 +10,54 @@ from .models import (
     Journal, JournalCategory, JournalSubcategory, JournalTag,
     Note, NoteCategory, NoteSubcategory, NoteTag,
     Strategy, StrategyCategory, StrategySubcategory, StrategyTag,
+    User,
 )
+
+
+class RegistrationForm(UserCreationForm):
+    """Create a local account with a unique, normalized email address."""
+
+    first_name = forms.CharField(label="Name", max_length=150)
+    last_name = forms.CharField(label="Surname", max_length=150)
+    email = forms.EmailField(label="Email")
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = (
+            "first_name", "last_name", "username", "email",
+            "password1", "password2",
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        placeholders = {
+            "first_name": "Name",
+            "last_name": "Surname",
+            "username": "Username",
+            "email": "you@example.com",
+            "password1": "Password",
+            "password2": "Confirm password",
+        }
+        autocomplete = {
+            "first_name": "given-name",
+            "last_name": "family-name",
+            "username": "username",
+            "email": "email",
+            "password1": "new-password",
+            "password2": "new-password",
+        }
+        for name, field in self.fields.items():
+            field.widget.attrs.update({
+                "class": "auth-input",
+                "placeholder": placeholders[name],
+                "autocomplete": autocomplete[name],
+            })
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("An account with this email already exists.")
+        return email
 
 
 class TaxonomyModelForm(forms.ModelForm):

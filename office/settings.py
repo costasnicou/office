@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 AUTH_USER_MODEL = 'core.User'
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,6 +29,8 @@ DEBUG = True
 ALLOWED_HOSTS = []
 AUTH_USER_MODEL = "core.User"
 LOGIN_URL = "login"
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "")
+GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET", "")
 # Application definition
 
 INSTALLED_APPS = [
@@ -165,4 +168,3 @@ DATE_INPUT_FORMATS = [
 ]
 
 USE_I18N = False  # Deactivates automatic locale-based overrides
-
