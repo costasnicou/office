@@ -19,7 +19,7 @@ iframe.VIpgJd-ZVi9od-ORHb-OEVmcd {
 
   html[lang="el"] .menu-wraper {
     position: relative;
-    left: 10%; } }
+    left: 6%; } }
 :root {
   --add-record-bar-height: 42px;
   --header-height: 58px;
@@ -313,7 +313,7 @@ html[lang="el"] .header .header-nav .header-menu {
   row-gap: 8px; }
   html[lang="el"] .header .header-nav .header-menu li a:link,
   html[lang="el"] .header .header-nav .header-menu li a:visited {
-    font-size: 15px;
+    font-size: 18px;
     white-space: normal; }
   html[lang="el"] .header .header-nav .header-menu li:not(:last-of-type) {
     margin-right: 22px; }
@@ -327,6 +327,21 @@ html[lang="el"] .grid-right {
   margin-left: 20%; }
   html[lang="el"] .grid-right .view-single-btn {
     white-space: normal; }
+html[lang="el"] .grid-right-wraper .preview .content p {
+  margin: 5px 0 10px 0;
+  font-size: 17px;
+  font-weight: 300;
+  font-size: 19px;
+  width: 90%;
+  color: #4e4e4e; }
+@media (max-width: 500px) {
+  html[lang="el"] .grid-right-wraper .preview .content p {
+    margin: 0 auto 14px;
+    font-size: 17px;
+    line-height: 1.55;
+    height: 135px;
+    overflow-y: hidden;
+    width: 90%; } }
 
 .pagination {
   text-align: center;

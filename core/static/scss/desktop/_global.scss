@@ -57,7 +57,7 @@ iframe.VIpgJd-ZVi9od-ORHb-OEVmcd {
     html[lang="el"]{
         .menu-wraper {
             position: relative;
-            left: 10%;
+            left: 6%;
         }
     }
 }
@@ -515,7 +515,7 @@ html[lang="el"] {
 
             li a:link,
             li a:visited {
-                font-size: 15px;
+                font-size: 18px;
                 white-space: normal;
             }
 
@@ -542,6 +542,28 @@ html[lang="el"] {
             white-space: normal;
         }
     }
+
+    .grid-right-wraper .preview .content p {
+        margin: 5px 0 10px 0;
+        font-size: 17px;
+        font-weight: 300;
+        font-size: 19px;
+        width: 90%;
+        color: #4e4e4e;
+    }
+
+    @media (max-width: 500px) {
+        .grid-right-wraper .preview .content p {
+            margin: 0 auto 14px;
+            font-size: 17px;
+            line-height: 1.55;
+            height: 135px;
+            overflow-y: hidden;
+            width: 90%;
+        }
+    }
+
+    
 }
 
 .pagination {
