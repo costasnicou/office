@@ -322,8 +322,6 @@ h1 b, h1 strong, h2 b, h2 strong, h3 b, h3 strong, h4 b, h4 strong, h5 b, h5 str
             background-color: #333;
             background-color: #987637; }
 
-html[lang="el"] .header .header-nav .logo {
-  margin: 0 10px; }
 html[lang="el"] .header .header-nav .header-menu {
   flex-wrap: wrap;
   row-gap: 8px; }
