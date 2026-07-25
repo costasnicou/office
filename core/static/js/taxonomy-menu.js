@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const deleteEndpoint = document.body.dataset.taxonomyDeleteUrl;
     const recordType = document.body.dataset.recordType;
     const modal = document.querySelector(".taxonomy-modal");
-    const form = modal?.querySelector(".taxonomy-modal-form");
+    const form = modal ? modal.querySelector(".taxonomy-modal-form") : null;
 
     if (!endpoint || !deleteEndpoint || !recordType || !modal || !form) {
         return;
@@ -29,7 +29,9 @@ document.addEventListener("DOMContentLoaded", () => {
         form.reset();
         error.hidden = true;
         document.body.classList.remove("taxonomy-modal-open");
-        returnFocus?.focus();
+        if (returnFocus) {
+            returnFocus.focus();
+        }
     };
 
     const openModal = ({kind, categorySlug = "", categoryName = "", trigger}) => {
@@ -122,11 +124,12 @@ document.addEventListener("DOMContentLoaded", () => {
             const pathParts = new URL(categoryLink.href).pathname
                 .split("/")
                 .filter(Boolean);
-            const categorySlug = pathParts.at(-1);
+            const categorySlug = pathParts[pathParts.length - 1];
             const categoryName = categoryLink.textContent.trim();
             const isDefaultCategory = categorySlug === "uncategorized";
             let subcategoryList = [...item.children].find(
-                (child) => child.classList?.contains("sub-categories")
+                (child) => child.classList &&
+                    child.classList.contains("sub-categories")
             );
             if (!subcategoryList) {
                 subcategoryList = document.createElement("ul");
@@ -148,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     subcategoryItem,
                     subcategoryLink,
                     "subcategory",
-                    subcategoryParts.at(-1),
+                    subcategoryParts[subcategoryParts.length - 1],
                     subcategoryLink.textContent.trim(),
                 );
             });
@@ -196,7 +199,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 tagItem,
                 tagLink,
                 "tag",
-                tagParts.at(-1),
+                tagParts[tagParts.length - 1],
                 tagLink.textContent.trim(),
             );
         });
