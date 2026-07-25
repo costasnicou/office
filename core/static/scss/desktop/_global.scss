@@ -69,11 +69,19 @@ iframe.VIpgJd-ZVi9od-ORHb-OEVmcd {
         margin-left: 5px;
         color: var(--workspace-ink);
         text-decoration: none;
+        margin: 0 20px;
     }
-    
+
+    .header .header-nav .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0px;
+    }
+        
     .menu-wraper {
         position: relative;
-        left: 8%;
+        left:0;
     }
 
     html[lang="el"]{
@@ -135,7 +143,7 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
 
     .header-nav{
         display: flex;
-        justify-content: flex-start;
+        justify-content: space-between;
         align-items: center;
         position: relative;
 
@@ -187,7 +195,7 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
             padding: 0;
             margin: 0;
             position: relative;
-            left: 12.5%;
+            // left: 12.5%;
 
             li a:link,li a:visited{
                 text-decoration: none;
@@ -531,8 +539,9 @@ h1 b, h1 strong,h2 b, h2 strong,h3 b, h3 strong,h4 b, h4 strong,h5 b, h5 strong,
 html[lang="el"] {
     .header .header-nav {
         .logo {
-            margin-right: 45px;
-            margin-left: 45px;
+            // margin-right: 45px;
+            // margin-left: 45px;
+            margin: 0 10px;
         }
 
         .header-menu {
@@ -546,7 +555,7 @@ html[lang="el"] {
             }
 
             li:not(:last-of-type) {
-                margin-right: 22px;
+                margin-right: 5px;
             }
         }
     }

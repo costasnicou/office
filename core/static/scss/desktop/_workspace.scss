@@ -78,7 +78,7 @@
 
             .logo {
                 gap: 10px;
-                margin-left: 90px;
+                // margin-left: 90px;
                 color: var(--workspace-ink);
                 text-decoration: none;
 
@@ -137,7 +137,8 @@
         display: flex;
         align-items: center;
         gap: 13px;
-        margin-left: auto;
+        // margin-left: auto;
+        margin: 0 80px;
     }
 
     .user-badge {
@@ -586,7 +587,7 @@ html[lang="el"] .workspace-page {
 
         .header-menu {
             gap: clamp(9px, 1.15vw, 18px);
-            left: 9%;
+            // left: 9%;
         }
     }
 }
@@ -595,13 +596,13 @@ html[lang="el"] .workspace-page {
 @media(max-width:500px){
     html[lang="el"] .workspace-page .header .header-nav .logo {
         margin-right: clamp(18px, 2.5vw, 42px);
-        margin-left: 22%;
+        margin-left: 0 !important;
     }
 
     .workspace-page .grid-right-wraper .preview {
         justify-content: flex-start;
         gap: 24px;
-        padding: 10px;
+        padding: 26px;
         border: 1px solid var(--workspace-line);
         border-radius: 14px;
         background: rgba(255, 253, 250, 0.88);
@@ -663,7 +664,7 @@ html[lang="el"] .workspace-page {
     .workspace-page .grid-right-wraper {
         width: min(100% - 64px, 1050px);
         margin: 0 auto;
-        padding: 52px 0 90px;
+        padding: 52px 0;
         width: 93%;
     }
 
@@ -703,6 +704,24 @@ html[lang="el"] .workspace-page {
         padding: 15px;
     }
 
+      .workspace-page .workspace-account {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        margin: 0 5px;
+    }
+
+    .workspace-page .header .header-nav .logo {
+        margin: 0;
+        margin-right: 0 !important;
+    }
+
+    .workspace-page .header .header-nav .logo .logo-icon {
+        width: 25px;
+        height: 25px;
+        position: relative;
+        left: 7px;
+    }
 
 }
 
@@ -830,14 +849,37 @@ html[lang="el"] .workspace-page {
         color: white;
     }
 
+    .workspace-page .workspace-account {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        margin: 0 5px;
+    }
+
+    .workspace-page .header .header-nav .logo {
+        margin: 0;
+        margin-right:0 !important;
+    }
+    html[lang="el"] .header .header-nav .logo {
+        margin-right: 45px;
+        margin-left: 0 10px !important;
+    }
    
 }
 
 
 // greek language menu on big screens
 @media (min-width: 1441px) and (max-width: 1680px) {
+ 
+    .workspace-page .workspace-account {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        margin-left: 0 20px;
+        margin: 0 20px;
+    }
     html[lang="el"] .header .header-nav .logo {
-        margin-right: 45px;
+        margin-right: 0px;
         margin-left: 0px;
     }
 
@@ -848,7 +890,7 @@ html[lang="el"] .workspace-page {
 
         .menu-wraper {
             position: relative;
-            left: 4.5%;
+            // left: 4.5%;
         }
     }
 
@@ -857,6 +899,13 @@ html[lang="el"] .workspace-page {
         left: 0%;
     }
 
+
+    html[lang="el"]{
+        .workspace-page .header .header-nav .logo p {
+            color: var(--workspace-ink);
+            font-size: 20px;
+        }
+    }
 }
 
 
@@ -892,6 +941,7 @@ html[lang="el"] .workspace-page {
         .workspace-account {
             position: absolute;
             right: 0;
+            margin: 0 20px;
         }
 
         .user-badge {
@@ -958,11 +1008,19 @@ html[lang="el"] .workspace-page {
         margin-left: 0px;
         color: var(--workspace-ink);
         text-decoration: none;
+        margin: 0 5px;
     }
 
+
+    .workspace-page .workspace-account {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        margin: 0 5px;
+    }
     .menu-wraper {
         position: relative;
-        left: -1%;
+        left: 0;
     }
 
     html[lang="el"] .workspace-page .header .header-nav .header-menu {
@@ -979,7 +1037,7 @@ html[lang="el"] .workspace-page {
 
         .workspace-page .header .header-nav .logo p {
             color: var(--workspace-ink);
-            font-size: 30px;
+            font-size: 20px;
         }
 
         .menu-wraper {
@@ -1010,7 +1068,7 @@ html[lang="el"] .workspace-page {
 @media (max-width: 1920px) {
     .header .header-nav .header-menu{
         position: relative;
-        left: 7.5%;
+        // left: 7.5%;
     }
 }
 
