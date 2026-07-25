@@ -9,6 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from functools import wraps
+from django.db.models import Q
 import secrets
 from .forms import (
     ArticleForm, CentralPointForm, DecisionForm, GoalForm,
@@ -128,7 +129,15 @@ def login_view(request):
         # Attempt to sign user in
         identifier = request.POST["username"].strip()
         password = request.POST["password"]
-        user = authenticate(request, username=identifier, password=password)
+        matches = list(User.objects.filter(
+            Q(username=identifier) | Q(email__iexact=identifier)
+        ).values_list("username", flat=True)[:2])
+        authentication_username = matches[0] if len(matches) == 1 else identifier
+        user = authenticate(
+            request,
+            username=authentication_username,
+            password=password,
+        )
 
         # Check if authentication successful
         if user is not None:

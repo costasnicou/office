@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from unittest.mock import patch
 
@@ -242,6 +242,18 @@ class LoginTests(TestCase):
     def test_signs_in_with_email_case_insensitively(self):
         response = self.client.post(reverse("login"), {
             "username": "PERSON@EXAMPLE.COM",
+            "password": "test-password",
+        })
+
+        self.assertEqual(self.client.session["_auth_user_id"], str(self.user.pk))
+        self.assertRedirects(response, workspace_reverse("index", self.user))
+
+    @override_settings(
+        AUTHENTICATION_BACKENDS=["django.contrib.auth.backends.ModelBackend"]
+    )
+    def test_email_login_is_resolved_before_calling_the_authentication_backend(self):
+        response = self.client.post(reverse("login"), {
+            "username": "person@example.com",
             "password": "test-password",
         })
 
