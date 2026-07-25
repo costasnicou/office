@@ -6,6 +6,7 @@ from .forms import ArticleForm, RegistrationForm
 from .models import (
     Article, ArticleCategory, ArticleSubcategory, ArticleTag, Strategy, User,
 )
+from .views import TAXONOMY_MODELS
 
 
 def workspace_reverse(name, user, args=None):
@@ -481,3 +482,241 @@ class RecordUpdateTests(TestCase):
                         f"{{% url '{route_name}' request.user.username article.slug %}}",
                         template.read(),
                     )
+
+
+class TaxonomyPopupTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="taxonomy-owner",
+            password="test-password",
+        )
+        self.other_user = User.objects.create_user(
+            username="taxonomy-other-owner",
+            password="test-password",
+        )
+        self.client.force_login(self.user)
+
+    def taxonomy_url(self, record_type, user=None):
+        return workspace_reverse(
+            "taxonomy_create",
+            user or self.user,
+            args=[record_type],
+        )
+
+    def taxonomy_delete_url(self, record_type, user=None):
+        return workspace_reverse(
+            "taxonomy_delete",
+            user or self.user,
+            args=[record_type],
+        )
+
+    def test_sign_in_creates_default_category_for_every_record_type(self):
+        for record_type, models_for_type in TAXONOMY_MODELS.items():
+            _, category_model, _, _ = models_for_type
+            with self.subTest(record_type=record_type):
+                self.assertTrue(category_model.objects.filter(
+                    user=self.user,
+                    name="Uncategorized",
+                    slug="uncategorized",
+                ).exists())
+
+    def test_uncategorized_is_the_first_category_in_forms_and_sidebars(self):
+        ArticleCategory.objects.create(user=self.user, name="Alpha")
+
+        form = ArticleForm(user=self.user)
+        response = self.client.get(workspace_reverse("index", self.user))
+
+        self.assertEqual(
+            form.fields["category"].queryset.first().slug,
+            "uncategorized",
+        )
+        self.assertEqual(
+            response.context["article_categories"].first().slug,
+            "uncategorized",
+        )
+
+    def test_workspace_renders_reusable_taxonomy_modal_and_controls_script(self):
+        response = self.client.get(workspace_reverse("index", self.user))
+
+        self.assertContains(response, 'class="taxonomy-modal"')
+        self.assertContains(response, 'data-record-type="article"')
+        self.assertContains(response, "js/taxonomy-menu.js")
+        self.assertContains(response, 'id="google_translate_element"', count=1)
+        self.assertContains(response, 'data-language="en"', count=1)
+        self.assertContains(response, 'data-language="el"', count=1)
+        self.assertNotContains(response, 'class="language-flag" type="button" data-language="en" aria-label="English" title="English" disabled')
+        self.assertLess(
+            response.content.index(b'class="logout"'),
+            response.content.index(b'class="language-selector'),
+        )
+
+    def test_creates_user_owned_taxonomy_for_every_record_type(self):
+        for record_type, models_for_type in TAXONOMY_MODELS.items():
+            _, category_model, subcategory_model, tag_model = models_for_type
+            with self.subTest(record_type=record_type, kind="category"):
+                response = self.client.post(self.taxonomy_url(record_type), {
+                    "kind": "category",
+                    "name": f"{record_type} category",
+                })
+                self.assertEqual(response.status_code, 200)
+                category = category_model.objects.get(
+                    user=self.user,
+                    name=f"{record_type} category",
+                )
+
+            with self.subTest(record_type=record_type, kind="subcategory"):
+                response = self.client.post(self.taxonomy_url(record_type), {
+                    "kind": "subcategory",
+                    "name": f"{record_type} subcategory",
+                    "category_slug": category.slug,
+                })
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(subcategory_model.objects.filter(
+                    user=self.user,
+                    category=category,
+                ).exists())
+
+            with self.subTest(record_type=record_type, kind="tag"):
+                response = self.client.post(self.taxonomy_url(record_type), {
+                    "kind": "tag",
+                    "name": f"{record_type} tag",
+                })
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(tag_model.objects.filter(user=self.user).exists())
+
+    def test_cannot_create_taxonomy_in_another_users_workspace(self):
+        response = self.client.post(
+            self.taxonomy_url("article", self.other_user),
+            {"kind": "category", "name": "Forbidden"},
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(ArticleCategory.objects.filter(name="Forbidden").exists())
+
+    def test_cannot_create_subcategory_under_another_users_category(self):
+        category = ArticleCategory.objects.create(
+            user=self.other_user,
+            name="Other user's category",
+        )
+
+        response = self.client.post(self.taxonomy_url("article"), {
+            "kind": "subcategory",
+            "name": "Forbidden child",
+            "category_slug": category.slug,
+        })
+
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(
+            ArticleSubcategory.objects.filter(name="Forbidden child").exists()
+        )
+
+    def test_uncategorized_cannot_have_subcategories_or_be_deleted(self):
+        default_category = ArticleCategory.objects.get(
+            user=self.user,
+            slug="uncategorized",
+        )
+
+        create_response = self.client.post(self.taxonomy_url("article"), {
+            "kind": "subcategory",
+            "name": "Forbidden child",
+            "category_slug": default_category.slug,
+        })
+        delete_response = self.client.post(self.taxonomy_delete_url("article"), {
+            "kind": "category",
+            "slug": default_category.slug,
+        })
+
+        self.assertEqual(create_response.status_code, 400)
+        self.assertEqual(delete_response.status_code, 400)
+        self.assertTrue(
+            ArticleCategory.objects.filter(pk=default_category.pk).exists()
+        )
+
+    def test_deleting_subcategory_keeps_posts_in_parent_category(self):
+        category = ArticleCategory.objects.create(user=self.user, name="Parent")
+        subcategory = ArticleSubcategory.objects.create(
+            user=self.user,
+            category=category,
+            name="Child",
+        )
+        article = Article.objects.create(
+            user=self.user,
+            category=category,
+            subcategory=subcategory,
+            title="Categorized article",
+            content="Body",
+        )
+
+        response = self.client.post(self.taxonomy_delete_url("article"), {
+            "kind": "subcategory",
+            "slug": subcategory.slug,
+        })
+
+        article.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(article.category, category)
+        self.assertIsNone(article.subcategory)
+        self.assertFalse(
+            ArticleSubcategory.objects.filter(pk=subcategory.pk).exists()
+        )
+
+    def test_deleting_category_moves_posts_to_uncategorized(self):
+        category = ArticleCategory.objects.create(user=self.user, name="Temporary")
+        subcategory = ArticleSubcategory.objects.create(
+            user=self.user,
+            category=category,
+            name="Temporary child",
+        )
+        article = Article.objects.create(
+            user=self.user,
+            category=category,
+            subcategory=subcategory,
+            title="Article to move",
+            content="Body",
+        )
+
+        response = self.client.post(self.taxonomy_delete_url("article"), {
+            "kind": "category",
+            "slug": category.slug,
+        })
+
+        article.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(article.category.slug, "uncategorized")
+        self.assertEqual(article.category.user, self.user)
+        self.assertIsNone(article.subcategory)
+        self.assertFalse(ArticleCategory.objects.filter(pk=category.pk).exists())
+
+    def test_deleting_tag_detaches_it_from_posts(self):
+        category = ArticleCategory.objects.create(user=self.user, name="Tagged")
+        tag = ArticleTag.objects.create(user=self.user, name="Temporary tag")
+        article = Article.objects.create(
+            user=self.user,
+            category=category,
+            title="Tagged article",
+            content="Body",
+        )
+        article.tags.add(tag)
+
+        response = self.client.post(self.taxonomy_delete_url("article"), {
+            "kind": "tag",
+            "slug": tag.slug,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(ArticleTag.objects.filter(pk=tag.pk).exists())
+        self.assertFalse(article.tags.exists())
+
+    def test_cannot_delete_another_users_taxonomy(self):
+        category = ArticleCategory.objects.create(
+            user=self.other_user,
+            name="Other private category",
+        )
+
+        response = self.client.post(self.taxonomy_delete_url("article"), {
+            "kind": "category",
+            "slug": category.slug,
+        })
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(ArticleCategory.objects.filter(pk=category.pk).exists())

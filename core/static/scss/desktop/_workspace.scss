@@ -139,7 +139,7 @@
         align-items: center;
         gap: 13px;
         // margin-left: auto;
-        margin: 0 80px;
+        margin: 0 92px 0 80px;
     }
 
     .user-badge {
@@ -336,6 +336,146 @@
                     background: #50483c;
                 }
             }
+        }
+
+        .taxonomy-control,
+        .taxonomy-control:not(:last-of-type) {
+            width: 100%;
+            margin: 5px 0 0;
+            list-style: none;
+        }
+
+        .taxonomy-add-button {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            width: 100%;
+            padding: 7px 9px;
+            border: 1px dashed #70675c;
+            border-radius: 7px;
+            color: #d9cdbb;
+            background: transparent;
+            cursor: pointer;
+            font: inherit;
+            font-size: 12px;
+            text-align: left;
+
+            span {
+                font-size: 17px;
+                line-height: 1;
+            }
+
+            &:hover,
+            &:focus-visible {
+                outline: none;
+                border-color: #b68c48;
+                color: white;
+                background: rgba(255, 255, 255, .08);
+            }
+        }
+
+        .taxonomy-subcategory-control {
+            padding-left: 0;
+        }
+
+        .taxonomy-add-subcategory {
+            padding-block: 5px;
+            border-color: transparent;
+            color: #a9a093;
+            font-size: 11px;
+        }
+
+        .tags .tags-wraper .taxonomy-tag-control {
+            flex: 1 0 100%;
+        }
+
+        .taxonomy-item-with-delete {
+            > .taxonomy-item-row > a {
+                padding-right: 34px !important;
+            }
+        }
+
+        .taxonomy-item-row {
+            position: relative;
+        }
+
+        .taxonomy-delete-button {
+            display: grid;
+            position: absolute;
+            top: 50%;
+            right: 4px;
+            z-index: 2;
+            width: 23px;
+            height: 23px;
+            padding: 0;
+            place-items: center;
+            border: 0;
+            border-radius: 50%;
+            color: white;
+            background: orangered;
+            cursor: pointer;
+            font: inherit;
+            font-size: 18px;
+            font-weight: 900;
+            line-height: 1;
+            transform: translateY(-50%);
+
+            > span {
+                display: flex;
+                width: 100%;
+                height: 100%;
+                align-items: center;
+                justify-content: center;
+                line-height: 1;
+                transform: translateY(-1px);
+            }
+
+            &:hover,
+            &:focus-visible {
+                outline: 2px solid rgba(255, 255, 255, .75);
+                outline-offset: 1px;
+                background: #c93600;
+            }
+
+            &:disabled {
+                cursor: wait;
+                opacity: .55;
+            }
+        }
+
+        .sub-categories .taxonomy-delete-button {
+            width: 21px;
+            height: 21px;
+            font-size: 16px;
+        }
+
+        .tags .tags-wraper .taxonomy-item-with-delete {
+            .taxonomy-item-row {
+                display: inline-flex;
+                align-items: center;
+            }
+
+            .taxonomy-item-row > a {
+                padding-right: 31px;
+            }
+
+            .taxonomy-delete-button {
+                top: 50%;
+                right: 4px;
+                width: 20px;
+                height: 20px;
+                font-size: 15px;
+            }
+        }
+
+        .taxonomy-default-category > .taxonomy-item-row > a::after {
+            content: "Default";
+            margin-left: 7px;
+            color: #a9a093;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
         }
     }
 
@@ -580,7 +720,165 @@
     }
 }
 
+// Reserve the right edge of the navigation for the absolutely positioned
+// language flags.
+@media (min-width: 1367px) {
+    .workspace-page .header .header-nav .workspace-account {
+        margin-right: 92px !important;
+    }
+}
+
+@media (max-width: 1366px) {
+    .workspace-page .header .header-nav .workspace-account {
+        right: 92px !important;
+        margin-right: 0 !important;
+    }
+}
+
+.taxonomy-modal[hidden] {
+    display: none;
+}
+
+.taxonomy-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10100;
+    display: grid;
+    padding: 20px;
+    place-items: center;
+}
+
+.taxonomy-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(24, 21, 17, .7);
+    cursor: default;
+}
+
+.taxonomy-modal-card {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 460px);
+    padding: 32px;
+    border: 1px solid #ded3c3;
+    border-radius: 14px;
+    background: #fffdfa;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .3);
+
+    h2 {
+        margin: 3px 0 8px;
+        color: #28251f;
+        font-size: 28px;
+    }
+}
+
+.taxonomy-modal-kicker {
+    margin: 0;
+    color: #9a6817;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.taxonomy-modal-context {
+    margin: 0 0 22px;
+    color: #756f65;
+    font-size: 14px;
+}
+
+.taxonomy-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 8px;
+    color: #625c52;
+    background: transparent;
+    cursor: pointer;
+    font-size: 28px;
+
+    &:hover,
+    &:focus-visible {
+        outline: none;
+        background: #eee7dc;
+    }
+}
+
+.taxonomy-modal-form {
+    label {
+        display: block;
+        margin-bottom: 7px;
+        color: #423d35;
+        font-size: 13px;
+        font-weight: 900;
+    }
+
+    input[type="text"] {
+        width: 100%;
+        height: 46px;
+        padding: 0 13px;
+        border: 1px solid #cfc3b2;
+        border-radius: 8px;
+        outline: none;
+        font: inherit;
+
+        &:focus {
+            border-color: #a56e12;
+            box-shadow: 0 0 0 3px rgba(165, 110, 18, .14);
+        }
+    }
+}
+
+.taxonomy-modal-error {
+    margin: 9px 0 0;
+    color: #a52f27;
+    font-size: 13px;
+}
+
+.taxonomy-modal-submit {
+    width: 100%;
+    min-height: 44px;
+    margin-top: 18px;
+    border: 0;
+    border-radius: 8px;
+    color: white;
+    background: #8e5c0b;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 900;
+
+    &:hover,
+    &:focus-visible {
+        outline: none;
+        background: #6f4505;
+    }
+
+    &:disabled {
+        cursor: wait;
+        opacity: .65;
+    }
+}
+
+.taxonomy-modal-open {
+    overflow: hidden;
+}
+
 @media (max-width: 1024px) {
+    .workspace-page .add-record-bar {
+        gap: 10px;
+
+        .record-search-form {
+            flex: 1 1 auto;
+            width: auto;
+            max-width: 460px;
+        }
+
+    }
+
     .workspace-page .add-record-dropdown {
         position: fixed;
         top: calc(var(--add-record-bar-height) + 8px);
@@ -605,7 +903,7 @@
 html[lang="el"] .workspace-page {
     .header .header-nav {
         .logo {
-            margin-right: clamp(18px, 2.5vw, 42px);
+            // margin-right: clamp(18px, 2.5vw, 42px);
         }
 
         .header-menu {
@@ -617,9 +915,11 @@ html[lang="el"] .workspace-page {
 
 
 @media(max-width:500px){
-    html[lang="el"] .workspace-page .header .header-nav .logo {
+      html[lang="el"] .workspace-page .header .header-nav .logo {
         margin-right: clamp(18px, 2.5vw, 42px);
         margin-left: 0 !important;
+        position: relative;
+        right: 14%;
     }
 
     .workspace-page .grid-right-wraper .preview {
@@ -655,6 +955,12 @@ html[lang="el"] .workspace-page {
         
 }
 
+@media (max-width: 420px) {
+    .workspace-page .header .header-nav .logo p {
+        display: none;
+    }
+}
+
 
 
 @media (min-width:320px) and (max-width: 500px) {
@@ -674,9 +980,9 @@ html[lang="el"] .workspace-page {
         padding: 20px 10px;
     }
 
-    .workspace-page .header .header-nav .logo p {
+      .workspace-page .header .header-nav .logo p {
         color: var(--workspace-ink);
-        font-size: 22px;
+        font-size: 24px;
     }
 
     .workspace-page .header .header-nav .logo {
@@ -736,15 +1042,18 @@ html[lang="el"] .workspace-page {
 
     .workspace-page .header .header-nav .logo {
         margin: 0;
-        margin-right: 0 !important;
+        margin-right: 9%;
+        position: relative;
+        right: 15%;
     }
 
     .workspace-page .header .header-nav .logo .logo-icon {
         width: 25px;
         height: 25px;
         position: relative;
-        left: 7px;
+        left: 8px;
     }
+
 
 }
 
@@ -867,6 +1176,12 @@ html[lang="el"] .workspace-page {
         left: 0;
     }
 
+    html[lang="el"]{
+        .workspace-page .header .header-nav .logo p {
+            font-size: 28px;
+        }
+    }
+
     .workspace-page .header .header-nav .header-menu li a:link:hover, .workspace-page .header .header-nav .header-menu li a:visited:hover
     {
         color: white;
@@ -886,6 +1201,20 @@ html[lang="el"] .workspace-page {
     html[lang="el"] .header .header-nav .logo {
         margin-right: 45px;
         margin-left: 0 10px !important;
+    }
+
+    html[lang="el"] .header .header-nav .logo {
+        margin-right: 45px;
+        margin-left: 0 10px !important;
+        position: relative;
+        right: 10%;
+    }
+
+    .workspace-page .header .header-nav .logo {
+        margin: 0;
+        margin-right: 9%;
+        position: relative;
+        right: 10%;
     }
    
 }
@@ -963,8 +1292,9 @@ html[lang="el"] .workspace-page {
 
         .workspace-account {
             position: absolute;
-            right: 0;
-            margin: 0 20px;
+            right: 92px;
+            gap: 8px;
+            margin: 0;
         }
 
         .user-badge {

@@ -20,7 +20,14 @@
 
     <script src="https://kit.fontawesome.com/d495971c43.js" crossorigin="anonymous"></script>
 </head>
-<body class="workspace-page">
+<body
+    class="workspace-page"
+    {% if workspace_record_type %}
+        data-taxonomy-url="{% url 'taxonomy_create' request.user.username workspace_record_type %}"
+        data-taxonomy-delete-url="{% url 'taxonomy_delete' request.user.username workspace_record_type %}"
+        data-record-type="{{ workspace_record_type }}"
+    {% endif %}
+>
     <div class="add-record-bar">
         <form class="record-search-form" action="{% url 'record_search' request.user.username %}" method="get" role="search">
             <label class="sr-only" for="record-search">Search all post titles</label>
@@ -94,6 +101,7 @@
                     </a>
                 </div>
             </div>
+            {% include "core/includes/language-selector.html" %}
         </nav>
 
     </header>
@@ -106,9 +114,30 @@
 
     </main>
 
+    {% if workspace_record_type %}
+        <div class="taxonomy-modal" hidden>
+            <button class="taxonomy-modal-backdrop" type="button" aria-label="Close taxonomy form"></button>
+            <section class="taxonomy-modal-card" role="dialog" aria-modal="true" aria-labelledby="taxonomy-modal-title">
+                <button class="taxonomy-modal-close" type="button" aria-label="Close">&times;</button>
+                <p class="taxonomy-modal-kicker">Organize your workspace</p>
+                <h2 id="taxonomy-modal-title">Create item</h2>
+                <p class="taxonomy-modal-context"></p>
+                <form class="taxonomy-modal-form">
+                    {% csrf_token %}
+                    <input name="kind" type="hidden">
+                    <input name="category_slug" type="hidden">
+                    <label for="taxonomy-name">Name</label>
+                    <input id="taxonomy-name" name="name" type="text" maxlength="255" required>
+                    <p class="taxonomy-modal-error" role="alert" hidden></p>
+                    <button class="taxonomy-modal-submit" type="submit">Create</button>
+                </form>
+            </section>
+        </div>
+    {% endif %}
 
     <script src="{% static 'js/mobile-navigation.js' %}" defer></script>
     <script src="{% static 'js/add-record-menu.js' %}" defer></script>
+    <script src="{% static 'js/taxonomy-menu.js' %}" defer></script>
     <script src="{% static 'js/google-translate.js' %}"></script>
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 </body>

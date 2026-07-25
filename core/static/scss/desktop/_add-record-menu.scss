@@ -65,6 +65,70 @@
     position: relative;
 }
 
+.header-nav > .language-selector {
+    display: flex;
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    z-index: 3;
+    align-items: center;
+    height: 36px;
+    transform: translateY(-50%);
+
+    .language-flags {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px;
+        border: 1px solid #ded5c8;
+        border-radius: 9px;
+        background: #f7f2ea;
+    }
+
+    .language-flag {
+        display: grid;
+        width: 34px;
+        height: 30px;
+        padding: 0;
+        place-items: center;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: transparent;
+        cursor: pointer;
+        font-size: 19px;
+        line-height: 1;
+
+        &:hover,
+        &:focus-visible {
+            outline: none;
+            background: #ebe2d5;
+        }
+
+        &.is-active {
+            border-color: #d7aa55;
+            background: #f3e5c9;
+            box-shadow: inset 0 0 0 1px rgba(215, 170, 85, .18);
+        }
+
+        &:disabled {
+            cursor: wait;
+            opacity: .5;
+        }
+    }
+
+    // Keep Google's select in the DOM as the translation engine, but expose
+    // only the accessible flag controls.
+    #google_translate_element {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+}
+
 .add-record-button {
     display: flex;
     align-items: center;
@@ -152,6 +216,7 @@
 
 @media (max-width: 700px) {
     .add-record-bar {
+        gap: 5px;
         padding: 0 8px;
     }
 
@@ -162,6 +227,7 @@
     }
 
     .add-record-button {
+        flex: 0 0 auto;
         padding: 0 9px;
 
         span,

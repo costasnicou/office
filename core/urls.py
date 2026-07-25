@@ -13,6 +13,16 @@ urlpatterns = [
 
 workspace_patterns = [
     path("search/", views.record_search, name="record_search"),
+    path(
+        "taxonomy/<str:record_type>/create/",
+        views.taxonomy_create,
+        name="taxonomy_create",
+    ),
+    path(
+        "taxonomy/<str:record_type>/delete/",
+        views.taxonomy_delete,
+        name="taxonomy_delete",
+    ),
 
     # articles
     path("", views.index, name="index"),

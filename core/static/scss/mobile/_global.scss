@@ -324,11 +324,14 @@
             z-index: 10030;
             background: transparent;
             box-shadow: none;
+            -webkit-backdrop-filter: none;
+            backdrop-filter: none;
             pointer-events: none;
 
             .logo,
             .hamburger,
             .logout,
+            .language-selector,
             .menu-wraper {
                 visibility: hidden;
             }
@@ -356,9 +359,24 @@
         }
 
         .grid-left {
+            padding-top: 84px;
             visibility: visible;
             transform: translateX(0);
             transition: transform .35s ease, visibility 0s;
+
+            .categories > h2 {
+                display: block;
+                width: 100%;
+                margin: 0 0 16px;
+                padding: 0 0 10px;
+                border-bottom: 1px solid rgba(255, 255, 255, .16);
+                color: #d8d0c4;
+                font-size: 13px;
+                line-height: 1.35;
+                letter-spacing: .1em;
+                text-align: left;
+                text-transform: uppercase;
+            }
         }
     }
 }

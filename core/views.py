@@ -7,15 +7,21 @@ from .models import *
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from functools import wraps
 from django.db.models import Q
+from django.db import transaction
+from django.views.decorators.http import require_POST
 import secrets
 from .forms import (
     ArticleForm, CentralPointForm, DecisionForm, GoalForm,
     JournalForm, NoteForm, RegistrationForm, StrategyForm,
 )
 from .google_oauth import GoogleOAuthError, authorization_url, fetch_profile
+from .taxonomy import (
+    DEFAULT_CATEGORY_SLUG, TAXONOMY_MODELS, default_category_first,
+    get_default_category, is_category_model,
+)
 # Create your views here.
 
 
@@ -28,7 +34,6 @@ RECORD_FORMS = {
     "decision": (Decision, DecisionForm, "decision_single", "decision_index", "Decision"),
     "goal": (Goal, GoalForm, "goal_single", "goal_index", "Goal"),
 }
-
 
 SEARCH_RECORD_TYPES = (
     (Article, "article_single", "fa-regular fa-newspaper", "content"),
@@ -46,7 +51,10 @@ def records_for_user(model, user):
 
 
 def taxonomy_for_user(model, user):
-    return model.objects.filter(user=user)
+    queryset = model.objects.filter(user=user)
+    if is_category_model(model):
+        return default_category_first(queryset)
+    return queryset.order_by("name")
 
 
 def workspace_login_required(view):
@@ -57,6 +65,101 @@ def workspace_login_required(view):
         return view(request, *args, **kwargs)
 
     return login_required(workspace_view)
+
+
+@workspace_login_required
+@require_POST
+def taxonomy_create(request, record_type):
+    models_for_type = TAXONOMY_MODELS.get(record_type)
+    if models_for_type is None:
+        raise Http404
+
+    kind = request.POST.get("kind", "").strip()
+    name = request.POST.get("name", "").strip()
+    if kind not in {"category", "subcategory", "tag"}:
+        return JsonResponse({"error": "Invalid taxonomy type."}, status=400)
+    if not name:
+        return JsonResponse({"error": "A name is required."}, status=400)
+    if len(name) > 255:
+        return JsonResponse(
+            {"error": "The name must contain 255 characters or fewer."},
+            status=400,
+        )
+
+    _, category_model, subcategory_model, tag_model = models_for_type
+    model = {"category": category_model, "tag": tag_model}.get(kind)
+    create_values = {"user": request.user}
+
+    if kind == "subcategory":
+        category_slug = request.POST.get("category_slug", "").strip()
+        category = get_object_or_404(
+            category_model,
+            user=request.user,
+            slug=category_slug,
+        )
+        if category.slug == DEFAULT_CATEGORY_SLUG:
+            return JsonResponse(
+                {"error": "Uncategorized cannot have subcategories."},
+                status=400,
+            )
+        model = subcategory_model
+        create_values["category"] = category
+
+    existing = model.objects.filter(
+        user=request.user,
+        name__iexact=name,
+        **({"category": create_values["category"]} if kind == "subcategory" else {}),
+    ).first()
+    item = existing or model.objects.create(name=name, **create_values)
+
+    return JsonResponse({
+        "created": existing is None,
+        "id": item.pk,
+        "name": item.name,
+        "slug": item.slug,
+    })
+
+
+@workspace_login_required
+@require_POST
+@transaction.atomic
+def taxonomy_delete(request, record_type):
+    models_for_type = TAXONOMY_MODELS.get(record_type)
+    if models_for_type is None:
+        raise Http404
+
+    kind = request.POST.get("kind", "").strip()
+    slug = request.POST.get("slug", "").strip()
+    if kind not in {"category", "subcategory", "tag"} or not slug:
+        return JsonResponse({"error": "Invalid taxonomy item."}, status=400)
+
+    record_model, category_model, subcategory_model, tag_model = models_for_type
+    model = {
+        "category": category_model,
+        "subcategory": subcategory_model,
+        "tag": tag_model,
+    }[kind]
+    item = get_object_or_404(model, user=request.user, slug=slug)
+
+    if kind == "category":
+        if item.slug == DEFAULT_CATEGORY_SLUG:
+            return JsonResponse(
+                {"error": "Uncategorized cannot be deleted."},
+                status=400,
+            )
+        default_category = get_default_category(category_model, request.user)
+        record_model.objects.filter(
+            user=request.user,
+            category=item,
+        ).update(category=default_category, subcategory=None)
+    elif kind == "subcategory":
+        record_model.objects.filter(
+            user=request.user,
+            subcategory=item,
+        ).update(subcategory=None)
+
+    item.delete()
+    return JsonResponse({"deleted": True})
 
 
 @workspace_login_required

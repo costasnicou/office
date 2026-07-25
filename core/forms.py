@@ -12,6 +12,9 @@ from .models import (
     Strategy, StrategyCategory, StrategySubcategory, StrategyTag,
     User,
 )
+from .taxonomy import (
+    DEFAULT_CATEGORY_NAME, DEFAULT_CATEGORY_SLUG, default_category_first,
+)
 
 
 class RegistrationForm(UserCreationForm):
@@ -89,9 +92,9 @@ class TaxonomyModelForm(forms.ModelForm):
         self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         self.fields["category"].required = False
-        self.fields["category"].queryset = self.category_model.objects.filter(
-            user=self.user
-        ).order_by("name")
+        self.fields["category"].queryset = default_category_first(
+            self.category_model.objects.filter(user=self.user)
+        )
         self.fields["category"].empty_label = "Select an existing category"
         self.fields["subcategory"].queryset = self.subcategory_model.objects.select_related(
             "category"
@@ -143,6 +146,14 @@ class TaxonomyModelForm(forms.ModelForm):
             self.add_error(
                 "subcategory",
                 "An existing subcategory cannot be used with a new category.",
+            )
+        is_default_category = (
+            category and category.slug == DEFAULT_CATEGORY_SLUG
+        ) or new_category.casefold() == DEFAULT_CATEGORY_NAME.casefold()
+        if is_default_category and (subcategory or new_subcategory):
+            self.add_error(
+                "subcategory",
+                "Uncategorized cannot have subcategories.",
             )
         return cleaned_data
 
