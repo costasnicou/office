@@ -1,6 +1,8 @@
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.core.management import call_command
 from unittest.mock import patch
+from io import StringIO
 
 from .forms import ArticleForm, RegistrationForm
 from .models import (
@@ -720,3 +722,43 @@ class TaxonomyPopupTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertTrue(ArticleCategory.objects.filter(pk=category.pk).exists())
+
+
+class LegacyDataRecoveryTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="legacy-owner",
+            password="test-password",
+        )
+        self.category = ArticleCategory.objects.create(name="Legacy category")
+        self.article = Article.objects.create(
+            title="Legacy article",
+            content="Still present",
+            category=self.category,
+        )
+
+    def test_dry_run_does_not_change_legacy_rows(self):
+        output = StringIO()
+
+        call_command(
+            "assign_legacy_data",
+            username=self.user.username,
+            stdout=output,
+        )
+
+        self.article.refresh_from_db()
+        self.assertIsNone(self.article.user)
+        self.assertIn("Dry run only", output.getvalue())
+
+    def test_apply_assigns_legacy_rows_to_requested_user(self):
+        call_command(
+            "assign_legacy_data",
+            username=self.user.username,
+            apply=True,
+            stdout=StringIO(),
+        )
+
+        self.article.refresh_from_db()
+        self.category.refresh_from_db()
+        self.assertEqual(self.article.user, self.user)
+        self.assertEqual(self.category.user, self.user)
