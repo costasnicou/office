@@ -762,3 +762,34 @@ class LegacyDataRecoveryTests(TestCase):
         self.category.refresh_from_db()
         self.assertEqual(self.article.user, self.user)
         self.assertEqual(self.category.user, self.user)
+
+    def test_apply_merges_duplicate_legacy_uncategorized_safely(self):
+        owned_default = ArticleCategory.objects.create(
+            user=self.user,
+            name="Uncategorized",
+            slug="uncategorized",
+        )
+        legacy_default = ArticleCategory.objects.create(
+            name="Uncategorized",
+            slug="uncategorized",
+        )
+        legacy_article = Article.objects.create(
+            title="Legacy default article",
+            content="Still present",
+            category=legacy_default,
+        )
+
+        call_command(
+            "assign_legacy_data",
+            username=self.user.username,
+            apply=True,
+            stdout=StringIO(),
+        )
+
+        legacy_article.refresh_from_db()
+        self.assertEqual(legacy_article.user, self.user)
+        self.assertEqual(legacy_article.category, owned_default)
+        self.assertIsNone(legacy_article.subcategory)
+        self.assertFalse(
+            ArticleCategory.objects.filter(pk=legacy_default.pk).exists()
+        )
