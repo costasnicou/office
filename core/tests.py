@@ -48,8 +48,11 @@ class ArticleCreateTests(TestCase):
         self.assertRedirects(response, reverse("article_single", args=[article.slug]))
         self.assertEqual(article.user, self.user)
         self.assertEqual(article.category.name, "Work")
+        self.assertEqual(article.category.user, self.user)
         self.assertEqual(article.subcategory.name, "Planning")
+        self.assertEqual(article.subcategory.user, self.user)
         self.assertCountEqual(article.tags.values_list("name", flat=True), ["Important", "Weekly"])
+        self.assertFalse(article.tags.exclude(user=self.user).exists())
 
     def test_reuses_existing_values_case_insensitively(self):
         category = ArticleCategory.objects.create(name="Work")
@@ -90,6 +93,39 @@ class ArticleCreateTests(TestCase):
         self.assertIn('type="checkbox"', rendered_tags)
         self.assertIn("Important", rendered_tags)
         self.assertIn("Reference", rendered_tags)
+
+    def test_create_form_only_shows_the_logged_in_users_taxonomy(self):
+        other_user = User.objects.create_user(username="taxonomy-other")
+        ArticleCategory.objects.create(user=self.user, name="My category")
+        ArticleCategory.objects.create(user=other_user, name="Other category")
+        ArticleTag.objects.create(user=self.user, name="My tag")
+        ArticleTag.objects.create(user=other_user, name="Other tag")
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("article_create"))
+
+        self.assertContains(response, "My category")
+        self.assertContains(response, "My tag")
+        self.assertNotContains(response, "Other category")
+        self.assertNotContains(response, "Other tag")
+
+    def test_users_can_create_taxonomy_with_the_same_name(self):
+        other_user = User.objects.create_user(username="same-name-other")
+        ArticleCategory.objects.create(user=other_user, name="Work")
+        ArticleTag.objects.create(user=other_user, name="Important")
+        self.client.force_login(self.user)
+
+        response = self.client.post(reverse("article_create"), {
+            "title": "My independently categorized article",
+            "content": "Body",
+            "new_category": "Work",
+            "new_tags": "Important",
+        })
+
+        article = Article.objects.get(title="My independently categorized article")
+        self.assertRedirects(response, reverse("article_single", args=[article.slug]))
+        self.assertEqual(article.category.user, self.user)
+        self.assertEqual(article.tags.get().user, self.user)
 
     def test_rejects_subcategory_from_another_category(self):
         selected_category = ArticleCategory.objects.create(name="Work")
@@ -247,7 +283,7 @@ class RecordOwnershipTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="owner", password="test-password")
         self.other_user = User.objects.create_user(username="other-owner", password="test-password")
-        self.category = ArticleCategory.objects.create(name="Private")
+        self.category = ArticleCategory.objects.create(user=self.user, name="Private")
         self.own_article = Article.objects.create(
             user=self.user,
             title="My article",
@@ -322,7 +358,7 @@ class RecordOwnershipTests(TestCase):
 class RecordUpdateTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="editor", password="test-password")
-        self.category = ArticleCategory.objects.create(name="Work")
+        self.category = ArticleCategory.objects.create(user=self.user, name="Work")
         self.article = Article.objects.create(
             user=self.user,
             title="Original title",

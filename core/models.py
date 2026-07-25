@@ -22,17 +22,29 @@ class UserOwnedModel(models.Model):
 
     class Meta:
         abstract = True
+        constraints = [
+            models.UniqueConstraint(
+                fields=("user", "slug"),
+                name="unique_%(class)s_user_slug",
+            )
+        ]
 
 
 # Create your models here.
 
 # BASE CATEGORY AND TAG MODELS
-class BaseCategory(models.Model):
+class BaseCategory(UserOwnedModel):
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
 
     class Meta:
         abstract = True
+        constraints = [
+            models.UniqueConstraint(
+                fields=("user", "slug"),
+                name="unique_%(class)s_user_slug",
+            )
+        ]
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -42,12 +54,18 @@ class BaseCategory(models.Model):
     def __str__(self):
         return self.name
 
-class BaseTag(models.Model):
+class BaseTag(UserOwnedModel):
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
 
     class Meta:
         abstract = True
+        constraints = [
+            models.UniqueConstraint(
+                fields=("user", "slug"),
+                name="unique_%(class)s_user_slug",
+            )
+        ]
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -61,14 +79,14 @@ class BaseTag(models.Model):
 class ArticleCategory(BaseCategory):
     pass
 
-class ArticleSubcategory(models.Model):
+class ArticleSubcategory(UserOwnedModel):
     category = models.ForeignKey(
         ArticleCategory,
         on_delete=models.CASCADE,
         related_name="subcategories"
     )
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -83,7 +101,7 @@ class ArticleTag(BaseTag):
 
 class Article(UserOwnedModel):
     title = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     content = CKEditor5Field('Content', config_name='extends')  # or 'default'
     category = models.ForeignKey(
@@ -117,14 +135,14 @@ class Article(UserOwnedModel):
 class JournalCategory(BaseCategory):
     pass
 
-class JournalSubcategory(models.Model):
+class JournalSubcategory(UserOwnedModel):
     category = models.ForeignKey(
         JournalCategory,
         on_delete=models.CASCADE,
         related_name="subcategories"
     )
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -139,7 +157,7 @@ class JournalTag(BaseTag):
 
 class Journal(UserOwnedModel):
     title = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     content = CKEditor5Field('Content', config_name='extends')  # or 'default'
     category = models.ForeignKey(
@@ -174,14 +192,14 @@ class Journal(UserOwnedModel):
 class NoteCategory(BaseCategory):
     pass
 
-class NoteSubcategory(models.Model):
+class NoteSubcategory(UserOwnedModel):
     category = models.ForeignKey(
         NoteCategory,
         on_delete=models.CASCADE,
         related_name="subcategories"
     )
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -196,7 +214,7 @@ class NoteTag(BaseTag):
 
 class Note(UserOwnedModel):
     title = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     content = CKEditor5Field('Content', config_name='extends')  # or 'default'
     category = models.ForeignKey(
@@ -231,14 +249,14 @@ class Note(UserOwnedModel):
 class CentralPointCategory(BaseCategory):
     pass
 
-class CentralPointSubcategory(models.Model):
+class CentralPointSubcategory(UserOwnedModel):
     category = models.ForeignKey(
         CentralPointCategory,
         on_delete=models.CASCADE,
         related_name="subcategories"
     )
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -253,7 +271,7 @@ class CentralPointTag(BaseTag):
 
 class CentralPoint(UserOwnedModel):
     title = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     content = CKEditor5Field('Content', config_name='extends')  # or 'default'
     category = models.ForeignKey(
@@ -288,14 +306,14 @@ class CentralPoint(UserOwnedModel):
 class StrategyCategory(BaseCategory):
     pass
 
-class StrategySubcategory(models.Model):
+class StrategySubcategory(UserOwnedModel):
     category = models.ForeignKey(
         StrategyCategory,
         on_delete=models.CASCADE,
         related_name="subcategories"
     )
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -310,7 +328,7 @@ class StrategyTag(BaseTag):
 
 class Strategy(UserOwnedModel):
     title = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     strenght = CKEditor5Field('Strenghts', config_name='extends')  # or 'default'
     Weeknesses = CKEditor5Field('Weaknesses', config_name='extends')  # or 'default'
@@ -355,14 +373,14 @@ class Strategy(UserOwnedModel):
 class DecisionCategory(BaseCategory):
     pass
 
-class DecisionSubcategory(models.Model):
+class DecisionSubcategory(UserOwnedModel):
     category = models.ForeignKey(
         DecisionCategory,
         on_delete=models.CASCADE,
         related_name="subcategories"
     )
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -377,7 +395,7 @@ class DecisionTag(BaseTag):
 
 class Decision(UserOwnedModel):
     title = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     bothering = CKEditor5Field('What is bothering me? Gather all the data you can on the situation.', config_name='extends')  # or 'default'
     worst_case = CKEditor5Field('What is the worst case scenario?', config_name='extends')  # or 'default'
@@ -420,14 +438,14 @@ class Decision(UserOwnedModel):
 class GoalCategory(BaseCategory):
     pass
 
-class GoalSubcategory(models.Model):
+class GoalSubcategory(UserOwnedModel):
     category = models.ForeignKey(
         GoalCategory,
         on_delete=models.CASCADE,
         related_name="subcategories"
     )
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -442,7 +460,7 @@ class GoalTag(BaseTag):
 
 class Goal(UserOwnedModel):
     title = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     outcome = CKEditor5Field('What do I want to accomplish?', config_name='extends')  # or 'default'
     purpose = CKEditor5Field('Why do I want to achieve this goal?', config_name='extends')  # or 'default'

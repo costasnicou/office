@@ -86,15 +86,20 @@ class TaxonomyModelForm(forms.ModelForm):
     tag_model = None
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         self.fields["category"].required = False
-        self.fields["category"].queryset = self.category_model.objects.order_by("name")
+        self.fields["category"].queryset = self.category_model.objects.filter(
+            user=self.user
+        ).order_by("name")
         self.fields["category"].empty_label = "Select an existing category"
         self.fields["subcategory"].queryset = self.subcategory_model.objects.select_related(
             "category"
-        ).order_by("category__name", "name")
+        ).filter(user=self.user).order_by("category__name", "name")
         self.fields["subcategory"].empty_label = "Select an existing subcategory (optional)"
-        self.fields["tags"].queryset = self.tag_model.objects.order_by("name")
+        self.fields["tags"].queryset = self.tag_model.objects.filter(
+            user=self.user
+        ).order_by("name")
         self.fields["tags"].widget = forms.CheckboxSelectMultiple(
             attrs={"class": "tag-choice-input"}
         )
@@ -141,10 +146,14 @@ class TaxonomyModelForm(forms.ModelForm):
             )
         return cleaned_data
 
-    @staticmethod
-    def _get_or_create_by_name(model, name, **extra):
-        existing = model.objects.filter(name__iexact=name, **extra).first()
-        return existing or model.objects.create(name=name, **extra)
+    def _get_or_create_by_name(self, model, name, **extra):
+        ownership = {"user": self.user}
+        existing = model.objects.filter(
+            name__iexact=name, **ownership, **extra
+        ).first()
+        return existing or model.objects.create(
+            name=name, **ownership, **extra
+        )
 
     @transaction.atomic
     def save(self, commit=True):
