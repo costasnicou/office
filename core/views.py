@@ -7,7 +7,8 @@ from .models import *
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect
+from functools import wraps
 import secrets
 from .forms import (
     ArticleForm, CentralPointForm, DecisionForm, GoalForm,
@@ -47,7 +48,17 @@ def taxonomy_for_user(model, user):
     return model.objects.filter(user=user)
 
 
-@login_required
+def workspace_login_required(view):
+    @wraps(view)
+    def workspace_view(request, *args, username=None, **kwargs):
+        if username != request.user.username:
+            raise Http404
+        return view(request, *args, **kwargs)
+
+    return login_required(workspace_view)
+
+
+@workspace_login_required
 def record_search(request):
     query = request.GET.get("q", "").strip()
     results = []
@@ -71,14 +82,14 @@ def record_search(request):
     })
 
 
-@login_required
+@workspace_login_required
 def record_create(request, record_type):
     _, form_class, detail_url, _, label = RECORD_FORMS[record_type]
     form = form_class(request.POST or None, user=request.user)
     if request.method == "POST" and form.is_valid():
         form.instance.user = request.user
         record = form.save()
-        return redirect(detail_url, slug=record.slug)
+        return redirect(detail_url, username=request.user.username, slug=record.slug)
     return render(request, "core/forms/record-form.html", {
         "form": form,
         "record_type": record_type,
@@ -87,19 +98,19 @@ def record_create(request, record_type):
     })
 
 
-@login_required
+@workspace_login_required
 def record_update(request, record_type, slug):
     model, form_class, detail_url, index_url, label = RECORD_FORMS[record_type]
     record = get_object_or_404(model, slug=slug, user=request.user)
 
     if request.method == "POST" and request.POST.get("action") == "delete":
         record.delete()
-        return redirect(index_url)
+        return redirect(index_url, username=request.user.username)
 
     form = form_class(request.POST or None, instance=record, user=request.user)
     if request.method == "POST" and form.is_valid():
         record = form.save()
-        return redirect(detail_url, slug=record.slug)
+        return redirect(detail_url, username=request.user.username, slug=record.slug)
 
     return render(request, "core/forms/record-form.html", {
         "form": form,
@@ -115,32 +126,37 @@ def login_view(request):
     if request.method == "POST":
 
         # Attempt to sign user in
-        username = request.POST["username"]
+        identifier = request.POST["username"].strip()
         password = request.POST["password"]
-        user = authenticate(request, username=username, password=password)
+        user = authenticate(request, username=identifier, password=password)
 
         # Check if authentication successful
         if user is not None:
             login(request, user)
-            return HttpResponseRedirect(reverse("index"))
+            return redirect("index", username=user.username)
         else:
             return render(request, "core/login.html", {
-                "message": "Invalid username and/or password."
+                "message": "Invalid username/email or password."
             })
     else:
         return render(request, "core/login.html")
 
 
+def root_redirect(request):
+    if request.user.is_authenticated:
+        return redirect("index", username=request.user.username)
+    return redirect("login")
+
+
 def register_view(request):
     if request.user.is_authenticated:
-        return redirect("index")
+        return redirect("index", username=request.user.username)
 
     form = RegistrationForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         user = form.save()
-        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
         messages.success(request, "Welcome! Your account has been created.")
-        return redirect("index")
+        return redirect("login")
     google_client_id = getattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "")
     google_client_secret = getattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", "")
     return render(request, "core/register.html", {
@@ -198,18 +214,18 @@ def google_callback(request):
         user.set_unusable_password()
         user.save()
 
-    login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+    login(request, user, backend="core.backends.UsernameOrEmailBackend")
     messages.success(request, "You are signed in with Google.")
-    return redirect("index")
+    return redirect("index", username=user.username)
 
 
 def logout_view(request):
     logout(request)
-    return HttpResponseRedirect(reverse("index"))
+    return redirect("login")
 
 
 # ARTICLES
-@login_required
+@workspace_login_required
 def index(request):
     articles = records_for_user(Article, request.user).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
@@ -228,7 +244,7 @@ def index(request):
         "article_tags":article_tags     
     })
 
-@login_required
+@workspace_login_required
 def article_single(request,slug):
     article = get_object_or_404(Article, slug=slug, user=request.user)
     article_categories = taxonomy_for_user(ArticleCategory, request.user)
@@ -244,7 +260,7 @@ def article_single(request,slug):
         
     })
 
-@login_required
+@workspace_login_required
 def article_category(request,slug):
     article_categories = taxonomy_for_user(ArticleCategory, request.user)
     article_category = get_object_or_404(ArticleCategory, slug=slug, user=request.user)
@@ -265,7 +281,7 @@ def article_category(request,slug):
         
     })
 
-@login_required
+@workspace_login_required
 def article_subcategory(request,cat_slug,subcat_slug):
     article_categories = taxonomy_for_user(ArticleCategory, request.user)
     article_subcategory = get_object_or_404(
@@ -290,7 +306,7 @@ def article_subcategory(request,cat_slug,subcat_slug):
         
     })
 
-@login_required
+@workspace_login_required
 def article_tag(request,slug):
     article_categories = taxonomy_for_user(ArticleCategory, request.user)
     article_tags = taxonomy_for_user(ArticleTag, request.user)
@@ -313,7 +329,7 @@ def article_tag(request,slug):
     })
 
 # JOURNALS
-@login_required
+@workspace_login_required
 def journal_index(request):
 
     journals = records_for_user(Journal, request.user).order_by("-created_at")
@@ -333,7 +349,7 @@ def journal_index(request):
         "article_tags":journal_tags     
     })
 
-@login_required
+@workspace_login_required
 def journal_single(request,slug):
     article = get_object_or_404(Journal, slug=slug, user=request.user)
     journal_categories = taxonomy_for_user(JournalCategory, request.user)
@@ -349,7 +365,7 @@ def journal_single(request,slug):
         
     })
 
-@login_required
+@workspace_login_required
 def journal_category(request,slug):
     journal_categories = taxonomy_for_user(JournalCategory, request.user)
     journal_category = get_object_or_404(JournalCategory, slug=slug, user=request.user)
@@ -370,7 +386,7 @@ def journal_category(request,slug):
         
     })
 
-@login_required
+@workspace_login_required
 def journal_subcategory(request,cat_slug,subcat_slug):
     journal_categories = taxonomy_for_user(JournalCategory, request.user)
     journal_subcategory = get_object_or_404(
@@ -393,7 +409,7 @@ def journal_subcategory(request,cat_slug,subcat_slug):
         "article_tags":journal_tags,
         
     })
-@login_required
+@workspace_login_required
 def journal_tag(request,slug):
     article_categories = taxonomy_for_user(JournalCategory, request.user)
     article_tags = taxonomy_for_user(JournalTag, request.user)
@@ -416,7 +432,7 @@ def journal_tag(request,slug):
     })
 
 # NOTES
-@login_required
+@workspace_login_required
 def note_index(request):
 
     notes = records_for_user(Note, request.user).order_by("-created_at")
@@ -435,7 +451,7 @@ def note_index(request):
         "article_tags":note_tags     
     })
 
-@login_required
+@workspace_login_required
 def note_single(request,slug):
     article = get_object_or_404(Note, slug=slug, user=request.user)
     note_categories = taxonomy_for_user(NoteCategory, request.user)
@@ -451,7 +467,7 @@ def note_single(request,slug):
         
     })
 
-@login_required
+@workspace_login_required
 def note_category(request,slug):
     note_categories = taxonomy_for_user(NoteCategory, request.user)
     note_category = get_object_or_404(NoteCategory, slug=slug, user=request.user)
@@ -472,7 +488,7 @@ def note_category(request,slug):
         
     })
 
-@login_required
+@workspace_login_required
 def note_subcategory(request,cat_slug,subcat_slug):
     note_categories = taxonomy_for_user(NoteCategory, request.user)
     note_subcategory = get_object_or_404(
@@ -496,7 +512,7 @@ def note_subcategory(request,cat_slug,subcat_slug):
         
     })
 
-@login_required
+@workspace_login_required
 def note_tag(request,slug):
     article_categories = taxonomy_for_user(NoteCategory, request.user)
     article_tags = taxonomy_for_user(NoteTag, request.user)
@@ -520,7 +536,7 @@ def note_tag(request,slug):
 
 # CENTRAL POINT
 
-@login_required
+@workspace_login_required
 def centralpoint_index(request):
 
     articles = records_for_user(CentralPoint, request.user).order_by("-created_at")
@@ -540,7 +556,7 @@ def centralpoint_index(request):
         "article_tags":article_tags     
     })
 
-@login_required
+@workspace_login_required
 def centralpoint_single(request,slug):
     article = get_object_or_404(CentralPoint, slug=slug, user=request.user)
     article_categories = taxonomy_for_user(CentralPointCategory, request.user)
@@ -556,7 +572,7 @@ def centralpoint_single(request,slug):
         
     })
 
-@login_required
+@workspace_login_required
 def centralpoint_category(request,slug):
     article_categories = taxonomy_for_user(CentralPointCategory, request.user)
     article_category = get_object_or_404(CentralPointCategory, slug=slug, user=request.user)
@@ -577,7 +593,7 @@ def centralpoint_category(request,slug):
         
     })
 
-@login_required
+@workspace_login_required
 def centralpoint_subcategory(request,cat_slug,subcat_slug):
     article_categories = taxonomy_for_user(CentralPointCategory, request.user)
     article_subcategory = get_object_or_404(
@@ -602,7 +618,7 @@ def centralpoint_subcategory(request,cat_slug,subcat_slug):
         
     })
 
-@login_required
+@workspace_login_required
 def centralpoint_tag(request,slug):
     article_categories = taxonomy_for_user(CentralPointCategory, request.user)
     article_tags = taxonomy_for_user(CentralPointTag, request.user)
@@ -625,7 +641,7 @@ def centralpoint_tag(request,slug):
     })
 
 # STRATEGY
-@login_required
+@workspace_login_required
 def strategy_index(request):
 
 
@@ -648,7 +664,7 @@ def strategy_index(request):
         "article_categories":article_categories,  
         "article_tags":article_tags,
     })
-@login_required
+@workspace_login_required
 def strategy_single(request,slug):
     article = get_object_or_404(Strategy, slug=slug, user=request.user)
     article_categories = taxonomy_for_user(StrategyCategory, request.user)
@@ -663,7 +679,7 @@ def strategy_single(request,slug):
         
         
     })
-@login_required
+@workspace_login_required
 def strategy_category(request,slug):
 
     article_categories = taxonomy_for_user(StrategyCategory, request.user)
@@ -686,7 +702,7 @@ def strategy_category(request,slug):
         "article_tags":article_tags,
         
     })
-@login_required
+@workspace_login_required
 def strategy_subcategory(request,cat_slug,subcat_slug):
     article_categories = taxonomy_for_user(StrategyCategory, request.user)
     article_subcategory = get_object_or_404(
@@ -710,7 +726,7 @@ def strategy_subcategory(request,cat_slug,subcat_slug):
         "article_tags":article_tags,
         
     })
-@login_required
+@workspace_login_required
 def strategy_tag(request,slug):
     article_categories = taxonomy_for_user(StrategyCategory, request.user)
     article_tags = taxonomy_for_user(StrategyTag, request.user)
@@ -733,7 +749,7 @@ def strategy_tag(request,slug):
     })
 
 # DECISION
-@login_required
+@workspace_login_required
 def decision_index(request):
 
 
@@ -756,7 +772,7 @@ def decision_index(request):
         "article_categories":article_categories,  
         "article_tags":article_tags,
     })
-@login_required
+@workspace_login_required
 def decision_single(request,slug):
     article = get_object_or_404(Decision, slug=slug, user=request.user)
     article_categories = taxonomy_for_user(DecisionCategory, request.user)
@@ -771,7 +787,7 @@ def decision_single(request,slug):
         
         
     })
-@login_required
+@workspace_login_required
 def decision_category(request,slug):
 
     article_categories = taxonomy_for_user(DecisionCategory, request.user)
@@ -794,7 +810,7 @@ def decision_category(request,slug):
         "article_tags":article_tags,
         
     })
-@login_required
+@workspace_login_required
 def decision_subcategory(request,cat_slug,subcat_slug):
     article_categories = taxonomy_for_user(DecisionCategory, request.user)
     article_subcategory = get_object_or_404(
@@ -818,7 +834,7 @@ def decision_subcategory(request,cat_slug,subcat_slug):
         "article_tags":article_tags,
         
     })
-@login_required
+@workspace_login_required
 def decision_tag(request,slug):
     article_categories = taxonomy_for_user(DecisionCategory, request.user)
     article_tags = taxonomy_for_user(DecisionTag, request.user)
@@ -841,7 +857,7 @@ def decision_tag(request,slug):
     })
 
 # GOAL
-@login_required
+@workspace_login_required
 def goal_index(request):
 
 
@@ -864,7 +880,7 @@ def goal_index(request):
         "article_categories":article_categories,  
         "article_tags":article_tags,
     })
-@login_required
+@workspace_login_required
 def goal_single(request,slug):
     article = get_object_or_404(Goal, slug=slug, user=request.user)
     article_categories = taxonomy_for_user(GoalCategory, request.user)
@@ -879,7 +895,7 @@ def goal_single(request,slug):
         
         
     })
-@login_required
+@workspace_login_required
 def goal_category(request,slug):
 
     article_categories = taxonomy_for_user(GoalCategory, request.user)
@@ -902,7 +918,7 @@ def goal_category(request,slug):
         "article_tags":article_tags,
         
     })
-@login_required
+@workspace_login_required
 def goal_subcategory(request,cat_slug,subcat_slug):
     article_categories = taxonomy_for_user(GoalCategory, request.user)
     article_subcategory = get_object_or_404(
@@ -926,7 +942,7 @@ def goal_subcategory(request,cat_slug,subcat_slug):
         "article_tags":article_tags,
         
     })
-@login_required
+@workspace_login_required
 def goal_tag(request,slug):
     article_categories = taxonomy_for_user(GoalCategory, request.user)
     article_tags = taxonomy_for_user(GoalTag, request.user)

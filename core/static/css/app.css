@@ -1456,6 +1456,7 @@ html[lang="el"] .grid-right-wraper .preview .content p {
     .header .header-nav .logo p {
       font-size: 17px; } }
 .workspace-page {
+  --add-record-bar-height: 48px;
   --workspace-ink: #28251f;
   --workspace-muted: #756f65;
   --workspace-line: #e2dacf;
@@ -1869,6 +1870,22 @@ html[lang="el"] .grid-right-wraper .preview .content p {
     .workspace-page .form-submit:hover {
       background: var(--workspace-gold-dark); }
 
+@media (max-width: 1024px) {
+  .workspace-page .add-record-dropdown {
+    position: fixed;
+    top: calc(var(--add-record-bar-height) + 8px);
+    right: 16px;
+    left: auto;
+    width: min(320px, calc(100vw - 32px));
+    max-height: calc(100dvh - var(--add-record-bar-height) - 20px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain; } }
+@media (max-width: 700px) {
+  .workspace-page .add-record-dropdown {
+    right: 12px;
+    left: 12px;
+    width: auto; } }
 html[lang="el"] .workspace-page .header .header-nav .logo {
   margin-right: clamp(18px, 2.5vw, 42px); }
 html[lang="el"] .workspace-page .header .header-nav .header-menu {

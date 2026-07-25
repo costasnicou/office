@@ -29,6 +29,9 @@ DEBUG = True
 ALLOWED_HOSTS = []
 AUTH_USER_MODEL = "core.User"
 LOGIN_URL = "login"
+AUTHENTICATION_BACKENDS = [
+    "core.backends.UsernameOrEmailBackend",
+]
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "")
 GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET", "")
 # Application definition

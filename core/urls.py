@@ -1,13 +1,17 @@
-from django.urls import path
+from django.urls import include, path
 from . import views
 
 urlpatterns = [
 
+    path("", views.root_redirect, name="root"),
     path("login", views.login_view, name="login"),
     path("register/", views.register_view, name="register"),
     path("auth/google/", views.google_login, name="google_login"),
     path("auth/google/callback/", views.google_callback, name="google_callback"),
     path("logout", views.logout_view, name="logout"),
+]
+
+workspace_patterns = [
     path("search/", views.record_search, name="record_search"),
 
     # articles
@@ -75,4 +79,8 @@ urlpatterns = [
     path("goals/add/", views.record_create, {"record_type": "goal"}, name="goal_create"),
     path("goals/<slug:slug>/edit/", views.record_update, {"record_type": "goal"}, name="goal_edit"),
 
+]
+
+urlpatterns += [
+    path("<str:username>/", include(workspace_patterns)),
 ]

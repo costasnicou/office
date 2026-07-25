@@ -45,14 +45,14 @@
                 <form class="register-form login-form-modern" action="{% url 'login' %}" method="post">
                     {% csrf_token %}
                     <div class="auth-field">
-                        <label for="login-username">Username</label>
+                        <label for="login-username">Username or email</label>
                         <input
                             autofocus
                             class="auth-input"
                             id="login-username"
                             type="text"
                             name="username"
-                            placeholder="Your username"
+                            placeholder="Your username or email"
                             autocomplete="username"
                             required
                         >

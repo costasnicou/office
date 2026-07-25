@@ -8,35 +8,39 @@ from .models import (
 )
 
 
+def workspace_reverse(name, user, args=None):
+    return reverse(name, args=[user.username, *(args or [])])
+
+
 class ArticleCreateTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="writer", password="test-password")
 
     def test_create_page_requires_login(self):
-        response = self.client.get(reverse("article_create"))
+        response = self.client.get(workspace_reverse("article_create", self.user))
         self.assertRedirects(
             response,
-            f'{reverse("login")}?next={reverse("article_create")}',
+            f'{reverse("login")}?next={workspace_reverse("article_create", self.user)}',
         )
 
     def test_create_page_does_not_render_empty_error_lists(self):
         self.client.force_login(self.user)
 
-        response = self.client.get(reverse("article_create"))
+        response = self.client.get(workspace_reverse("article_create", self.user))
 
         self.assertNotContains(response, 'class="field-errors"')
 
     def test_create_page_renders_actual_field_errors(self):
         self.client.force_login(self.user)
 
-        response = self.client.post(reverse("article_create"), {"title": ""})
+        response = self.client.post(workspace_reverse("article_create", self.user), {"title": ""})
 
         self.assertContains(response, 'class="field-errors"')
         self.assertContains(response, "This field is required.")
 
     def test_creates_record_and_new_taxonomy_values(self):
         self.client.force_login(self.user)
-        response = self.client.post(reverse("article_create"), {
+        response = self.client.post(workspace_reverse("article_create", self.user), {
             "title": "Useful article",
             "content": "Article body",
             "new_category": "Work",
@@ -45,7 +49,7 @@ class ArticleCreateTests(TestCase):
         })
 
         article = Article.objects.get(title="Useful article")
-        self.assertRedirects(response, reverse("article_single", args=[article.slug]))
+        self.assertRedirects(response, workspace_reverse("article_single", self.user, args=[article.slug]))
         self.assertEqual(article.user, self.user)
         self.assertEqual(article.category.name, "Work")
         self.assertEqual(article.category.user, self.user)
@@ -102,7 +106,7 @@ class ArticleCreateTests(TestCase):
         ArticleTag.objects.create(user=other_user, name="Other tag")
         self.client.force_login(self.user)
 
-        response = self.client.get(reverse("article_create"))
+        response = self.client.get(workspace_reverse("article_create", self.user))
 
         self.assertContains(response, "My category")
         self.assertContains(response, "My tag")
@@ -115,7 +119,7 @@ class ArticleCreateTests(TestCase):
         ArticleTag.objects.create(user=other_user, name="Important")
         self.client.force_login(self.user)
 
-        response = self.client.post(reverse("article_create"), {
+        response = self.client.post(workspace_reverse("article_create", self.user), {
             "title": "My independently categorized article",
             "content": "Body",
             "new_category": "Work",
@@ -123,7 +127,7 @@ class ArticleCreateTests(TestCase):
         })
 
         article = Article.objects.get(title="My independently categorized article")
-        self.assertRedirects(response, reverse("article_single", args=[article.slug]))
+        self.assertRedirects(response, workspace_reverse("article_single", self.user, args=[article.slug]))
         self.assertEqual(article.category.user, self.user)
         self.assertEqual(article.tags.get().user, self.user)
 
@@ -154,7 +158,7 @@ class RegistrationTests(TestCase):
         self.assertContains(response, 'class="register-grid"')
         self.assertContains(response, reverse("google_login"))
 
-    def test_creates_and_signs_in_a_local_user(self):
+    def test_creates_account_and_redirects_to_login_without_signing_in(self):
         response = self.client.post(reverse("register"), {
             "first_name": "Ada",
             "last_name": "Lovelace",
@@ -168,8 +172,8 @@ class RegistrationTests(TestCase):
         self.assertEqual(user.first_name, "Ada")
         self.assertEqual(user.last_name, "Lovelace")
         self.assertEqual(user.email, "ada@example.com")
-        self.assertEqual(self.client.session["_auth_user_id"], str(user.pk))
-        self.assertRedirects(response, reverse("index"))
+        self.assertNotIn("_auth_user_id", self.client.session)
+        self.assertRedirects(response, reverse("login"))
 
     def test_rejects_an_email_that_is_already_registered(self):
         User.objects.create_user(
@@ -210,7 +214,7 @@ class RegistrationTests(TestCase):
         self.assertEqual(user.first_name, "Grace")
         self.assertFalse(user.has_usable_password())
         self.assertEqual(self.client.session["_auth_user_id"], str(user.pk))
-        self.assertRedirects(response, reverse("index"))
+        self.assertRedirects(response, workspace_reverse("index", user))
 
     @patch("core.views.fetch_profile")
     def test_google_callback_rejects_an_invalid_state(self, fetch_profile):
@@ -227,6 +231,38 @@ class RegistrationTests(TestCase):
         self.assertRedirects(response, reverse("register"))
 
 
+class LoginTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="email-user",
+            email="person@example.com",
+            password="test-password",
+        )
+
+    def test_signs_in_with_email_case_insensitively(self):
+        response = self.client.post(reverse("login"), {
+            "username": "PERSON@EXAMPLE.COM",
+            "password": "test-password",
+        })
+
+        self.assertEqual(self.client.session["_auth_user_id"], str(self.user.pk))
+        self.assertRedirects(response, workspace_reverse("index", self.user))
+
+    def test_still_signs_in_with_username(self):
+        response = self.client.post(reverse("login"), {
+            "username": "email-user",
+            "password": "test-password",
+        })
+
+        self.assertEqual(self.client.session["_auth_user_id"], str(self.user.pk))
+        self.assertRedirects(response, workspace_reverse("index", self.user))
+
+    def test_login_page_explains_that_email_is_supported(self):
+        response = self.client.get(reverse("login"))
+
+        self.assertContains(response, "Username or email")
+
+
 class RecordSearchTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="searcher", password="test-password")
@@ -240,10 +276,10 @@ class RecordSearchTests(TestCase):
             finalized_strategy="Expand carefully",
         )
 
-        response = self.client.get(reverse("record_search"), {"q": "competitor"})
+        response = self.client.get(workspace_reverse("record_search", self.user), {"q": "competitor"})
 
         self.assertContains(response, strategy.title)
-        self.assertContains(response, reverse("strategy_single", args=[strategy.slug]))
+        self.assertContains(response, workspace_reverse("strategy_single", self.user, args=[strategy.slug]))
 
     def test_does_not_search_post_content(self):
         strategy = Strategy.objects.create(
@@ -253,10 +289,10 @@ class RecordSearchTests(TestCase):
             finalized_strategy="Expand carefully",
         )
 
-        response = self.client.get(reverse("record_search"), {"q": "competitor"})
+        response = self.client.get(workspace_reverse("record_search", self.user), {"q": "competitor"})
 
         self.assertNotContains(response, strategy.title)
-        self.assertNotContains(response, reverse("strategy_single", args=[strategy.slug]))
+        self.assertNotContains(response, workspace_reverse("strategy_single", self.user, args=[strategy.slug]))
 
     def test_search_only_returns_the_logged_in_users_records(self):
         other_user = User.objects.create_user(username="other", password="test-password")
@@ -273,7 +309,7 @@ class RecordSearchTests(TestCase):
             finalized_strategy="Another user's record",
         )
 
-        response = self.client.get(reverse("record_search"), {"q": "private"})
+        response = self.client.get(workspace_reverse("record_search", self.user), {"q": "private"})
 
         self.assertContains(response, own_strategy.title)
         self.assertNotContains(response, "Private competitor plan")
@@ -299,20 +335,25 @@ class RecordOwnershipTests(TestCase):
         self.client.force_login(self.user)
 
     def test_index_only_shows_the_logged_in_users_records(self):
-        response = self.client.get(reverse("index"))
+        response = self.client.get(workspace_reverse("index", self.user))
 
         self.assertContains(response, self.own_article.title)
         self.assertNotContains(response, self.other_article.title)
 
     def test_cannot_view_another_users_record(self):
         response = self.client.get(
-            reverse("article_single", args=[self.other_article.slug])
+            workspace_reverse("article_single", self.user, args=[self.other_article.slug])
         )
 
         self.assertEqual(response.status_code, 404)
 
+    def test_cannot_use_another_users_workspace_url(self):
+        response = self.client.get(workspace_reverse("index", self.other_user))
+
+        self.assertEqual(response.status_code, 404)
+
     def test_cannot_edit_or_delete_another_users_record(self):
-        url = reverse("article_edit", args=[self.other_article.slug])
+        url = workspace_reverse("article_edit", self.user, args=[self.other_article.slug])
 
         self.assertEqual(self.client.get(url).status_code, 404)
         self.assertEqual(
@@ -335,10 +376,10 @@ class RecordOwnershipTests(TestCase):
             finalized_strategy="Strategy body",
         )
 
-        response = self.client.get(reverse("record_search"), {"q": "shared"})
+        response = self.client.get(workspace_reverse("record_search", self.user), {"q": "shared"})
 
-        self.assertContains(response, reverse("article_single", args=[article.slug]))
-        self.assertContains(response, reverse("strategy_single", args=[strategy.slug]))
+        self.assertContains(response, workspace_reverse("article_single", self.user, args=[article.slug]))
+        self.assertContains(response, workspace_reverse("strategy_single", self.user, args=[strategy.slug]))
         self.assertLess(
             response.content.index(strategy.title.encode()),
             response.content.index(article.title.encode()),
@@ -347,11 +388,11 @@ class RecordOwnershipTests(TestCase):
     def test_search_requires_login(self):
         self.client.logout()
 
-        response = self.client.get(reverse("record_search"), {"q": "anything"})
+        response = self.client.get(workspace_reverse("record_search", self.user), {"q": "anything"})
 
         self.assertRedirects(
             response,
-            f'{reverse("login")}?next={reverse("record_search")}%3Fq%3Danything',
+            f'{reverse("login")}?next={workspace_reverse("record_search", self.user)}%3Fq%3Danything',
         )
 
 
@@ -367,7 +408,7 @@ class RecordUpdateTests(TestCase):
         )
 
     def test_edit_page_requires_login(self):
-        edit_url = reverse("article_edit", args=[self.article.slug])
+        edit_url = workspace_reverse("article_edit", self.user, args=[self.article.slug])
 
         response = self.client.get(edit_url)
 
@@ -376,7 +417,7 @@ class RecordUpdateTests(TestCase):
     def test_edit_page_prefills_existing_record(self):
         self.client.force_login(self.user)
 
-        response = self.client.get(reverse("article_edit", args=[self.article.slug]))
+        response = self.client.get(workspace_reverse("article_edit", self.user, args=[self.article.slug]))
 
         self.assertContains(response, 'value="Original title"')
         self.assertContains(response, "Original body")
@@ -385,7 +426,7 @@ class RecordUpdateTests(TestCase):
     def test_updates_record_and_redirects_to_single_page(self):
         self.client.force_login(self.user)
 
-        response = self.client.post(reverse("article_edit", args=[self.article.slug]), {
+        response = self.client.post(workspace_reverse("article_edit", self.user, args=[self.article.slug]), {
             "title": "Updated title",
             "content": "Updated body",
             "category": self.category.pk,
@@ -396,18 +437,18 @@ class RecordUpdateTests(TestCase):
         self.assertEqual(self.article.content, "Updated body")
         self.assertRedirects(
             response,
-            reverse("article_single", args=[self.article.slug]),
+            workspace_reverse("article_single", self.user, args=[self.article.slug]),
         )
 
     def test_deletes_record_with_post_and_redirects_to_index(self):
         self.client.force_login(self.user)
 
-        response = self.client.post(reverse("article_edit", args=[self.article.slug]), {
+        response = self.client.post(workspace_reverse("article_edit", self.user, args=[self.article.slug]), {
             "action": "delete",
         })
 
         self.assertFalse(Article.objects.filter(pk=self.article.pk).exists())
-        self.assertRedirects(response, reverse("index"))
+        self.assertRedirects(response, workspace_reverse("index", self.user))
 
     def test_every_single_template_has_its_edit_link(self):
         edit_routes = {
@@ -424,4 +465,7 @@ class RecordUpdateTests(TestCase):
             with self.subTest(record_type=record_type):
                 template_path = f"core/templates/core/singles/{record_type}-single.html"
                 with open(template_path, encoding="utf-8") as template:
-                    self.assertIn(f"{{% url '{route_name}' article.slug %}}", template.read())
+                    self.assertIn(
+                        f"{{% url '{route_name}' request.user.username article.slug %}}",
+                        template.read(),
+                    )
