@@ -3,11 +3,25 @@ from django.utils.text import slugify
 from django_ckeditor_5.fields import CKEditor5Field
 from django.db.models import DateField
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 
 
 # Create your models here.
 class User(AbstractUser):
     pass
+
+
+class UserOwnedModel(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="%(class)s_records",
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        abstract = True
 
 
 # Create your models here.
@@ -67,7 +81,7 @@ class ArticleSubcategory(models.Model):
 class ArticleTag(BaseTag):
     pass
 
-class Article(models.Model):
+class Article(UserOwnedModel):
     title = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -123,7 +137,7 @@ class JournalSubcategory(models.Model):
 class JournalTag(BaseTag):
     pass
 
-class Journal(models.Model):
+class Journal(UserOwnedModel):
     title = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -180,7 +194,7 @@ class NoteSubcategory(models.Model):
 class NoteTag(BaseTag):
     pass
 
-class Note(models.Model):
+class Note(UserOwnedModel):
     title = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -237,7 +251,7 @@ class CentralPointSubcategory(models.Model):
 class CentralPointTag(BaseTag):
     pass
 
-class CentralPoint(models.Model):
+class CentralPoint(UserOwnedModel):
     title = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -294,7 +308,7 @@ class StrategySubcategory(models.Model):
 class StrategyTag(BaseTag):
     pass
 
-class Strategy(models.Model):
+class Strategy(UserOwnedModel):
     title = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -361,7 +375,7 @@ class DecisionSubcategory(models.Model):
 class DecisionTag(BaseTag):
     pass
 
-class Decision(models.Model):
+class Decision(UserOwnedModel):
     title = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -426,7 +440,7 @@ class GoalSubcategory(models.Model):
 class GoalTag(BaseTag):
     pass
 
-class Goal(models.Model):
+class Goal(UserOwnedModel):
     title = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -474,4 +488,3 @@ class Goal(models.Model):
 
     def __str__(self):
         return self.title
-

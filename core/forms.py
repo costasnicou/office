@@ -182,7 +182,7 @@ class TaxonomyModelForm(forms.ModelForm):
 def taxonomy_form(name, model, category_model, subcategory_model, tag_model):
     meta = type("Meta", (), {
         "model": model,
-        "exclude": ("slug", "created_at"),
+        "exclude": ("slug", "created_at", "user"),
         "widgets": {"deadline": forms.DateInput(attrs={"type": "date"})},
     })
     return type(name, (TaxonomyModelForm,), {

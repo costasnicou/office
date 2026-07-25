@@ -46,6 +46,7 @@ class ArticleCreateTests(TestCase):
 
         article = Article.objects.get(title="Useful article")
         self.assertRedirects(response, reverse("article_single", args=[article.slug]))
+        self.assertEqual(article.user, self.user)
         self.assertEqual(article.category.name, "Work")
         self.assertEqual(article.subcategory.name, "Planning")
         self.assertCountEqual(article.tags.values_list("name", flat=True), ["Important", "Weekly"])
@@ -197,6 +198,7 @@ class RecordSearchTests(TestCase):
 
     def test_searches_titles_across_post_types_and_links_to_the_correct_single_view(self):
         strategy = Strategy.objects.create(
+            user=self.user,
             title="Competitor growth plan",
             threats="A market threat",
             finalized_strategy="Expand carefully",
@@ -209,6 +211,7 @@ class RecordSearchTests(TestCase):
 
     def test_does_not_search_post_content(self):
         strategy = Strategy.objects.create(
+            user=self.user,
             title="Growth plan",
             threats="A uniquely searchable competitor",
             finalized_strategy="Expand carefully",
@@ -219,14 +222,79 @@ class RecordSearchTests(TestCase):
         self.assertNotContains(response, strategy.title)
         self.assertNotContains(response, reverse("strategy_single", args=[strategy.slug]))
 
+    def test_search_only_returns_the_logged_in_users_records(self):
+        other_user = User.objects.create_user(username="other", password="test-password")
+        own_strategy = Strategy.objects.create(
+            user=self.user,
+            title="Private growth plan",
+            threats="",
+            finalized_strategy="Own record",
+        )
+        Strategy.objects.create(
+            user=other_user,
+            title="Private competitor plan",
+            threats="",
+            finalized_strategy="Another user's record",
+        )
+
+        response = self.client.get(reverse("record_search"), {"q": "private"})
+
+        self.assertContains(response, own_strategy.title)
+        self.assertNotContains(response, "Private competitor plan")
+
+
+class RecordOwnershipTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="owner", password="test-password")
+        self.other_user = User.objects.create_user(username="other-owner", password="test-password")
+        self.category = ArticleCategory.objects.create(name="Private")
+        self.own_article = Article.objects.create(
+            user=self.user,
+            title="My article",
+            content="Mine",
+            category=self.category,
+        )
+        self.other_article = Article.objects.create(
+            user=self.other_user,
+            title="Someone else's article",
+            content="Theirs",
+            category=self.category,
+        )
+        self.client.force_login(self.user)
+
+    def test_index_only_shows_the_logged_in_users_records(self):
+        response = self.client.get(reverse("index"))
+
+        self.assertContains(response, self.own_article.title)
+        self.assertNotContains(response, self.other_article.title)
+
+    def test_cannot_view_another_users_record(self):
+        response = self.client.get(
+            reverse("article_single", args=[self.other_article.slug])
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_cannot_edit_or_delete_another_users_record(self):
+        url = reverse("article_edit", args=[self.other_article.slug])
+
+        self.assertEqual(self.client.get(url).status_code, 404)
+        self.assertEqual(
+            self.client.post(url, {"action": "delete"}).status_code,
+            404,
+        )
+        self.assertTrue(Article.objects.filter(pk=self.other_article.pk).exists())
+
     def test_combines_post_types_in_reverse_chronological_order(self):
         category = ArticleCategory.objects.create(name="Work")
         article = Article.objects.create(
+            user=self.user,
             title="Earlier shared record",
             content="Article body",
             category=category,
         )
         strategy = Strategy.objects.create(
+            user=self.user,
             title="Later shared record",
             finalized_strategy="Strategy body",
         )
@@ -256,6 +324,7 @@ class RecordUpdateTests(TestCase):
         self.user = User.objects.create_user(username="editor", password="test-password")
         self.category = ArticleCategory.objects.create(name="Work")
         self.article = Article.objects.create(
+            user=self.user,
             title="Original title",
             content="Original body",
             category=self.category,

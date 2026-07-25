@@ -39,6 +39,10 @@ SEARCH_RECORD_TYPES = (
 )
 
 
+def records_for_user(model, user):
+    return model.objects.filter(user=user)
+
+
 @login_required
 def record_search(request):
     query = request.GET.get("q", "").strip()
@@ -46,7 +50,7 @@ def record_search(request):
 
     if query:
         for model, detail_url, icon_class, preview_field in SEARCH_RECORD_TYPES:
-            for record in model.objects.filter(title__icontains=query):
+            for record in records_for_user(model, request.user).filter(title__icontains=query):
                 results.append({
                     "record": record,
                     "detail_url": detail_url,
@@ -68,6 +72,7 @@ def record_create(request, record_type):
     _, form_class, detail_url, _, label = RECORD_FORMS[record_type]
     form = form_class(request.POST or None)
     if request.method == "POST" and form.is_valid():
+        form.instance.user = request.user
         record = form.save()
         return redirect(detail_url, slug=record.slug)
     return render(request, "core/forms/record-form.html", {
@@ -81,7 +86,7 @@ def record_create(request, record_type):
 @login_required
 def record_update(request, record_type, slug):
     model, form_class, detail_url, index_url, label = RECORD_FORMS[record_type]
-    record = get_object_or_404(model, slug=slug)
+    record = get_object_or_404(model, slug=slug, user=request.user)
 
     if request.method == "POST" and request.POST.get("action") == "delete":
         record.delete()
@@ -202,7 +207,7 @@ def logout_view(request):
 # ARTICLES
 @login_required
 def index(request):
-    articles = Article.objects.all().order_by("-created_at")
+    articles = records_for_user(Article, request.user).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -221,7 +226,7 @@ def index(request):
 
 @login_required
 def article_single(request,slug):
-    article = Article.objects.get(slug=slug)
+    article = get_object_or_404(Article, slug=slug, user=request.user)
     article_categories = ArticleCategory.objects.all()
     article_tags = ArticleTag.objects.all()
     for category in article_categories:
@@ -240,7 +245,7 @@ def article_category(request,slug):
     article_categories = ArticleCategory.objects.all()
     article_category = ArticleCategory.objects.get(slug=slug)
     article_tags = ArticleTag.objects.all()
-    articles = Article.objects.filter(category=article_category).order_by("-created_at")
+    articles = records_for_user(Article, request.user).filter(category=article_category).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -261,7 +266,7 @@ def article_subcategory(request,cat_slug,subcat_slug):
     article_categories = ArticleCategory.objects.all()
     article_subcategory = ArticleSubcategory.objects.get(slug=subcat_slug)
     article_tags = ArticleTag.objects.all()
-    articles = Article.objects.filter(subcategory=article_subcategory).order_by("-created_at")
+    articles = records_for_user(Article, request.user).filter(subcategory=article_subcategory).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -283,7 +288,7 @@ def article_tag(request,slug):
     article_categories = ArticleCategory.objects.all()
     article_tags = ArticleTag.objects.all()
     article_tag = ArticleTag.objects.get(slug=slug)
-    articles = Article.objects.filter(tags=article_tag).order_by("-created_at")
+    articles = records_for_user(Article, request.user).filter(tags=article_tag).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -304,7 +309,7 @@ def article_tag(request,slug):
 @login_required
 def journal_index(request):
 
-    journals = Journal.objects.all().order_by("-created_at")
+    journals = records_for_user(Journal, request.user).order_by("-created_at")
     paginator = Paginator(journals, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -323,7 +328,7 @@ def journal_index(request):
 
 @login_required
 def journal_single(request,slug):
-    article = Journal.objects.get(slug=slug)
+    article = get_object_or_404(Journal, slug=slug, user=request.user)
     journal_categories = JournalCategory.objects.all()
     journal_tags = JournalTag.objects.all()
     for category in journal_categories:
@@ -342,7 +347,7 @@ def journal_category(request,slug):
     journal_categories = JournalCategory.objects.all()
     journal_category = JournalCategory.objects.get(slug=slug)
     journal_tags = JournalTag.objects.all()
-    articles = Journal.objects.filter(category=journal_category).order_by("-created_at")
+    articles = records_for_user(Journal, request.user).filter(category=journal_category).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -363,7 +368,7 @@ def journal_subcategory(request,cat_slug,subcat_slug):
     journal_categories = JournalCategory.objects.all()
     journal_subcategory = JournalSubcategory.objects.get(slug=subcat_slug)
     journal_tags = JournalTag.objects.all()
-    articles = Journal.objects.filter(subcategory=journal_subcategory).order_by("-created_at")
+    articles = records_for_user(Journal, request.user).filter(subcategory=journal_subcategory).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -383,7 +388,7 @@ def journal_tag(request,slug):
     article_categories = JournalCategory.objects.all()
     article_tags = JournalTag.objects.all()
     article_tag = JournalTag.objects.get(slug=slug)
-    articles = Journal.objects.filter(tags=article_tag).order_by("-created_at")
+    articles = records_for_user(Journal, request.user).filter(tags=article_tag).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -404,7 +409,7 @@ def journal_tag(request,slug):
 @login_required
 def note_index(request):
 
-    notes = Note.objects.all().order_by("-created_at")
+    notes = records_for_user(Note, request.user).order_by("-created_at")
     paginator = Paginator(notes, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -422,7 +427,7 @@ def note_index(request):
 
 @login_required
 def note_single(request,slug):
-    article = Note.objects.get(slug=slug)
+    article = get_object_or_404(Note, slug=slug, user=request.user)
     note_categories = NoteCategory.objects.all()
     note_tags = NoteTag.objects.all()
     for category in note_categories:
@@ -441,7 +446,7 @@ def note_category(request,slug):
     note_categories = NoteCategory.objects.all()
     note_category = NoteCategory.objects.get(slug=slug)
     note_tags = NoteTag.objects.all()
-    articles = Note.objects.filter(category=note_category).order_by("-created_at")
+    articles = records_for_user(Note, request.user).filter(category=note_category).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -462,7 +467,7 @@ def note_subcategory(request,cat_slug,subcat_slug):
     note_categories = NoteCategory.objects.all()
     note_subcategory = NoteSubcategory.objects.get(slug=subcat_slug)
     note_tags = NoteTag.objects.all()
-    articles = Note.objects.filter(subcategory=note_subcategory).order_by("-created_at")
+    articles = records_for_user(Note, request.user).filter(subcategory=note_subcategory).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -483,7 +488,7 @@ def note_tag(request,slug):
     article_categories = NoteCategory.objects.all()
     article_tags = NoteTag.objects.all()
     article_tag = NoteTag.objects.get(slug=slug)
-    articles = Note.objects.filter(tags=article_tag).order_by("-created_at")
+    articles = records_for_user(Note, request.user).filter(tags=article_tag).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -505,7 +510,7 @@ def note_tag(request,slug):
 @login_required
 def centralpoint_index(request):
 
-    articles = CentralPoint.objects.all().order_by("-created_at")
+    articles = records_for_user(CentralPoint, request.user).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -524,7 +529,7 @@ def centralpoint_index(request):
 
 @login_required
 def centralpoint_single(request,slug):
-    article = CentralPoint.objects.get(slug=slug)
+    article = get_object_or_404(CentralPoint, slug=slug, user=request.user)
     article_categories = CentralPointCategory.objects.all()
     article_tags = CentralPointTag.objects.all()
     for category in article_categories:
@@ -543,7 +548,7 @@ def centralpoint_category(request,slug):
     article_categories = CentralPointCategory.objects.all()
     article_category = CentralPointCategory.objects.get(slug=slug)
     article_tags = CentralPointTag.objects.all()
-    articles = CentralPoint.objects.filter(category=article_category).order_by("-created_at")
+    articles = records_for_user(CentralPoint, request.user).filter(category=article_category).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -564,7 +569,7 @@ def centralpoint_subcategory(request,cat_slug,subcat_slug):
     article_categories = CentralPointCategory.objects.all()
     article_subcategory = CentralPointSubcategory.objects.get(slug=subcat_slug)
     article_tags = CentralPointTag.objects.all()
-    articles = CentralPoint.objects.filter(subcategory=article_subcategory).order_by("-created_at")
+    articles = records_for_user(CentralPoint, request.user).filter(subcategory=article_subcategory).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -586,7 +591,7 @@ def centralpoint_tag(request,slug):
     article_categories = CentralPointCategory.objects.all()
     article_tags = CentralPointTag.objects.all()
     article_tag = CentralPointTag.objects.get(slug=slug)
-    articles = CentralPoint.objects.filter(tags=article_tag).order_by("-created_at")
+    articles = records_for_user(CentralPoint, request.user).filter(tags=article_tag).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -608,7 +613,7 @@ def centralpoint_tag(request,slug):
 def strategy_index(request):
 
 
-    articles = Strategy.objects.all().order_by("-created_at")
+    articles = records_for_user(Strategy, request.user).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -629,7 +634,7 @@ def strategy_index(request):
     })
 @login_required
 def strategy_single(request,slug):
-    article = Strategy.objects.get(slug=slug)
+    article = get_object_or_404(Strategy, slug=slug, user=request.user)
     article_categories = StrategyCategory.objects.all()
     article_tags = StrategyTag.objects.all()
     for category in article_categories:
@@ -647,7 +652,7 @@ def strategy_category(request,slug):
 
     article_categories = StrategyCategory.objects.all()
     article_category = StrategyCategory.objects.get(slug=slug)
-    articles = Strategy.objects.filter(category=article_category).order_by("-created_at")
+    articles = records_for_user(Strategy, request.user).filter(category=article_category).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -670,7 +675,7 @@ def strategy_subcategory(request,cat_slug,subcat_slug):
     article_categories = StrategyCategory.objects.all()
     article_subcategory = StrategySubcategory.objects.get(slug=subcat_slug)
     article_tags = StrategyTag.objects.all()
-    articles = Strategy.objects.filter(subcategory=article_subcategory).order_by("-created_at")
+    articles = records_for_user(Strategy, request.user).filter(subcategory=article_subcategory).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -691,7 +696,7 @@ def strategy_tag(request,slug):
     article_categories = StrategyCategory.objects.all()
     article_tags = StrategyTag.objects.all()
     article_tag = StrategyTag.objects.get(slug=slug)
-    articles = Strategy.objects.filter(tags=article_tag).order_by("-created_at")
+    articles = records_for_user(Strategy, request.user).filter(tags=article_tag).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -713,7 +718,7 @@ def strategy_tag(request,slug):
 def decision_index(request):
 
 
-    articles = Decision.objects.all().order_by("-created_at")
+    articles = records_for_user(Decision, request.user).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -734,7 +739,7 @@ def decision_index(request):
     })
 @login_required
 def decision_single(request,slug):
-    article = Decision.objects.get(slug=slug)
+    article = get_object_or_404(Decision, slug=slug, user=request.user)
     article_categories = DecisionCategory.objects.all()
     article_tags = DecisionTag.objects.all()
     for category in article_categories:
@@ -752,7 +757,7 @@ def decision_category(request,slug):
 
     article_categories = DecisionCategory.objects.all()
     article_category = DecisionCategory.objects.get(slug=slug)
-    articles = Decision.objects.filter(category=article_category).order_by("-created_at")
+    articles = records_for_user(Decision, request.user).filter(category=article_category).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -775,7 +780,7 @@ def decision_subcategory(request,cat_slug,subcat_slug):
     article_categories = DecisionCategory.objects.all()
     article_subcategory = DecisionSubcategory.objects.get(slug=subcat_slug)
     article_tags = DecisionTag.objects.all()
-    articles = Decision.objects.filter(subcategory=article_subcategory).order_by("-created_at")
+    articles = records_for_user(Decision, request.user).filter(subcategory=article_subcategory).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -796,7 +801,7 @@ def decision_tag(request,slug):
     article_categories = DecisionCategory.objects.all()
     article_tags = DecisionTag.objects.all()
     article_tag = DecisionTag.objects.get(slug=slug)
-    articles = Decision.objects.filter(tags=article_tag).order_by("-created_at")
+    articles = records_for_user(Decision, request.user).filter(tags=article_tag).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -818,7 +823,7 @@ def decision_tag(request,slug):
 def goal_index(request):
 
 
-    articles = Goal.objects.all().order_by("-created_at")
+    articles = records_for_user(Goal, request.user).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -839,7 +844,7 @@ def goal_index(request):
     })
 @login_required
 def goal_single(request,slug):
-    article = Goal.objects.get(slug=slug)
+    article = get_object_or_404(Goal, slug=slug, user=request.user)
     article_categories = GoalCategory.objects.all()
     article_tags = GoalTag.objects.all()
     for category in article_categories:
@@ -857,7 +862,7 @@ def goal_category(request,slug):
 
     article_categories = GoalCategory.objects.all()
     article_category = GoalCategory.objects.get(slug=slug)
-    articles = Goal.objects.filter(category=article_category).order_by("-created_at")
+    articles = records_for_user(Goal, request.user).filter(category=article_category).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -880,7 +885,7 @@ def goal_subcategory(request,cat_slug,subcat_slug):
     article_categories = GoalCategory.objects.all()
     article_subcategory = GoalSubcategory.objects.get(slug=subcat_slug)
     article_tags = GoalTag.objects.all()
-    articles = Goal.objects.filter(subcategory=article_subcategory).order_by("-created_at")
+    articles = records_for_user(Goal, request.user).filter(subcategory=article_subcategory).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -901,7 +906,7 @@ def goal_tag(request,slug):
     article_categories = GoalCategory.objects.all()
     article_tags = GoalTag.objects.all()
     article_tag = GoalTag.objects.get(slug=slug)
-    articles = Goal.objects.filter(tags=article_tag).order_by("-created_at")
+    articles = records_for_user(Goal, request.user).filter(tags=article_tag).order_by("-created_at")
     paginator = Paginator(articles, 6) # Show 9 per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
