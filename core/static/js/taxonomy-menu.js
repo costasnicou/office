@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+const initializeTaxonomyMenu = () => {
     const endpoint = document.body.dataset.taxonomyUrl;
     const deleteEndpoint = document.body.dataset.taxonomyDeleteUrl;
     const recordType = document.body.dataset.recordType;
@@ -8,6 +8,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!endpoint || !deleteEndpoint || !recordType || !modal || !form) {
         return;
     }
+    if (modal.dataset.taxonomyInitialized === "true") {
+        return;
+    }
+    modal.dataset.taxonomyInitialized = "true";
 
     const title = modal.querySelector("#taxonomy-modal-title");
     const context = modal.querySelector(".taxonomy-modal-context");
@@ -187,8 +191,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const tags = document.querySelector(".tags");
     if (tags) {
         const tagContainer = tags.querySelector(".tags-wraper") || tags;
-        [...tagContainer.querySelectorAll(":scope > li")].forEach((tagItem) => {
-            const tagLink = tagItem.querySelector(":scope > a");
+        [...tagContainer.children].filter(
+            (child) => child.tagName === "LI"
+        ).forEach((tagItem) => {
+            const tagLink = [...tagItem.children].find(
+                (child) => child.tagName === "A"
+            );
             if (!tagLink) {
                 return;
             }
@@ -248,4 +256,13 @@ document.addEventListener("DOMContentLoaded", () => {
             submit.textContent = "Create";
         }
     });
-});
+};
+
+// Production asset optimizers can execute deferred scripts after DOMContentLoaded.
+// Initialize immediately in that case instead of waiting for an event that has
+// already fired.
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initializeTaxonomyMenu);
+} else {
+    initializeTaxonomyMenu();
+}
