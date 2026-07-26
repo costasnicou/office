@@ -394,6 +394,12 @@ html[lang="el"] .grid-right-wraper .preview .content p {
     height: auto;
     aspect-ratio: auto !important;
     object-fit: contain; }
+  .article-content .media {
+    max-width: 100%;
+    margin: 24px auto; }
+    .article-content .media iframe {
+      max-width: 100%;
+      border: 0; }
   .article-content h2, .article-content h3, .article-content h4, .article-content h5, .article-content h6, .article-content p {
     font-weight: 300;
     color: #4e4e4e; }

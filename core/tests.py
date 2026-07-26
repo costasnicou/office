@@ -1,5 +1,6 @@
 import base64
 import tempfile
+from django.conf import settings
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.core.management import call_command
@@ -53,6 +54,13 @@ class CKEditorUploadTests(TestCase):
         response = self.client.post(reverse("ck_editor_5_upload_file"))
 
         self.assertEqual(response.status_code, 403)
+
+    def test_media_embed_is_enabled_for_all_editor_configurations(self):
+        for config_name in ("default", "extends"):
+            with self.subTest(config_name=config_name):
+                config = settings.CKEDITOR_5_CONFIGS[config_name]
+                self.assertIn("mediaEmbed", config["toolbar"])
+                self.assertTrue(config["mediaEmbed"]["previewsInData"])
 
 
 class ArticleCreateTests(TestCase):

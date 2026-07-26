@@ -91,9 +91,13 @@ DATABASES = {
 
 CKEDITOR_5_CONFIGS = {
     "default": {
-        "toolbar": ["heading", "|", "bold", "italic", "link", "bulletedList", "numberedList", "blockQuote", "imageUpload"],
+        "toolbar": [
+            "heading", "|", "bold", "italic", "link", "bulletedList",
+            "numberedList", "blockQuote", "imageUpload", "mediaEmbed",
+        ],
         "height": "300px",
         "width": "100%",
+        "mediaEmbed": {"previewsInData": True},
         "image": {
             "toolbar": ["imageTextAlternative", "imageStyle:full", "imageStyle:side"]
         },
@@ -103,8 +107,10 @@ CKEDITOR_5_CONFIGS = {
         "toolbar": [
              "heading", 
             "bold", "italic", "link", "underline", "code", "bulletedList",
-            "numberedList", "insertTable", "blockQuote",  "imageUpload","undo", "redo"
+            "numberedList", "insertTable", "blockQuote", "imageUpload",
+            "mediaEmbed", "undo", "redo",
         ],
+        "mediaEmbed": {"previewsInData": True},
         "image": {
             "toolbar": [
                 "imageTextAlternative",
