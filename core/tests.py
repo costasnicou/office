@@ -544,7 +544,7 @@ class TaxonomyPopupTests(TestCase):
         self.assertContains(response, 'class="sidebar-toggle"')
         self.assertContains(response, 'data-record-type="article"')
         self.assertContains(response, "js/taxonomy-menu.js")
-        self.assertContains(response, "taxonomy-menu.js?v=20260726-1")
+        self.assertContains(response, "taxonomy-menu.js?v=20260726-2")
         self.assertContains(response, "google-translate.js?v=20260726-1")
         self.assertContains(response, 'id="google_translate_element"', count=1)
         self.assertContains(response, 'data-language="en"', count=1)
@@ -755,6 +755,32 @@ class TaxonomyPopupTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(ArticleTag.objects.filter(pk=tag.pk).exists())
         self.assertFalse(article.tags.exists())
+
+    def test_deletion_redirect_url_is_unfiltered_index_for_each_record_type(self):
+        index_routes = {
+            record_type: models_for_type[0]._meta.model_name + "_index"
+            for record_type, models_for_type in TAXONOMY_MODELS.items()
+        }
+        index_routes["article"] = "index"
+
+        for record_type, models_for_type in TAXONOMY_MODELS.items():
+            tag_model = models_for_type[3]
+            tag = tag_model.objects.create(
+                user=self.user,
+                name=f"{record_type} redirect tag",
+            )
+
+            with self.subTest(record_type=record_type):
+                response = self.client.post(
+                    self.taxonomy_delete_url(record_type),
+                    {"kind": "tag", "slug": tag.slug},
+                )
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(
+                    response.json()["redirect_url"],
+                    workspace_reverse(index_routes[record_type], self.user),
+                )
 
     def test_cannot_delete_another_users_taxonomy(self):
         category = ArticleCategory.objects.create(

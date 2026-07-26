@@ -159,7 +159,14 @@ def taxonomy_delete(request, record_type):
         ).update(subcategory=None)
 
     item.delete()
-    return JsonResponse({"deleted": True})
+    index_url_name = RECORD_FORMS[record_type][3]
+    return JsonResponse({
+        "deleted": True,
+        "redirect_url": reverse(
+            index_url_name,
+            kwargs={"username": request.user.username},
+        ),
+    })
 
 
 @workspace_login_required

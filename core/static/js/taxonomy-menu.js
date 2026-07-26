@@ -101,7 +101,7 @@ const initializeTaxonomyMenu = () => {
                 if (!response.ok) {
                     throw new Error(result.error || "The item could not be deleted.");
                 }
-                window.location.reload();
+                window.location.assign(result.redirect_url);
             } catch (requestError) {
                 window.alert(requestError.message);
                 button.disabled = false;
