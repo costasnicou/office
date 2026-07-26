@@ -381,6 +381,16 @@
     }
 }
 
+@media (max-width: 500px) {
+    body.sidebar-open .header .header-nav .sidebar-toggle {
+        position: fixed;
+        top: 50px;
+        left: 16px;
+        z-index: 10040;
+        visibility: visible;
+        pointer-events: auto;
+    }
+}
 @media(max-width: 700px) {
     :root {
         --header-height: 54px;

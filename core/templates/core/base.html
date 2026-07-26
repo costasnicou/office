@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meritocracy Pad</title>
-    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=20260726-3">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=20260726-8">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet">
@@ -21,7 +21,7 @@
     <script src="https://kit.fontawesome.com/d495971c43.js" crossorigin="anonymous"></script>
 </head>
 <body
-    class="workspace-page"
+    class="workspace-page{% if workspace_is_single %} workspace-single-page{% endif %}"
     {% if workspace_record_type %}
         data-taxonomy-url="{% url 'taxonomy_create' request.user.username workspace_record_type %}"
         data-taxonomy-delete-url="{% url 'taxonomy_delete' request.user.username workspace_record_type %}"
@@ -70,11 +70,7 @@
             </label>
 
             {% if not workspace_is_record_form %}
-                <button class="sidebar-toggle" type="button" aria-expanded="false" aria-label="Toggle categories and tags">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
+                {% include "core/includes/sidebar-toggle.html" %}
             {% endif %}
 
             <div class="menu-wraper">

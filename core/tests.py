@@ -577,6 +577,28 @@ class TaxonomyPopupTests(TestCase):
         self.assertNotContains(create_response, 'class="sidebar-toggle"')
         self.assertNotContains(edit_response, 'class="sidebar-toggle"')
 
+    def test_single_record_page_uses_collapsible_desktop_sidebar(self):
+        category = ArticleCategory.objects.get(
+            user=self.user,
+            slug="uncategorized",
+        )
+        article = Article.objects.create(
+            user=self.user,
+            category=category,
+            title="Single page sidebar",
+            content="Body",
+        )
+
+        response = self.client.get(
+            workspace_reverse("article_single", self.user, args=[article.slug])
+        )
+
+        self.assertContains(
+            response,
+            'class="workspace-page workspace-single-page"',
+        )
+        self.assertContains(response, 'class="sidebar-toggle"')
+
     def test_creates_user_owned_taxonomy_for_every_record_type(self):
         for record_type, models_for_type in TAXONOMY_MODELS.items():
             _, category_model, subcategory_model, tag_model = models_for_type

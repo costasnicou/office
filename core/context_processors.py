@@ -20,4 +20,5 @@ def workspace_record_type(request):
     return {
         "workspace_record_type": record_type,
         "workspace_is_record_form": url_name.endswith(("_create", "_edit")),
+        "workspace_is_single": url_name.endswith("_single"),
     }
