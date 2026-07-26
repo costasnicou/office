@@ -2513,6 +2513,38 @@ html[lang="el"] .workspace-page .header .header-nav .header-menu {
         opacity: 0; }
       .workspace-page.workspace-single-page.sidebar-open .header .header-nav .sidebar-toggle span:nth-child(3) {
         transform: translateY(-7px) rotate(-45deg); } }
+@media (min-width: 701px) and (max-width: 1366px) {
+  .workspace-page .article-content {
+    width: 100%; }
+    .workspace-page .article-content figure.image {
+      width: min(100%, 760px) !important;
+      max-width: 100%;
+      margin-right: auto;
+      margin-left: auto; }
+    .workspace-page .article-content img {
+      display: block;
+      width: 100%;
+      max-width: 760px;
+      max-height: 72vh;
+      margin-right: auto;
+      margin-left: auto;
+      object-fit: contain; } }
+@media (max-width: 700px) {
+  .workspace-page .article-content {
+    width: 100%; }
+    .workspace-page .article-content figure.image {
+      width: 100% !important;
+      max-width: 100%;
+      margin-right: 0;
+      margin-left: 0; }
+    .workspace-page .article-content img {
+      display: block;
+      width: 100% !important;
+      max-width: 100%;
+      height: auto;
+      margin-right: 0;
+      margin-left: 0;
+      object-fit: contain; } }
 @media (max-width: 1366px) {
   .workspace-page .header .header-nav {
     padding: 0 94px; }
