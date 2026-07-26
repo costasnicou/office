@@ -541,6 +541,7 @@ class TaxonomyPopupTests(TestCase):
         response = self.client.get(workspace_reverse("index", self.user))
 
         self.assertContains(response, 'class="taxonomy-modal"')
+        self.assertContains(response, 'class="sidebar-toggle"')
         self.assertContains(response, 'data-record-type="article"')
         self.assertContains(response, "js/taxonomy-menu.js")
         self.assertContains(response, "taxonomy-menu.js?v=20260726-1")
@@ -552,6 +553,28 @@ class TaxonomyPopupTests(TestCase):
             response.content.index(b'class="logout"'),
             response.content.index(b'class="language-selector'),
         )
+
+    def test_record_create_and_edit_forms_hide_sidebar_toggle(self):
+        category = ArticleCategory.objects.get(
+            user=self.user,
+            slug="uncategorized",
+        )
+        article = Article.objects.create(
+            user=self.user,
+            category=category,
+            title="Record being edited",
+            content="Body",
+        )
+
+        create_response = self.client.get(
+            workspace_reverse("article_create", self.user)
+        )
+        edit_response = self.client.get(
+            workspace_reverse("article_edit", self.user, args=[article.slug])
+        )
+
+        self.assertNotContains(create_response, 'class="sidebar-toggle"')
+        self.assertNotContains(edit_response, 'class="sidebar-toggle"')
 
     def test_creates_user_owned_taxonomy_for_every_record_type(self):
         for record_type, models_for_type in TAXONOMY_MODELS.items():

@@ -69,11 +69,13 @@
                 <span></span>
             </label>
 
-            <button class="sidebar-toggle" type="button" aria-expanded="false" aria-label="Toggle categories and tags">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
+            {% if not workspace_is_record_form %}
+                <button class="sidebar-toggle" type="button" aria-expanded="false" aria-label="Toggle categories and tags">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            {% endif %}
 
             <div class="menu-wraper">
                 <ul class="header-menu">

@@ -670,8 +670,8 @@
     .edit-record-btn,
     .edit-record-btn:link,
     .edit-record-btn:visited {
-        top: 34px;
-        right: 34px;
+        top: -20px;
+        right: 14px;
         display: grid;
         width: 42px;
         height: 42px;
@@ -679,8 +679,9 @@
         place-items: center;
         border: 1px solid var(--workspace-line);
         border-radius: 10px;
-        color: #766d61;
-        background: #faf6ef;
+        color: #ffffff;
+        background: #545454;
+        background: darken( $color-accent,15%);
         font-size: 17px;
     }
 
@@ -1050,7 +1051,7 @@ html[lang="el"] .workspace-page {
         border: 1px solid var(--workspace-line);
         border-radius: 10px;
         color: #ffffff;
-        background: #545454;
+        // background: #545454;
         font-size: 17px;
     }
 
@@ -1168,10 +1169,15 @@ html[lang="el"] .workspace-page {
             padding: 24px 20px;
         }
 
+        .workspace-page .edit-record-btn, .workspace-page .edit-record-btn:link, .workspace-page .edit-record-btn:visited {
+            top: -20px;
+            right: 18px;
+        }
+
         .edit-record-btn,
         .edit-record-btn:link,
         .edit-record-btn:visited {
-            top: 18px;
+            top: -20px;
             right: 18px;
         }
 
