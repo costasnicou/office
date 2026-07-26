@@ -1,6 +1,9 @@
+import base64
+import tempfile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.core.management import call_command
+from django.core.files.uploadedfile import SimpleUploadedFile
 from unittest.mock import patch
 from io import StringIO
 
@@ -13,6 +16,43 @@ from .views import TAXONOMY_MODELS
 
 def workspace_reverse(name, user, args=None):
     return reverse(name, args=[user.username, *(args or [])])
+
+
+class CKEditorUploadTests(TestCase):
+    PNG_DATA = base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwC"
+        "AAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+    )
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="ckeditor-user",
+            password="test-password",
+        )
+
+    def test_authenticated_user_can_upload_an_image(self):
+        self.client.force_login(self.user)
+
+        with tempfile.TemporaryDirectory() as media_root:
+            with override_settings(MEDIA_ROOT=media_root):
+                response = self.client.post(
+                    reverse("ck_editor_5_upload_file"),
+                    {
+                        "upload": SimpleUploadedFile(
+                            "pixel.png",
+                            self.PNG_DATA,
+                            content_type="image/png",
+                        ),
+                    },
+                )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["url"].startswith("/media/"))
+
+    def test_anonymous_user_cannot_upload_an_image(self):
+        response = self.client.post(reverse("ck_editor_5_upload_file"))
+
+        self.assertEqual(response.status_code, 403)
 
 
 class ArticleCreateTests(TestCase):

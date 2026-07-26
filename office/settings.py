@@ -121,6 +121,12 @@ CKEDITOR_5_CONFIGS = {
     },
 }
 
+# CKEditor uploads are available to signed-in workspace users. Files are stored
+# separately from collected static assets so deployments do not remove them.
+CKEDITOR_5_FILE_UPLOAD_PERMISSION = "authenticated"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
