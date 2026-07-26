@@ -1,6 +1,13 @@
 .article-content{
     font-weight: 300;
     width: 85%;
+
+    img {
+        max-width: 100%;
+        height: auto;
+        aspect-ratio: auto !important;
+        object-fit: contain;
+    }
     
     h2,h3,h4,h5,h6,p{
          font-weight: 300;

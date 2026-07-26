@@ -389,6 +389,11 @@ html[lang="el"] .grid-right-wraper .preview .content p {
 .article-content {
   font-weight: 300;
   width: 85%; }
+  .article-content img {
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: auto !important;
+    object-fit: contain; }
   .article-content h2, .article-content h3, .article-content h4, .article-content h5, .article-content h6, .article-content p {
     font-weight: 300;
     color: #4e4e4e; }
