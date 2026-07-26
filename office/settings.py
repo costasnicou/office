@@ -133,6 +133,10 @@ CKEDITOR_5_FILE_UPLOAD_PERMISSION = "authenticated"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# YouTube embeds require the embedding site's origin for player
+# identification. Send only the origin—not the full page URL—to third parties.
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 

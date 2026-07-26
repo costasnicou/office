@@ -62,6 +62,14 @@ class CKEditorUploadTests(TestCase):
                 self.assertIn("mediaEmbed", config["toolbar"])
                 self.assertTrue(config["mediaEmbed"]["previewsInData"])
 
+    def test_cross_origin_media_receives_origin_referrer_policy(self):
+        response = self.client.get(reverse("login"))
+
+        self.assertEqual(
+            response.headers["Referrer-Policy"],
+            "strict-origin-when-cross-origin",
+        )
+
 
 class ArticleCreateTests(TestCase):
     def setUp(self):
