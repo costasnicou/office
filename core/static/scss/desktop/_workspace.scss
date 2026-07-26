@@ -1638,3 +1638,38 @@ html[lang="el"] .workspace-page {
         height: 25px;
     }
 }
+
+@media (min-width:1441px) and (max-width:1565px){
+    html[lang="el"]{
+        .header .header-nav .header-menu li a{
+            font-size: 15px !important;
+            white-space: normal;
+        }
+
+
+    }
+}
+@media (min-width:1681px) and (max-width:1838px){
+    html[lang="el"]{
+        .workspace-page .header .header-nav .logo p {
+            color: var(--workspace-ink);
+            font-size: 30px;
+        }
+
+        .header .header-nav .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0px 50px;
+        }
+
+        .header .header-nav .header-menu li  a {
+            font-size: 17px;
+        }
+    }
+
+    html[lang="el"] .header .header-nav .header-menu li a:link, html[lang="el"] .header .header-nav .header-menu li a:visited {
+        font-size: 16px;
+        white-space: normal;
+    }
+}
