@@ -545,6 +545,7 @@ class TaxonomyPopupTests(TestCase):
         self.assertContains(response, 'data-record-type="article"')
         self.assertContains(response, "js/taxonomy-menu.js")
         self.assertContains(response, "taxonomy-menu.js?v=20260726-1")
+        self.assertContains(response, "google-translate.js?v=20260726-1")
         self.assertContains(response, 'id="google_translate_element"', count=1)
         self.assertContains(response, 'data-language="en"', count=1)
         self.assertContains(response, 'data-language="el"', count=1)

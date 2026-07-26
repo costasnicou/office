@@ -20,16 +20,38 @@
         });
     }
 
-    function persistLanguage(language) {
-        var value = language === "el" ? "/en/el" : "/en/en";
-        var cookie = "googtrans=" + value + ";path=/;SameSite=Lax";
-        document.cookie = cookie;
+    function translationCookieDomains() {
+        var hostname = window.location.hostname.replace(/^www\./, "");
+        var domains = ["", hostname, "." + hostname];
+        var parts = hostname.split(".");
 
-        // Google may create its cookie for the root domain on production.
-        // Write the same preference there so a stale domain cookie cannot win.
-        var rootDomain = window.location.hostname.replace(/^www\./, "");
-        if (rootDomain.includes(".") && !/^\d+\.\d+\.\d+\.\d+$/.test(rootDomain)) {
-            document.cookie = cookie + ";domain=." + rootDomain;
+        // Google Translate commonly stores its preference on the parent domain
+        // (for example .costasnicou.com from backoffice.costasnicou.com).
+        if (parts.length > 2 && !/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+            domains.push("." + parts.slice(-2).join("."));
+        }
+        return domains;
+    }
+
+    function writeTranslationCookie(value, domain) {
+        var cookie = "googtrans=" + value + ";path=/;SameSite=Lax";
+        document.cookie = domain ? cookie + ";domain=" + domain : cookie;
+    }
+
+    function clearTranslationCookies() {
+        var expired = ";path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT;Max-Age=0;SameSite=Lax";
+        translationCookieDomains().forEach(function (domain) {
+            document.cookie = "googtrans=" + expired +
+                (domain ? ";domain=" + domain : "");
+        });
+    }
+
+    function persistLanguage(language) {
+        clearTranslationCookies();
+        if (language === "el") {
+            translationCookieDomains().forEach(function (domain) {
+                writeTranslationCookie("/en/el", domain);
+            });
         }
     }
 
