@@ -1798,6 +1798,9 @@ html[lang="el"] .grid-right-wraper .preview .content p {
       padding-right: 34px !important; }
     .workspace-page .grid-left .taxonomy-item-row {
       position: relative; }
+    .workspace-page .grid-left .categories .taxonomy-item-row {
+      display: inline-block;
+      max-width: 100%; }
     .workspace-page .grid-left .taxonomy-delete-button {
       display: grid;
       position: absolute;
@@ -1811,7 +1814,7 @@ html[lang="el"] .grid-right-wraper .preview .content p {
       border: 0;
       border-radius: 50%;
       color: white;
-      background: orangered;
+      background: #eaaa31;
       cursor: pointer;
       font: inherit;
       font-size: 18px;
@@ -1819,17 +1822,28 @@ html[lang="el"] .grid-right-wraper .preview .content p {
       line-height: 1;
       transform: translateY(-50%); }
       .workspace-page .grid-left .taxonomy-delete-button > span {
-        display: flex;
+        display: block;
+        position: relative;
         width: 100%;
         height: 100%;
-        align-items: center;
-        justify-content: center;
-        line-height: 1;
-        transform: translateY(-1px); }
+        font-size: 0;
+        transform: none; }
+        .workspace-page .grid-left .taxonomy-delete-button > span::before, .workspace-page .grid-left .taxonomy-delete-button > span::after {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 11px;
+          height: 2px;
+          border-radius: 1px;
+          background: currentColor;
+          transform: translate(-50%, -50%) rotate(45deg); }
+        .workspace-page .grid-left .taxonomy-delete-button > span::after {
+          transform: translate(-50%, -50%) rotate(-45deg); }
       .workspace-page .grid-left .taxonomy-delete-button:hover, .workspace-page .grid-left .taxonomy-delete-button:focus-visible {
         outline: 2px solid rgba(255, 255, 255, 0.75);
         outline-offset: 1px;
-        background: #c93600; }
+        background: #e8a01a; }
       .workspace-page .grid-left .taxonomy-delete-button:disabled {
         cursor: wait;
         opacity: .55; }
@@ -1837,6 +1851,9 @@ html[lang="el"] .grid-right-wraper .preview .content p {
       width: 21px;
       height: 21px;
       font-size: 16px; }
+      .workspace-page .grid-left .sub-categories .taxonomy-delete-button > span::before,
+      .workspace-page .grid-left .sub-categories .taxonomy-delete-button > span::after {
+        width: 10px; }
     .workspace-page .grid-left .tags .tags-wraper .taxonomy-item-with-delete .taxonomy-item-row {
       display: inline-flex;
       align-items: center; }
@@ -1848,6 +1865,9 @@ html[lang="el"] .grid-right-wraper .preview .content p {
       width: 20px;
       height: 20px;
       font-size: 15px; }
+      .workspace-page .grid-left .tags .tags-wraper .taxonomy-item-with-delete .taxonomy-delete-button > span::before,
+      .workspace-page .grid-left .tags .tags-wraper .taxonomy-item-with-delete .taxonomy-delete-button > span::after {
+        width: 9px; }
     .workspace-page .grid-left .taxonomy-default-category > .taxonomy-item-row > a::after {
       content: "Default";
       margin-left: 7px;
