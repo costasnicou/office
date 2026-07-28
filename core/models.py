@@ -11,6 +11,28 @@ class User(AbstractUser):
     pass
 
 
+class RecordDraft(models.Model):
+    """An incomplete form snapshot kept separate from published records."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="record_drafts",
+    )
+    record_type = models.CharField(max_length=32)
+    record_key = models.CharField(max_length=255, default="__new__")
+    data = models.JSONField(default=dict)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("user", "record_type", "record_key"),
+                name="unique_user_record_draft",
+            )
+        ]
+
+
 class UserOwnedModel(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

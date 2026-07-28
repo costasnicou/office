@@ -1,4 +1,5 @@
 {% extends "core/base.html" %}
+{% load static %}
 
 {% block main %}
 <div class="record-form-page">
@@ -6,8 +7,14 @@
         <p class="form-eyebrow">{% if is_edit %}Update record{% else %}New record{% endif %}</p>
         <h1>{% if is_edit %}Edit{% else %}Add{% endif %} {{ record_label }}</h1>
         <p class="form-intro">Choose existing categories and tags, or create missing ones below.</p>
+        <p class="autosave-status{% if draft %} is-saved{% endif %}" role="status" aria-live="polite">{% if draft %}Draft restored — last saved {{ draft.updated_at|date:"M j, Y, H:i:s" }}{% endif %}</p>
 
-        <form method="post" class="record-form">
+        <form
+            method="post"
+            class="record-form"
+            data-autosave-url="{% url 'record_autosave' request.user.username record_type %}"
+            data-record-slug="{% if is_edit %}{{ record.slug }}{% endif %}"
+        >
             {% csrf_token %}
             {{ form.media }}
             {% if form.non_field_errors %}
@@ -34,4 +41,5 @@
         </form>
     </div>
 </div>
+<script src="{% static 'js/record-autosave.js' %}?v=20260729-2" defer></script>
 {% endblock %}

@@ -10,7 +10,8 @@ from io import StringIO
 
 from .forms import ArticleForm, RegistrationForm
 from .models import (
-    Article, ArticleCategory, ArticleSubcategory, ArticleTag, Strategy, User,
+    Article, ArticleCategory, ArticleSubcategory, ArticleTag, RecordDraft,
+    Strategy, User,
 )
 from .views import TAXONOMY_MODELS
 
@@ -96,6 +97,97 @@ class ArticleCreateTests(TestCase):
 
         self.assertContains(response, 'class="field-errors"')
         self.assertContains(response, "This field is required.")
+
+    def test_autosave_stores_an_incomplete_new_record_as_a_draft(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            workspace_reverse("record_autosave", self.user, args=["article"]),
+            {"title": "Work in progress", "content": "Unfinished body"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        draft = RecordDraft.objects.get(
+            user=self.user, record_type="article", record_key="__new__"
+        )
+        self.assertEqual(draft.data["title"], ["Work in progress"])
+        self.assertFalse(Article.objects.exists())
+
+    def test_create_page_restores_the_users_draft(self):
+        RecordDraft.objects.create(
+            user=self.user,
+            record_type="article",
+            data={"title": ["Restored title"], "content": ["Restored body"]},
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(workspace_reverse("article_create", self.user))
+
+        self.assertContains(response, 'value="Restored title"')
+        self.assertContains(response, "Restored body")
+        self.assertContains(response, "Draft restored")
+
+    def test_final_save_removes_the_new_record_draft(self):
+        RecordDraft.objects.create(
+            user=self.user,
+            record_type="article",
+            data={"title": ["Draft title"]},
+        )
+        self.client.force_login(self.user)
+
+        self.client.post(workspace_reverse("article_create", self.user), {
+            "title": "Published title",
+            "content": "Published body",
+            "new_category": "Work",
+        })
+
+        self.assertTrue(Article.objects.filter(title="Published title").exists())
+        self.assertFalse(RecordDraft.objects.filter(user=self.user).exists())
+
+    def test_autosave_cannot_modify_another_users_record(self):
+        other_user = User.objects.create_user(username="other-writer")
+        category = ArticleCategory.objects.create(user=other_user, name="Private")
+        article = Article.objects.create(
+            user=other_user,
+            title="Private article",
+            content="Private body",
+            category=category,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            workspace_reverse("record_autosave", self.user, args=["article"]),
+            {"record_slug": article.slug, "title": "Attempted overwrite"},
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(RecordDraft.objects.exists())
+
+    def test_edit_autosave_does_not_change_record_until_final_save(self):
+        category = ArticleCategory.objects.create(user=self.user, name="Work")
+        article = Article.objects.create(
+            user=self.user,
+            title="Published title",
+            content="Published body",
+            category=category,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            workspace_reverse("record_autosave", self.user, args=["article"]),
+            {
+                "record_slug": article.slug,
+                "title": "Draft edit",
+                "content": "Draft body",
+                "category": str(category.pk),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        article.refresh_from_db()
+        self.assertEqual(article.title, "Published title")
+        draft = RecordDraft.objects.get(record_key=article.slug)
+        self.assertEqual(draft.data["title"], ["Draft edit"])
 
     def test_creates_record_and_new_taxonomy_values(self):
         self.client.force_login(self.user)

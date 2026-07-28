@@ -983,6 +983,18 @@ html[lang="el"] .grid-right-wraper .preview .content p {
   margin-bottom: 32px;
   color: #666; }
 
+.autosave-status {
+  margin: -20px 0 28px;
+  color: #666;
+  text-align: center;
+  font-size: 14px; }
+
+.autosave-status.is-saved {
+  color: #397047; }
+
+.autosave-status.has-error {
+  color: #a40000; }
+
 .record-form {
   display: flex;
   flex-direction: column;

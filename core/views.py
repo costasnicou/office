@@ -50,6 +50,27 @@ def records_for_user(model, user):
     return model.objects.filter(user=user)
 
 
+def _draft_key(slug=None):
+    return slug or "__new__"
+
+
+def _record_draft(user, record_type, slug=None):
+    return RecordDraft.objects.filter(
+        user=user, record_type=record_type, record_key=_draft_key(slug)
+    ).first()
+
+
+def _draft_initial(draft):
+    if draft is None:
+        return None
+    return {
+        name: values if isinstance(values, list) and len(values) != 1 else (
+            values[0] if isinstance(values, list) and values else values
+        )
+        for name, values in draft.data.items()
+    }
+
+
 def taxonomy_for_user(model, user):
     queryset = model.objects.filter(user=user)
     if is_category_model(model):
@@ -194,18 +215,53 @@ def record_search(request):
 
 
 @workspace_login_required
+@require_POST
+def record_autosave(request, record_type):
+    config = RECORD_FORMS.get(record_type)
+    if config is None:
+        raise Http404
+
+    model, form_class, _, _, _ = config
+    slug = request.POST.get("record_slug", "").strip() or None
+    if slug and not model.objects.filter(user=request.user, slug=slug).exists():
+        raise Http404
+
+    allowed_fields = set(form_class(user=request.user).fields)
+    data = {
+        name: request.POST.getlist(name)
+        for name in allowed_fields
+        if name in request.POST
+    }
+    draft, _ = RecordDraft.objects.update_or_create(
+        user=request.user,
+        record_type=record_type,
+        record_key=_draft_key(slug),
+        defaults={"data": data},
+    )
+    return JsonResponse({"saved": True, "updated_at": draft.updated_at.isoformat()})
+
+
+@workspace_login_required
 def record_create(request, record_type):
     _, form_class, detail_url, _, label = RECORD_FORMS[record_type]
-    form = form_class(request.POST or None, user=request.user)
+    draft = _record_draft(request.user, record_type)
+    form = form_class(
+        request.POST or None,
+        initial=_draft_initial(draft) if request.method == "GET" else None,
+        user=request.user,
+    )
     if request.method == "POST" and form.is_valid():
         form.instance.user = request.user
         record = form.save()
+        if draft:
+            draft.delete()
         return redirect(detail_url, username=request.user.username, slug=record.slug)
     return render(request, "core/forms/record-form.html", {
         "form": form,
         "record_type": record_type,
         "record_label": label,
         "is_edit": False,
+        "draft": draft,
     })
 
 
@@ -213,14 +269,24 @@ def record_create(request, record_type):
 def record_update(request, record_type, slug):
     model, form_class, detail_url, index_url, label = RECORD_FORMS[record_type]
     record = get_object_or_404(model, slug=slug, user=request.user)
+    draft = _record_draft(request.user, record_type, slug)
 
     if request.method == "POST" and request.POST.get("action") == "delete":
+        if draft:
+            draft.delete()
         record.delete()
         return redirect(index_url, username=request.user.username)
 
-    form = form_class(request.POST or None, instance=record, user=request.user)
+    form = form_class(
+        request.POST or None,
+        instance=record,
+        initial=_draft_initial(draft) if request.method == "GET" else None,
+        user=request.user,
+    )
     if request.method == "POST" and form.is_valid():
         record = form.save()
+        if draft:
+            draft.delete()
         return redirect(detail_url, username=request.user.username, slug=record.slug)
 
     return render(request, "core/forms/record-form.html", {
@@ -229,6 +295,7 @@ def record_update(request, record_type, slug):
         "record_type": record_type,
         "record_label": label,
         "is_edit": True,
+        "draft": draft,
     })
 
 

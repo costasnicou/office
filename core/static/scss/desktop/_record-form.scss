@@ -21,6 +21,21 @@
     color: $color-text-subtle;
 }
 
+.autosave-status {
+    margin: -20px 0 28px;
+    color: $color-text-subtle;
+    text-align: center;
+    font-size: 14px;
+}
+
+.autosave-status.is-saved {
+    color: #397047;
+}
+
+.autosave-status.has-error {
+    color: $color-error;
+}
+
 .record-form {
     display: flex;
     flex-direction: column;
