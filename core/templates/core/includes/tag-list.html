@@ -1,0 +1,10 @@
+{% if tag_scope_category %}
+<ul class="tags" data-category-slug="{{ tag_scope_category.slug }}" data-subcategory-slug="{{ tag_scope_subcategory.slug }}" data-scope-name="{% if tag_scope_subcategory %}{{ tag_scope_subcategory.name }}{% else %}{{ tag_scope_category.name }}{% endif %}">
+    <h2>{% if show_tag_scope_link %}<a href="{% url subcategory_url_name request.user.username tag_scope_category.slug tag_scope_subcategory.slug %}">{{ tag_scope_subcategory.name }}</a>{% elif tag_scope_subcategory %}{{ tag_scope_subcategory.name }}{% else %}{{ tag_scope_category.name }}{% endif %} Tags</h2>
+    <div class="tags-wraper">
+        {% for tag in article_tags %}
+        <li><a href="{% url tag_url_name request.user.username tag.slug %}"{% if article_tag.pk == tag.pk %} aria-current="page"{% endif %}>{{ tag.name }}</a></li>
+        {% empty %}<li class="no-tags">No tags yet.</li>{% endfor %}
+    </div>
+</ul>
+{% endif %}

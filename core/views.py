@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from functools import wraps
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.db import transaction
 from django.views.decorators.http import require_POST
 import secrets
@@ -47,7 +47,7 @@ SEARCH_RECORD_TYPES = (
 
 
 def records_for_user(model, user):
-    return model.objects.filter(user=user)
+    return model.objects.filter(user=user).select_related("category", "subcategory__parent").prefetch_related("tags")
 
 
 def _draft_key(slug=None):
@@ -88,6 +88,18 @@ def workspace_login_required(view):
     return login_required(workspace_view)
 
 
+def tag_scope(request, category_model, subcategory_model):
+    category_slug = request.POST.get("category_slug", "").strip()
+    if not category_slug:
+        return None
+    category = get_object_or_404(category_model, user=request.user, slug=category_slug)
+    subcategory_slug = request.POST.get("subcategory_slug", "").strip()
+    subcategory = get_object_or_404(
+        subcategory_model, user=request.user, category=category, slug=subcategory_slug
+    ) if subcategory_slug else None
+    return {"category": category, "subcategory": subcategory}
+
+
 @workspace_login_required
 @require_POST
 def taxonomy_create(request, record_type):
@@ -125,11 +137,26 @@ def taxonomy_create(request, record_type):
             )
         model = subcategory_model
         create_values["category"] = category
+        parent_slug = request.POST.get("parent_slug", "").strip()
+        parent = get_object_or_404(
+            subcategory_model, user=request.user, category=category, slug=parent_slug,
+        ) if parent_slug else None
+        if parent and parent.parent_id:
+            return JsonResponse({"error": "Only two levels of subcategories are allowed."}, status=400)
+        create_values["parent"] = parent
+
+    scope = {}
+    if kind == "tag":
+        scope = tag_scope(request, category_model, subcategory_model)
+        if scope is None:
+            return JsonResponse({"error": "Choose a category or subcategory for the tag."}, status=400)
+        create_values.update(scope)
 
     existing = model.objects.filter(
+        **scope,
         user=request.user,
         name__iexact=name,
-        **({"category": create_values["category"]} if kind == "subcategory" else {}),
+        **({"category": create_values["category"], "parent": create_values["parent"]} if kind == "subcategory" else {}),
     ).first()
     item = existing or model.objects.create(name=name, **create_values)
 
@@ -168,22 +195,27 @@ def taxonomy_delete(request, record_type):
                 {"error": "Uncategorized cannot be deleted."},
                 status=400,
             )
-        default_category = get_default_category(category_model, request.user)
-        record_model.objects.filter(
-            user=request.user,
-            category=item,
-        ).update(category=default_category, subcategory=None)
-    elif kind == "subcategory":
-        record_model.objects.filter(
-            user=request.user,
-            subcategory=item,
-        ).update(subcategory=None)
+
+    redirect_url = None
+    if kind == "tag":
+        scope = tag_scope(request, category_model, subcategory_model)
+        if scope is None:
+            return JsonResponse({"error": "Choose the tag's category or subcategory."}, status=400)
+        if item.category_id != scope["category"].pk or item.subcategory_id != getattr(scope["subcategory"], "pk", None):
+            raise Http404
+        kwargs = {"username": request.user.username}
+        if item.subcategory_id:
+            kwargs.update(cat_slug=item.category.slug, subcat_slug=item.subcategory.slug)
+            redirect_url = reverse(f"{record_type}_subcategory", kwargs=kwargs)
+        else:
+            kwargs["slug"] = item.category.slug
+            redirect_url = reverse(f"{record_type}_category", kwargs=kwargs)
 
     item.delete()
     index_url_name = RECORD_FORMS[record_type][3]
     return JsonResponse({
         "deleted": True,
-        "redirect_url": reverse(
+        "redirect_url": redirect_url or reverse(
             index_url_name,
             kwargs={"username": request.user.username},
         ),
@@ -201,6 +233,7 @@ def record_search(request):
                 results.append({
                     "record": record,
                     "detail_url": detail_url,
+                    "record_type": model._meta.model_name,
                     "icon_class": icon_class,
                     "preview": getattr(record, preview_field, ""),
                 })
@@ -421,7 +454,7 @@ def index(request):
 
     article_categories = taxonomy_for_user(ArticleCategory, request.user)
     for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
+        category.sub_categories = category.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
 
     return render(request,"core/view/index.html",{
         "articles":articles,
@@ -436,7 +469,7 @@ def article_single(request,slug):
     article_categories = taxonomy_for_user(ArticleCategory, request.user)
     article_tags = taxonomy_for_user(ArticleTag, request.user)
     for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
+        category.sub_categories = category.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
 
     return render(request,"core/singles/article-single.html",{
         "article":article,
@@ -448,73 +481,19 @@ def article_single(request,slug):
 
 @workspace_login_required
 def article_category(request,slug):
-    article_categories = taxonomy_for_user(ArticleCategory, request.user)
-    article_category = get_object_or_404(ArticleCategory, slug=slug, user=request.user)
-    article_tags = taxonomy_for_user(ArticleTag, request.user)
-    articles = records_for_user(Article, request.user).filter(category=article_category).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "article", category_slug=slug)
 
-   
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/categories/article-category.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_tags":article_tags,
-        
-    })
 
 @workspace_login_required
 def article_subcategory(request,cat_slug,subcat_slug):
-    article_categories = taxonomy_for_user(ArticleCategory, request.user)
-    article_subcategory = get_object_or_404(
-        ArticleSubcategory, slug=subcat_slug, user=request.user,
-        category__slug=cat_slug,
-    )
-    article_tags = taxonomy_for_user(ArticleTag, request.user)
-    articles = records_for_user(Article, request.user).filter(subcategory=article_subcategory).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "article", category_slug=cat_slug, subcategory_slug=subcat_slug)
 
-   
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/subcategories/article-subcategory.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_subcategory":article_subcategory,
-        "article_tags":article_tags,
-        
-    })
 
 @workspace_login_required
 def article_tag(request,slug):
-    article_categories = taxonomy_for_user(ArticleCategory, request.user)
-    article_tags = taxonomy_for_user(ArticleTag, request.user)
-    article_tag = get_object_or_404(ArticleTag, slug=slug, user=request.user)
-    articles = records_for_user(Article, request.user).filter(tags=article_tag).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "article", tag_slug=slug)
 
-   
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/tags/article-tags.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_tag":article_tag,
-        "article_tags":article_tags,
-        
-    })
 
-# JOURNALS
 @workspace_login_required
 def journal_index(request):
 
@@ -526,7 +505,7 @@ def journal_index(request):
 
     journal_categories = taxonomy_for_user(JournalCategory, request.user)
     for category in journal_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
+        category.sub_categories = category.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
 
     return render(request,"core/view/journal.html",{
         "article":journals,
@@ -541,7 +520,7 @@ def journal_single(request,slug):
     journal_categories = taxonomy_for_user(JournalCategory, request.user)
     journal_tags = taxonomy_for_user(JournalTag, request.user)
     for category in journal_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
+        category.sub_categories = category.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
 
     return render(request,"core/singles/journal-single.html",{
         "article":article,
@@ -553,71 +532,19 @@ def journal_single(request,slug):
 
 @workspace_login_required
 def journal_category(request,slug):
-    journal_categories = taxonomy_for_user(JournalCategory, request.user)
-    journal_category = get_object_or_404(JournalCategory, slug=slug, user=request.user)
-    journal_tags = taxonomy_for_user(JournalTag, request.user)
-    articles = records_for_user(Journal, request.user).filter(category=journal_category).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "journal", category_slug=slug)
 
-   
-    for category in journal_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/categories/journal-category.html",{
-        "page_obj":page_obj,
-        "article_category":journal_category,
-        "article_categories":journal_categories,
-        "article_tags":journal_tags,
-        
-    })
 
 @workspace_login_required
 def journal_subcategory(request,cat_slug,subcat_slug):
-    journal_categories = taxonomy_for_user(JournalCategory, request.user)
-    journal_subcategory = get_object_or_404(
-        JournalSubcategory, slug=subcat_slug, user=request.user,
-        category__slug=cat_slug,
-    )
-    journal_tags = taxonomy_for_user(JournalTag, request.user)
-    articles = records_for_user(Journal, request.user).filter(subcategory=journal_subcategory).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "journal", category_slug=cat_slug, subcategory_slug=subcat_slug)
 
-   
-    for category in journal_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/subcategories/journal-subcategory.html",{
-        "page_obj":page_obj,
-        "article_categories":journal_categories,
-        "article_subcategory":journal_subcategory,
-        "article_tags":journal_tags,
-        
-    })
+
 @workspace_login_required
 def journal_tag(request,slug):
-    article_categories = taxonomy_for_user(JournalCategory, request.user)
-    article_tags = taxonomy_for_user(JournalTag, request.user)
-    article_tag = get_object_or_404(JournalTag, slug=slug, user=request.user)
-    articles = records_for_user(Journal, request.user).filter(tags=article_tag).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "journal", tag_slug=slug)
 
-   
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/tags/journal-tags.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_tag":article_tag,
-        "article_tags":article_tags,
-        
-    })
 
-# NOTES
 @workspace_login_required
 def note_index(request):
 
@@ -628,7 +555,7 @@ def note_index(request):
     note_tags = taxonomy_for_user(NoteTag, request.user)
     note_categories = taxonomy_for_user(NoteCategory, request.user)
     for category in note_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
+        category.sub_categories = category.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
 
     return render(request,"core/view/note.html",{
         "article":notes,
@@ -643,7 +570,7 @@ def note_single(request,slug):
     note_categories = taxonomy_for_user(NoteCategory, request.user)
     note_tags = taxonomy_for_user(NoteTag, request.user)
     for category in note_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
+        category.sub_categories = category.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
 
     return render(request,"core/singles/note-single.html",{
         "article":article,
@@ -655,72 +582,18 @@ def note_single(request,slug):
 
 @workspace_login_required
 def note_category(request,slug):
-    note_categories = taxonomy_for_user(NoteCategory, request.user)
-    note_category = get_object_or_404(NoteCategory, slug=slug, user=request.user)
-    note_tags = taxonomy_for_user(NoteTag, request.user)
-    articles = records_for_user(Note, request.user).filter(category=note_category).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "note", category_slug=slug)
 
-   
-    for category in note_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/categories/note-category.html",{
-        "page_obj":page_obj,
-        "article_category":note_category,
-        "article_categories":note_categories,
-        "article_tags":note_tags,
-        
-    })
 
 @workspace_login_required
 def note_subcategory(request,cat_slug,subcat_slug):
-    note_categories = taxonomy_for_user(NoteCategory, request.user)
-    note_subcategory = get_object_or_404(
-        NoteSubcategory, slug=subcat_slug, user=request.user,
-        category__slug=cat_slug,
-    )
-    note_tags = taxonomy_for_user(NoteTag, request.user)
-    articles = records_for_user(Note, request.user).filter(subcategory=note_subcategory).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "note", category_slug=cat_slug, subcategory_slug=subcat_slug)
 
-   
-    for category in note_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/subcategories/note-subcategory.html",{
-        "page_obj":page_obj,
-        "article_categories":note_categories,
-        "article_subcategory":note_subcategory,
-        "article_tags":note_tags,
-        
-    })
 
 @workspace_login_required
 def note_tag(request,slug):
-    article_categories = taxonomy_for_user(NoteCategory, request.user)
-    article_tags = taxonomy_for_user(NoteTag, request.user)
-    article_tag = get_object_or_404(NoteTag, slug=slug, user=request.user)
-    articles = records_for_user(Note, request.user).filter(tags=article_tag).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "note", tag_slug=slug)
 
-   
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/tags/note-tags.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_tag":article_tag,
-        "article_tags":article_tags,
-        
-    })
-
-# CENTRAL POINT
 
 @workspace_login_required
 def centralpoint_index(request):
@@ -733,7 +606,7 @@ def centralpoint_index(request):
 
     article_categories = taxonomy_for_user(CentralPointCategory, request.user)
     for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
+        category.sub_categories = category.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
 
     return render(request,"core/view/centralpoint.html",{
         "articles":articles,
@@ -748,7 +621,7 @@ def centralpoint_single(request,slug):
     article_categories = taxonomy_for_user(CentralPointCategory, request.user)
     article_tags = taxonomy_for_user(CentralPointTag, request.user)
     for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
+        category.sub_categories = category.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
 
     return render(request,"core/singles/centralpoint-single.html",{
         "article":article,
@@ -760,73 +633,19 @@ def centralpoint_single(request,slug):
 
 @workspace_login_required
 def centralpoint_category(request,slug):
-    article_categories = taxonomy_for_user(CentralPointCategory, request.user)
-    article_category = get_object_or_404(CentralPointCategory, slug=slug, user=request.user)
-    article_tags = taxonomy_for_user(CentralPointTag, request.user)
-    articles = records_for_user(CentralPoint, request.user).filter(category=article_category).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "centralpoint", category_slug=slug)
 
-   
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/categories/centralpoint-category.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_tags":article_tags,
-        
-    })
 
 @workspace_login_required
 def centralpoint_subcategory(request,cat_slug,subcat_slug):
-    article_categories = taxonomy_for_user(CentralPointCategory, request.user)
-    article_subcategory = get_object_or_404(
-        CentralPointSubcategory, slug=subcat_slug, user=request.user,
-        category__slug=cat_slug,
-    )
-    article_tags = taxonomy_for_user(CentralPointTag, request.user)
-    articles = records_for_user(CentralPoint, request.user).filter(subcategory=article_subcategory).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "centralpoint", category_slug=cat_slug, subcategory_slug=subcat_slug)
 
-   
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/subcategories/centralpoint-subcategory.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_subcategory":article_subcategory,
-        "article_tags":article_tags,
-        
-    })
 
 @workspace_login_required
 def centralpoint_tag(request,slug):
-    article_categories = taxonomy_for_user(CentralPointCategory, request.user)
-    article_tags = taxonomy_for_user(CentralPointTag, request.user)
-    article_tag = get_object_or_404(CentralPointTag, slug=slug, user=request.user)
-    articles = records_for_user(CentralPoint, request.user).filter(tags=article_tag).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "centralpoint", tag_slug=slug)
 
-   
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/tags/centralpoint-tags.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_tag":article_tag,
-        "article_tags":article_tags,
-        
-    })
 
-# STRATEGY
 @workspace_login_required
 def strategy_index(request):
 
@@ -839,7 +658,7 @@ def strategy_index(request):
 
     article_categories = taxonomy_for_user(StrategyCategory, request.user)
     for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
+        category.sub_categories = category.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
     
   
   
@@ -856,7 +675,7 @@ def strategy_single(request,slug):
     article_categories = taxonomy_for_user(StrategyCategory, request.user)
     article_tags = taxonomy_for_user(StrategyTag, request.user)
     for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
+        category.sub_categories = category.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
 
     return render(request,"core/singles/strategy-single.html",{
         "article":article,
@@ -867,74 +686,19 @@ def strategy_single(request,slug):
     })
 @workspace_login_required
 def strategy_category(request,slug):
-
-    article_categories = taxonomy_for_user(StrategyCategory, request.user)
-    article_category = get_object_or_404(StrategyCategory, slug=slug, user=request.user)
-    articles = records_for_user(Strategy, request.user).filter(category=article_category).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    article_tags = taxonomy_for_user(StrategyTag, request.user)
+    return scoped_record_listing(request, "strategy", category_slug=slug)
 
 
-    article_categories = taxonomy_for_user(StrategyCategory, request.user)
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-
-    return render(request,"core/categories/strategy-category.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_tags":article_tags,
-        
-    })
 @workspace_login_required
 def strategy_subcategory(request,cat_slug,subcat_slug):
-    article_categories = taxonomy_for_user(StrategyCategory, request.user)
-    article_subcategory = get_object_or_404(
-        StrategySubcategory, slug=subcat_slug, user=request.user,
-        category__slug=cat_slug,
-    )
-    article_tags = taxonomy_for_user(StrategyTag, request.user)
-    articles = records_for_user(Strategy, request.user).filter(subcategory=article_subcategory).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "strategy", category_slug=cat_slug, subcategory_slug=subcat_slug)
 
-   
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/subcategories/strategy-subcategory.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_subcategory":article_subcategory,
-        "article_tags":article_tags,
-        
-    })
+
 @workspace_login_required
 def strategy_tag(request,slug):
-    article_categories = taxonomy_for_user(StrategyCategory, request.user)
-    article_tags = taxonomy_for_user(StrategyTag, request.user)
-    article_tag = get_object_or_404(StrategyTag, slug=slug, user=request.user)
-    articles = records_for_user(Strategy, request.user).filter(tags=article_tag).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "strategy", tag_slug=slug)
 
-   
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/tags/strategy-tags.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_tag":article_tag,
-        "article_tags":article_tags,
-        
-    })
 
-# DECISION
 @workspace_login_required
 def decision_index(request):
 
@@ -947,7 +711,7 @@ def decision_index(request):
 
     article_categories = taxonomy_for_user(DecisionCategory, request.user)
     for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
+        category.sub_categories = category.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
     
   
   
@@ -964,7 +728,7 @@ def decision_single(request,slug):
     article_categories = taxonomy_for_user(DecisionCategory, request.user)
     article_tags = taxonomy_for_user(DecisionTag, request.user)
     for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
+        category.sub_categories = category.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
 
     return render(request,"core/singles/decision-single.html",{
         "article":article,
@@ -975,74 +739,19 @@ def decision_single(request,slug):
     })
 @workspace_login_required
 def decision_category(request,slug):
-
-    article_categories = taxonomy_for_user(DecisionCategory, request.user)
-    article_category = get_object_or_404(DecisionCategory, slug=slug, user=request.user)
-    articles = records_for_user(Decision, request.user).filter(category=article_category).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    article_tags = taxonomy_for_user(DecisionTag, request.user)
+    return scoped_record_listing(request, "decision", category_slug=slug)
 
 
-    article_categories = taxonomy_for_user(DecisionCategory, request.user)
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-
-    return render(request,"core/categories/decision-category.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_tags":article_tags,
-        
-    })
 @workspace_login_required
 def decision_subcategory(request,cat_slug,subcat_slug):
-    article_categories = taxonomy_for_user(DecisionCategory, request.user)
-    article_subcategory = get_object_or_404(
-        DecisionSubcategory, slug=subcat_slug, user=request.user,
-        category__slug=cat_slug,
-    )
-    article_tags = taxonomy_for_user(DecisionTag, request.user)
-    articles = records_for_user(Decision, request.user).filter(subcategory=article_subcategory).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "decision", category_slug=cat_slug, subcategory_slug=subcat_slug)
 
-   
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/subcategories/decision-subcategory.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_subcategory":article_subcategory,
-        "article_tags":article_tags,
-        
-    })
+
 @workspace_login_required
 def decision_tag(request,slug):
-    article_categories = taxonomy_for_user(DecisionCategory, request.user)
-    article_tags = taxonomy_for_user(DecisionTag, request.user)
-    article_tag = get_object_or_404(DecisionTag, slug=slug, user=request.user)
-    articles = records_for_user(Decision, request.user).filter(tags=article_tag).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "decision", tag_slug=slug)
 
-   
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/tags/decision-tags.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_tag":article_tag,
-        "article_tags":article_tags,
-        
-    })
 
-# GOAL
 @workspace_login_required
 def goal_index(request):
 
@@ -1055,7 +764,7 @@ def goal_index(request):
 
     article_categories = taxonomy_for_user(GoalCategory, request.user)
     for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
+        category.sub_categories = category.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
     
   
   
@@ -1072,7 +781,7 @@ def goal_single(request,slug):
     article_categories = taxonomy_for_user(GoalCategory, request.user)
     article_tags = taxonomy_for_user(GoalTag, request.user)
     for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
+        category.sub_categories = category.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
 
     return render(request,"core/singles/goal-single.html",{
         "article":article,
@@ -1083,69 +792,82 @@ def goal_single(request,slug):
     })
 @workspace_login_required
 def goal_category(request,slug):
-
-    article_categories = taxonomy_for_user(GoalCategory, request.user)
-    article_category = get_object_or_404(GoalCategory, slug=slug, user=request.user)
-    articles = records_for_user(Goal, request.user).filter(category=article_category).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    article_tags = taxonomy_for_user(GoalTag, request.user)
+    return scoped_record_listing(request, "goal", category_slug=slug)
 
 
-    article_categories = taxonomy_for_user(GoalCategory, request.user)
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-
-    return render(request,"core/categories/goal-category.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_tags":article_tags,
-        
-    })
 @workspace_login_required
 def goal_subcategory(request,cat_slug,subcat_slug):
-    article_categories = taxonomy_for_user(GoalCategory, request.user)
-    article_subcategory = get_object_or_404(
-        GoalSubcategory, slug=subcat_slug, user=request.user,
-        category__slug=cat_slug,
-    )
-    article_tags = taxonomy_for_user(GoalTag, request.user)
-    articles = records_for_user(Goal, request.user).filter(subcategory=article_subcategory).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "goal", category_slug=cat_slug, subcategory_slug=subcat_slug)
 
-   
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/subcategories/goal-subcategory.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_subcategory":article_subcategory,
-        "article_tags":article_tags,
-        
-    })
+
 @workspace_login_required
 def goal_tag(request,slug):
-    article_categories = taxonomy_for_user(GoalCategory, request.user)
-    article_tags = taxonomy_for_user(GoalTag, request.user)
-    article_tag = get_object_or_404(GoalTag, slug=slug, user=request.user)
-    articles = records_for_user(Goal, request.user).filter(tags=article_tag).order_by("-created_at")
-    paginator = Paginator(articles, 6) # Show 9 per page.
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    return scoped_record_listing(request, "goal", tag_slug=slug)
 
-   
-    for category in article_categories:
-        category.sub_categories = category.subcategories.filter(user=request.user)
-    return render(request,"core/tags/goal-tags.html",{
-        "page_obj":page_obj,
-        "article_category":article_category,
-        "article_categories":article_categories,
-        "article_tag":article_tag,
-        "article_tags":article_tags,
-        
+
+
+def scoped_record_listing(request, record_type, category_slug=None, subcategory_slug=None, tag_slug=None):
+    record_model, category_model, subcategory_model, tag_model = TAXONOMY_MODELS[record_type]
+    selected_tag = None
+    if tag_slug:
+        selected_tag = get_object_or_404(tag_model, user=request.user, slug=tag_slug)
+        category = selected_tag.category
+        subcategory = selected_tag.subcategory
+    else:
+        category = get_object_or_404(category_model, user=request.user, slug=category_slug)
+        subcategory = get_object_or_404(
+            subcategory_model, user=request.user, category=category, slug=subcategory_slug
+        ) if subcategory_slug else None
+    tags = taxonomy_for_user(tag_model, request.user).filter(category=category, subcategory=subcategory)
+    records = records_for_user(record_model, request.user).filter(category=category)
+    if subcategory:
+        records = records.filter(Q(subcategory=subcategory) | Q(subcategory__parent=subcategory))
+    if selected_tag:
+        records = records.filter(tags=selected_tag)
+    categories = taxonomy_for_user(category_model, request.user)
+    for item in categories:
+        item.sub_categories = item.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
+    subcategory_tag_sections = []
+    if selected_tag is None:
+        scope_queryset = subcategory_model.objects.filter(user=request.user, category=category)
+        if subcategory is not None:
+            scope_queryset = scope_queryset.filter(parent=subcategory)
+        scopes = list(scope_queryset.select_related("parent").prefetch_related(Prefetch(
+            "tags", queryset=tag_model.objects.filter(user=request.user, category=category).order_by("name"),
+        )).order_by("name"))
+        sections = {
+            scope.pk: {"scope": scope, "tags": scope.tags.all(), "children": []}
+            for scope in scopes
+        }
+        for scope in scopes:
+            if scope.parent_id == getattr(subcategory, "pk", None):
+                subcategory_tag_sections.append(sections[scope.pk])
+            elif scope.parent_id in sections:
+                sections[scope.parent_id]["children"].append(sections[scope.pk])
+    show_subcategory_tag_sections = bool(subcategory_tag_sections)
+    for section in subcategory_tag_sections:
+        section["has_children"] = bool(section["children"])
+    if subcategory is None and selected_tag is None:
+        # Keep the parent-tag suppression even if all child sections are empty.
+        for section in subcategory_tag_sections:
+            section["children"] = [child for child in section["children"] if child["tags"]]
+        subcategory_tag_sections = [
+            section for section in subcategory_tag_sections
+            if (bool(section["children"]) if section["has_children"] else bool(section["tags"]))
+        ]
+    kind = "tags" if selected_tag else ("subcategories" if subcategory else "categories")
+    suffix = "tags" if selected_tag else ("subcategory" if subcategory else "category")
+    return render(request, f"core/{kind}/{record_type}-{suffix}.html", {
+        "article_categories": categories,
+        "article_category": category,
+        "article_subcategory": subcategory,
+        "article_tags": tags,
+        "article_tag": selected_tag,
+        "page_obj": Paginator(records.order_by("-created_at"), 6).get_page(request.GET.get("page")),
+        "tag_scope_category": category,
+        "tag_scope_subcategory": subcategory,
+        "tag_url_name": f"{record_type}_tag",
+        "subcategory_url_name": f"{record_type}_subcategory",
+        "subcategory_tag_sections": subcategory_tag_sections,
+        "show_subcategory_tag_sections": show_subcategory_tag_sections,
     })

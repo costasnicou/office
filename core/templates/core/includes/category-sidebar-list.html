@@ -1,0 +1,32 @@
+{% with category_url=workspace_record_type|add:"_category" subcategory_url=workspace_record_type|add:"_subcategory" %}
+<ul class="categories">
+    <h2>{% if workspace_record_type == "centralpoint" %}Central Point{% else %}{{ workspace_record_type|title }}{% endif %} Categories</h2>
+    {% for category in article_categories %}
+    <li>
+        <a href="{% url category_url request.user.username category.slug %}">{{ category.name }}</a>
+        {% if category.slug != "uncategorized" %}
+        <details class="subcategory-navigation">
+            <summary aria-label="Show or hide subcategories of {{ category.name }}"><span class="subcategory-navigation-show">Show</span><span class="subcategory-navigation-hide">Hide</span> subcategories</summary>
+            <ul class="sub-categories">
+                {% for subcategory in category.sub_categories %}
+                <li data-subcategory-slug="{{ subcategory.slug }}" data-parent-slug="">
+                    <a href="{% url subcategory_url request.user.username category.slug subcategory.slug %}">{{ subcategory.name }}</a>
+                    <details class="subcategory-navigation">
+                        <summary aria-label="Show or hide subcategories of {{ subcategory.name }}"><span class="subcategory-navigation-show">Show</span><span class="subcategory-navigation-hide">Hide</span> subcategories</summary>
+                        <ul class="sub-categories">
+                            {% for child in subcategory.children.all %}
+                            <li data-subcategory-slug="{{ child.slug }}" data-parent-slug="{{ subcategory.slug }}">
+                                <a href="{% url subcategory_url request.user.username category.slug child.slug %}">{{ child.name }}</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </details>
+                </li>
+                {% endfor %}
+            </ul>
+        </details>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% endwith %}

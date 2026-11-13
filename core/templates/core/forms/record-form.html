@@ -6,7 +6,7 @@
     <div class="record-form-card">
         <p class="form-eyebrow">{% if is_edit %}Update record{% else %}New record{% endif %}</p>
         <h1>{% if is_edit %}Edit{% else %}Add{% endif %} {{ record_label }}</h1>
-        <p class="form-intro">Choose existing categories and tags, or create missing ones below.</p>
+        <p class="form-intro">Choose a category and up to two subcategory levels, then select or create tags within the most specific level.</p>
         <p class="autosave-status{% if draft %} is-saved{% endif %}" role="status" aria-live="polite">{% if draft %}Draft restored — last saved {{ draft.updated_at|date:"M j, Y, H:i:s" }}{% endif %}</p>
 
         <form
@@ -41,5 +41,7 @@
         </form>
     </div>
 </div>
-<script src="{% static 'js/record-autosave.js' %}?v=20260729-2" defer></script>
+<script src="{% static 'js/record-floating-toolbar.js' %}?v=20261113-4" defer></script>
+<script src="{% static 'js/record-autosave.js' %}?v=20261113-1" defer></script>
+<script src="{% static 'js/record-taxonomy.js' %}?v=20261113-2" defer></script>
 {% endblock %}

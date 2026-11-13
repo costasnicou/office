@@ -1,7 +1,10 @@
 import base64
+from datetime import date
 import tempfile
 from django.conf import settings
-from django.test import TestCase, override_settings
+from django.test import TestCase, TransactionTestCase, override_settings
+from django.db import connection, transaction
+from django.db.migrations.executor import MigrationExecutor
 from django.urls import reverse
 from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -211,7 +214,7 @@ class ArticleCreateTests(TestCase):
 
     def test_reuses_existing_values_case_insensitively(self):
         category = ArticleCategory.objects.create(name="Work")
-        tag = ArticleTag.objects.create(name="Important")
+        tag = ArticleTag.objects.create(category=category, name="Important")
         form = ArticleForm(data={
             "title": "Another article",
             "content": "Body",
@@ -226,8 +229,8 @@ class ArticleCreateTests(TestCase):
 
     def test_selects_existing_tags(self):
         category = ArticleCategory.objects.create(name="Work")
-        first_tag = ArticleTag.objects.create(name="Important")
-        second_tag = ArticleTag.objects.create(name="Reference")
+        first_tag = ArticleTag.objects.create(category=category, name="Important")
+        second_tag = ArticleTag.objects.create(category=category, name="Reference")
         form = ArticleForm(data={
             "title": "Tagged article",
             "content": "Body",
@@ -240,8 +243,9 @@ class ArticleCreateTests(TestCase):
         self.assertCountEqual(article.tags.all(), [first_tag, second_tag])
 
     def test_existing_tags_are_rendered_as_touch_friendly_checkboxes(self):
-        ArticleTag.objects.create(name="Important")
-        ArticleTag.objects.create(name="Reference")
+        category = ArticleCategory.objects.create(name="Work")
+        ArticleTag.objects.create(category=category, name="Important")
+        ArticleTag.objects.create(category=category, name="Reference")
 
         rendered_tags = str(ArticleForm()["tags"])
 
@@ -253,8 +257,8 @@ class ArticleCreateTests(TestCase):
         other_user = User.objects.create_user(username="taxonomy-other")
         ArticleCategory.objects.create(user=self.user, name="My category")
         ArticleCategory.objects.create(user=other_user, name="Other category")
-        ArticleTag.objects.create(user=self.user, name="My tag")
-        ArticleTag.objects.create(user=other_user, name="Other tag")
+        ArticleTag.objects.create(user=self.user, category=ArticleCategory.objects.get(user=self.user, name="My category"), name="My tag")
+        ArticleTag.objects.create(user=other_user, category=ArticleCategory.objects.get(user=other_user, name="Other category"), name="Other tag")
         self.client.force_login(self.user)
 
         response = self.client.get(workspace_reverse("article_create", self.user))
@@ -267,7 +271,7 @@ class ArticleCreateTests(TestCase):
     def test_users_can_create_taxonomy_with_the_same_name(self):
         other_user = User.objects.create_user(username="same-name-other")
         ArticleCategory.objects.create(user=other_user, name="Work")
-        ArticleTag.objects.create(user=other_user, name="Important")
+        ArticleTag.objects.create(user=other_user, category=ArticleCategory.objects.get(user=other_user, name="Work"), name="Important")
         self.client.force_login(self.user)
 
         response = self.client.post(workspace_reverse("article_create", self.user), {
@@ -692,7 +696,7 @@ class TaxonomyPopupTests(TestCase):
         self.assertContains(response, 'class="sidebar-toggle"')
         self.assertContains(response, 'data-record-type="article"')
         self.assertContains(response, "js/taxonomy-menu.js")
-        self.assertContains(response, "taxonomy-menu.js?v=20260726-2")
+        self.assertContains(response, "taxonomy-menu.js?v=20261113-4")
         self.assertContains(response, "google-translate.js?v=20260726-1")
         self.assertContains(response, 'id="google_translate_element"', count=1)
         self.assertContains(response, 'data-language="en"', count=1)
@@ -777,6 +781,7 @@ class TaxonomyPopupTests(TestCase):
                 response = self.client.post(self.taxonomy_url(record_type), {
                     "kind": "tag",
                     "name": f"{record_type} tag",
+                    "category_slug": category.slug,
                 })
                 self.assertEqual(response.status_code, 200)
                 self.assertTrue(tag_model.objects.filter(user=self.user).exists())
@@ -886,7 +891,7 @@ class TaxonomyPopupTests(TestCase):
 
     def test_deleting_tag_detaches_it_from_posts(self):
         category = ArticleCategory.objects.create(user=self.user, name="Tagged")
-        tag = ArticleTag.objects.create(user=self.user, name="Temporary tag")
+        tag = ArticleTag.objects.create(user=self.user, category=category, name="Temporary tag")
         article = Article.objects.create(
             user=self.user,
             category=category,
@@ -898,13 +903,14 @@ class TaxonomyPopupTests(TestCase):
         response = self.client.post(self.taxonomy_delete_url("article"), {
             "kind": "tag",
             "slug": tag.slug,
+            "category_slug": category.slug,
         })
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(ArticleTag.objects.filter(pk=tag.pk).exists())
         self.assertFalse(article.tags.exists())
 
-    def test_deletion_redirect_url_is_unfiltered_index_for_each_record_type(self):
+    def test_tag_deletion_returns_to_category_for_each_record_type(self):
         index_routes = {
             record_type: models_for_type[0]._meta.model_name + "_index"
             for record_type, models_for_type in TAXONOMY_MODELS.items()
@@ -913,21 +919,23 @@ class TaxonomyPopupTests(TestCase):
 
         for record_type, models_for_type in TAXONOMY_MODELS.items():
             tag_model = models_for_type[3]
+            category = models_for_type[1].objects.get(user=self.user, slug="uncategorized")
             tag = tag_model.objects.create(
                 user=self.user,
                 name=f"{record_type} redirect tag",
+                category=category,
             )
 
             with self.subTest(record_type=record_type):
                 response = self.client.post(
                     self.taxonomy_delete_url(record_type),
-                    {"kind": "tag", "slug": tag.slug},
+                    {"kind": "tag", "slug": tag.slug, "category_slug": category.slug},
                 )
 
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(
                     response.json()["redirect_url"],
-                    workspace_reverse(index_routes[record_type], self.user),
+                    workspace_reverse(f"{record_type}_category", self.user, [category.slug]),
                 )
 
     def test_cannot_delete_another_users_taxonomy(self):
@@ -1014,3 +1022,662 @@ class LegacyDataRecoveryTests(TestCase):
         self.assertFalse(
             ArticleCategory.objects.filter(pk=legacy_default.pk).exists()
         )
+
+
+class ScopedTagTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="scope-owner")
+        self.client.force_login(self.user)
+
+    def test_category_and_subcategory_tags_are_independent_for_all_types(self):
+        for record_type, (_, Category, Subcategory, Tag) in TAXONOMY_MODELS.items():
+            with self.subTest(record_type=record_type):
+                category = Category.objects.create(user=self.user, name="Work")
+                subcategory = Subcategory.objects.create(user=self.user, category=category, name="Planning")
+                endpoint = workspace_reverse("taxonomy_create", self.user, [record_type])
+                category_data = {"kind": "tag", "name": "Priority", "category_slug": category.slug}
+                first = self.client.post(endpoint, category_data)
+                second = self.client.post(endpoint, {**category_data, "subcategory_slug": subcategory.slug})
+                self.assertEqual(first.status_code, 200)
+                self.assertEqual(second.status_code, 200)
+                self.assertNotEqual(first.json()["id"], second.json()["id"])
+                self.assertEqual(self.client.post(endpoint, category_data).json()["id"], first.json()["id"])
+                category_tag = Tag.objects.get(pk=first.json()["id"])
+                subcategory_tag = Tag.objects.get(pk=second.json()["id"])
+                self.assertIsNone(category_tag.subcategory)
+                self.assertEqual(subcategory_tag.subcategory, subcategory)
+                for route, args, expected in [
+                    (f"{record_type}_category", [category.slug], category_tag),
+                    (f"{record_type}_subcategory", [category.slug, subcategory.slug], subcategory_tag),
+                    (f"{record_type}_tag", [subcategory_tag.slug], subcategory_tag),
+                ]:
+                    response = self.client.get(workspace_reverse(route, self.user, args))
+                    self.assertEqual(response.status_code, 200)
+                    self.assertEqual(list(response.context["article_tags"]), [expected])
+                    self.assertContains(response, 'data-category-slug="work"')
+                index = "index" if record_type == "article" else f"{record_type}_index"
+                self.assertNotContains(self.client.get(workspace_reverse(index, self.user)), 'class="tags"')
+                deleted = self.client.post(workspace_reverse("taxonomy_delete", self.user, [record_type]), {
+                    "kind": "tag", "slug": subcategory_tag.slug,
+                    "category_slug": category.slug, "subcategory_slug": subcategory.slug,
+                })
+                self.assertEqual(deleted.status_code, 200)
+                self.assertEqual(deleted.json()["redirect_url"], workspace_reverse(f"{record_type}_subcategory", self.user, [category.slug, subcategory.slug]))
+                self.assertTrue(Tag.objects.filter(pk=category_tag.pk).exists())
+
+    def test_tags_require_a_scope_and_cannot_use_another_users_scope(self):
+        endpoint = workspace_reverse("taxonomy_create", self.user, ["article"])
+        self.assertEqual(self.client.post(endpoint, {"kind": "tag", "name": "Missing"}).status_code, 400)
+        other = User.objects.create_user(username="scope-other")
+        category = ArticleCategory.objects.create(user=other, name="Private")
+        self.assertEqual(self.client.post(endpoint, {"kind": "tag", "name": "Private", "category_slug": category.slug}).status_code, 404)
+
+    def test_rejects_tags_from_other_scopes_when_saving_or_deleting(self):
+        category = ArticleCategory.objects.create(user=self.user, name="Work")
+        other = ArticleCategory.objects.create(user=self.user, name="Personal")
+        subcategory = ArticleSubcategory.objects.create(user=self.user, category=category, name="Planning")
+        tag = ArticleTag.objects.create(user=self.user, category=category, subcategory=subcategory, name="Priority")
+        for selected, sub in [(other, None), (category, None)]:
+            form = ArticleForm(user=self.user, data={"title": "Invalid", "content": "Body", "category": selected.pk, "subcategory": sub, "tags": [tag.pk]})
+            self.assertFalse(form.is_valid())
+            self.assertIn("tags", form.errors)
+        result = self.client.post(workspace_reverse("taxonomy_delete", self.user, ["article"]), {"kind": "tag", "slug": tag.slug, "category_slug": other.slug})
+        self.assertEqual(result.status_code, 404)
+        self.assertTrue(ArticleTag.objects.filter(pk=tag.pk).exists())
+
+    def test_new_tags_use_selected_subcategory_and_edit_clears_old_tags(self):
+        category = ArticleCategory.objects.create(user=self.user, name="Work")
+        subcategory = ArticleSubcategory.objects.create(user=self.user, category=category, name="Planning")
+        data = {"title": "Tagged", "content": "Body", "category": category.pk, "subcategory": subcategory.pk, "new_tags": "Priority"}
+        form = ArticleForm(user=self.user, data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+        form.instance.user = self.user
+        record = form.save()
+        tag = record.tags.get()
+        self.assertEqual(tag.category, category)
+        self.assertEqual(tag.subcategory, subcategory)
+        form = ArticleForm(user=self.user, instance=record, data={**data, "subcategory": "", "new_tags": ""})
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        self.assertFalse(record.tags.exists())
+        self.assertTrue(ArticleTag.objects.filter(pk=tag.pk).exists())
+
+    def test_scoped_tag_page_filters_records(self):
+        category = ArticleCategory.objects.create(user=self.user, name="Work")
+        tag = ArticleTag.objects.create(user=self.user, category=category, name="Priority")
+        first = Article.objects.create(user=self.user, category=category, title="Tagged", content="Body")
+        Article.objects.create(user=self.user, category=category, title="Other", content="Body")
+        first.tags.add(tag)
+        response = self.client.get(workspace_reverse("article_tag", self.user, [tag.slug]))
+        self.assertEqual(list(response.context["page_obj"]), [first])
+
+
+class ScopedTagMigrationTests(TransactionTestCase):
+    def test_preserves_shared_assignments_and_places_unused_tags_in_uncategorized(self):
+        executor = MigrationExecutor(connection)
+        before = [("core", "0005_recorddraft")]
+        after = [("core", "0006_scope_tags")]
+        executor.migrate(before)
+        try:
+            old = executor.loader.project_state(before).apps
+            user = old.get_model("core", "User").objects.create(username="legacy-tags")
+            for prefix in ("Article", "Journal", "Note", "CentralPoint", "Strategy", "Decision", "Goal"):
+                Category = old.get_model("core", prefix + "Category")
+                Subcategory = old.get_model("core", prefix + "Subcategory")
+                Record = old.get_model("core", prefix)
+                Tag = old.get_model("core", prefix + "Tag")
+                category = Category.objects.create(user_id=user.pk, name="Work", slug="work")
+                other = Category.objects.create(user_id=user.pk, name="Personal", slug="personal")
+                subcategory = Subcategory.objects.create(user_id=user.pk, category=category, name="Planning", slug="planning")
+                tag = Tag.objects.create(user_id=user.pk, name="Shared", slug="shared")
+                Tag.objects.create(user_id=user.pk, name="Unused", slug="unused")
+                for index, (cat, sub) in enumerate([(category, None), (category, subcategory), (other, None)]):
+                    # Historical records have type-specific required text fields.
+                    fields = {field.name: "Body" for field in Record._meta.fields if field.get_internal_type() in ("TextField", "CKEditor5Field")}
+                    fields.update({field.name: date(2026, 11, 13) for field in Record._meta.fields if field.get_internal_type() == "DateField" and not field.null})
+                    record = Record.objects.create(user_id=user.pk, category=cat, subcategory=sub, title=f"Legacy {index}", slug=f"legacy-{index}", **fields)
+                    record.tags.add(tag)
+            executor = MigrationExecutor(connection)
+            executor.migrate(after)
+            new = executor.loader.project_state(after).apps
+            for prefix in ("Article", "Journal", "Note", "CentralPoint", "Strategy", "Decision", "Goal"):
+                Record = new.get_model("core", prefix)
+                Tag = new.get_model("core", prefix + "Tag")
+                self.assertEqual(Tag.objects.filter(name="Shared").count(), 3)
+                for record in Record.objects.filter(user_id=user.pk):
+                    tag = record.tags.get()
+                    self.assertEqual(tag.category_id, record.category_id)
+                    self.assertEqual(tag.subcategory_id, record.subcategory_id)
+                    self.assertEqual(tag.name, "Shared")
+                unused = Tag.objects.get(name="Unused")
+                self.assertEqual(unused.category.slug, "uncategorized")
+                self.assertIsNone(unused.subcategory_id)
+        finally:
+            MigrationExecutor(connection).migrate([("core", "0008_preserve_posts_on_taxonomy_delete")])
+
+
+class NestedSubcategoryTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="nested-owner")
+        self.client.force_login(self.user)
+
+    def hierarchy(self, record_type):
+        _, Category, Subcategory, _ = TAXONOMY_MODELS[record_type]
+        category = Category.objects.create(user=self.user, name="Work")
+        parent = Subcategory.objects.create(user=self.user, category=category, name="Projects")
+        child = Subcategory.objects.create(user=self.user, category=category, parent=parent, name="Planning")
+        return category, parent, child
+
+    def post_data(self, record_type, **values):
+        from django import forms
+        from .views import RECORD_FORMS
+        form_class = RECORD_FORMS[record_type][1]
+        data = {name: ("2026-11-14" if isinstance(field, forms.DateField) else "Body")
+                for name, field in form_class(user=self.user).fields.items()
+                if field.required and name not in {"category", "subcategory", "tags"}}
+        return {**data, "title": "Nested post", **values}
+
+    def test_creates_two_levels_and_rejects_third_for_every_post_type(self):
+        for record_type, (_, Category, Subcategory, _) in TAXONOMY_MODELS.items():
+            with self.subTest(record_type=record_type):
+                category, parent, child = self.hierarchy(record_type)
+                endpoint = workspace_reverse("taxonomy_create", self.user, [record_type])
+                data = {"kind":"subcategory", "category_slug":category.slug, "parent_slug":parent.slug, "name":"Second child"}
+                response = self.client.post(endpoint, data)
+                self.assertEqual(response.status_code, 200)
+                created = Subcategory.objects.get(pk=response.json()["id"])
+                self.assertEqual(created.parent, parent)
+                self.assertEqual(self.client.post(endpoint,data).json()["id"], created.pk)
+                rejected = self.client.post(endpoint,{**data,"parent_slug":child.slug,"name":"Too deep"})
+                self.assertEqual(rejected.status_code,400)
+                self.assertFalse(Subcategory.objects.filter(name="Too deep").exists())
+
+    def test_forms_save_select_and_restore_child_tags_for_every_post_type(self):
+        from .views import RECORD_FORMS
+        for record_type, (Record, _, _, Tag) in TAXONOMY_MODELS.items():
+            with self.subTest(record_type=record_type):
+                category,parent,child = self.hierarchy(record_type)
+                tag = Tag.objects.create(user=self.user,category=category,subcategory=child,name="Priority")
+                form_class = RECORD_FORMS[record_type][1]
+                form = form_class(user=self.user,data=self.post_data(record_type, category=category.pk,subcategory=parent.pk,child_subcategory=child.pk,tags=[tag.pk]))
+                self.assertTrue(form.is_valid(),form.errors)
+                form.instance.user = self.user
+                record = form.save()
+                self.assertEqual(record.subcategory,child)
+                self.assertEqual(record.tags.get(),tag)
+                edit = form_class(user=self.user,instance=record)
+                self.assertEqual(edit.initial["subcategory"],parent.pk)
+                self.assertEqual(edit.initial["child_subcategory"],child.pk)
+                self.assertNotIn(child,edit.fields["subcategory"].queryset)
+                self.assertIn(child,edit.fields["child_subcategory"].queryset)
+                for route,args in [(f"{record_type}_subcategory",[category.slug,parent.slug]),(f"{record_type}_subcategory",[category.slug,child.slug]),(f"{record_type}_tag",[tag.slug])]:
+                    response = self.client.get(workspace_reverse(route,self.user,args))
+                    self.assertEqual(response.status_code,200)
+                    self.assertEqual(list(response.context["page_obj"]),[record])
+                    self.assertContains(response,f'<li data-subcategory-slug="{child.slug}"',count=1)
+                single = self.client.get(workspace_reverse(f"{record_type}_single",self.user,[record.slug]))
+                self.assertContains(single, 'aria-label="Subcategory: Projects"')
+                self.assertContains(single, 'aria-label="Subcategory: Planning"')
+
+    def test_form_can_create_entire_hierarchy_and_tags(self):
+        form = ArticleForm(user=self.user,data={"title":"New tree","content":"Body","new_category":"Work","new_subcategory":"Projects","new_child_subcategory":"Planning","new_tags":"Priority"})
+        self.assertTrue(form.is_valid(),form.errors)
+        form.instance.user = self.user
+        record = form.save()
+        self.assertEqual(record.subcategory.name,"Planning")
+        self.assertEqual(record.subcategory.parent.name,"Projects")
+        self.assertEqual(record.tags.get().subcategory,record.subcategory)
+
+    def test_rejects_wrong_parent_scope_and_wrong_level_tags(self):
+        category,parent,child = self.hierarchy("article")
+        sibling = ArticleSubcategory.objects.create(user=self.user,category=category,name="Other")
+        base = {"title":"Invalid","content":"Body","category":category.pk,"subcategory":sibling.pk,"child_subcategory":child.pk}
+        form = ArticleForm(user=self.user,data=base)
+        self.assertFalse(form.is_valid())
+        self.assertIn("child_subcategory",form.errors)
+        tag = ArticleTag.objects.create(user=self.user,category=category,subcategory=parent,name="Parent only")
+        form = ArticleForm(user=self.user,data={**base,"subcategory":parent.pk,"tags":[tag.pk]})
+        self.assertFalse(form.is_valid())
+        self.assertIn("tags",form.errors)
+        form = ArticleForm(user=self.user,data={**base,"subcategory":"","child_subcategory":"","new_child_subcategory":"Missing parent"})
+        self.assertFalse(form.is_valid())
+        self.assertIn("new_child_subcategory",form.errors)
+
+    def test_model_rejects_cycles_depth_and_cross_workspace_parents(self):
+        from django.core.exceptions import ValidationError
+        for record_type, (_, Category, Subcategory, _) in TAXONOMY_MODELS.items():
+            with self.subTest(record_type=record_type):
+                category,parent,child = self.hierarchy(record_type)
+                with self.assertRaises(ValidationError):
+                    Subcategory.objects.create(user=self.user,category=category,parent=child,name="Third")
+                parent.parent = child
+                with self.assertRaises(ValidationError):
+                    parent.save()
+                parent.parent = parent
+                with self.assertRaises(ValidationError):
+                    parent.save()
+                other = Category.objects.create(user=self.user,name="Other")
+                with self.assertRaises(ValidationError):
+                    Subcategory.objects.create(user=self.user,category=other,parent=child,name="Wrong category")
+                outsider = User.objects.create_user(username=f"outsider-{record_type}")
+                with self.assertRaises(ValidationError):
+                    Subcategory.objects.create(user=outsider,category=category,name="Wrong owner")
+
+    def test_deleting_either_level_preserves_posts(self):
+        for delete_parent in (False,True):
+            with self.subTest(delete_parent=delete_parent):
+                # Use a separate type per case so names remain independent.
+                record_type = "article" if delete_parent else "note"
+                Record,_,Subcategory,Tag = TAXONOMY_MODELS[record_type]
+                category,parent,child = self.hierarchy(record_type)
+                record = Record.objects.create(user=self.user,category=category,subcategory=child,title="Keep me",content="Body")
+                tag = Tag.objects.create(user=self.user,category=category,subcategory=child,name="Temporary")
+                record.tags.add(tag)
+                response = self.client.post(workspace_reverse("taxonomy_delete",self.user,[record_type]),{"kind":"subcategory","slug":parent.slug if delete_parent else child.slug})
+                self.assertEqual(response.status_code,200)
+                record.refresh_from_db()
+                self.assertEqual(record.category,category)
+                self.assertEqual(record.subcategory,None if delete_parent else parent)
+                self.assertFalse(record.tags.exists())
+                self.assertFalse(Subcategory.objects.filter(pk=child.pk).exists())
+
+    def test_draft_restores_both_levels(self):
+        category,parent,child = self.hierarchy("article")
+        RecordDraft.objects.create(user=self.user,record_type="article",data={"category":[str(category.pk)],"subcategory":[str(parent.pk)],"child_subcategory":[str(child.pk)]})
+        response = self.client.get(workspace_reverse("article_create",self.user))
+        form = response.context["form"]
+        self.assertEqual(str(form["subcategory"].value()),str(parent.pk))
+        self.assertEqual(str(form["child_subcategory"].value()),str(child.pk))
+
+
+class CategoryTagSectionTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="category-tag-sections")
+        self.client.force_login(self.user)
+
+    def test_category_with_subcategories_shows_their_tags_and_hides_its_own_for_all_types(self):
+        for record_type, (_, Category, Subcategory, Tag) in TAXONOMY_MODELS.items():
+            with self.subTest(record_type=record_type):
+                category = Category.objects.create(user=self.user,name="Work")
+                parent = Subcategory.objects.create(user=self.user,category=category,name="Projects")
+                child = Subcategory.objects.create(user=self.user,category=category,parent=parent,name="Planning")
+                empty = Subcategory.objects.create(user=self.user,category=category,name="Empty scope")
+                category_tag = Tag.objects.create(user=self.user,category=category,name="Category only marker")
+                parent_tag = Tag.objects.create(user=self.user,category=category,subcategory=parent,name="Project marker")
+                child_tag = Tag.objects.create(user=self.user,category=category,subcategory=child,name="Planning marker")
+                response = self.client.get(workspace_reverse(f"{record_type}_category",self.user,[category.slug]))
+                self.assertEqual(response.status_code,200)
+                self.assertNotContains(response, 'Category only marker')
+                self.assertNotContains(response, 'data-subcategory-slug=""')
+                self.assertNotContains(response, 'Project marker')
+                self.assertContains(response,workspace_reverse(f"{record_type}_tag",self.user,[child_tag.slug]))
+                self.assertContains(response,f'<ul class="tags" data-category-slug="{category.slug}" data-subcategory-slug="{child.slug}"')
+                self.assertNotContains(response,f'<ul class="tags" data-category-slug="{category.slug}" data-subcategory-slug="{empty.slug}"')
+                self.assertContains(response,'child-subcategory-tag-sections')
+                self.assertNotContains(response,'No tags yet.')
+                self.assertTrue(Tag.objects.filter(pk=category_tag.pk,subcategory=None).exists())
+
+    def test_category_without_subcategories_keeps_category_tags_for_all_types(self):
+        for record_type, (_, Category, _, Tag) in TAXONOMY_MODELS.items():
+            with self.subTest(record_type=record_type):
+                category = Category.objects.create(user=self.user,name="Work")
+                tag = Tag.objects.create(user=self.user,category=category,name="Visible category marker")
+                response = self.client.get(workspace_reverse(f"{record_type}_category",self.user,[category.slug]))
+                self.assertContains(response,'Visible category marker')
+                self.assertContains(response,'data-subcategory-slug=""')
+                self.assertNotContains(response,'class="subcategory-tag-sections"')
+
+    def test_tag_pages_keep_the_selected_scopes_tags(self):
+        category = ArticleCategory.objects.create(user=self.user,name="Work")
+        parent = ArticleSubcategory.objects.create(user=self.user,category=category,name="Projects")
+        child = ArticleSubcategory.objects.create(user=self.user,category=category,parent=parent,name="Planning")
+        parent_tag = ArticleTag.objects.create(user=self.user,category=category,subcategory=parent,name="Parent tag")
+        ArticleTag.objects.create(user=self.user,category=category,subcategory=child,name="Child tag")
+        for route,args in [("article_tag",[parent_tag.slug])]:
+            response = self.client.get(workspace_reverse(route,self.user,args))
+            self.assertContains(response,'Parent tag')
+            self.assertNotContains(response,'Child tag')
+            self.assertNotContains(response,'class="subcategory-tag-sections"')
+
+
+    def test_first_level_subcategory_hides_own_tags_when_it_has_children_for_all_types(self):
+        for record_type, (_, Category, Subcategory, Tag) in TAXONOMY_MODELS.items():
+            with self.subTest(record_type=record_type):
+                category = Category.objects.create(user=self.user,name="Work")
+                parent = Subcategory.objects.create(user=self.user,category=category,name="Projects")
+                child = Subcategory.objects.create(user=self.user,category=category,parent=parent,name="Planning")
+                empty = Subcategory.objects.create(user=self.user,category=category,parent=parent,name="Empty child")
+                parent_tag = Tag.objects.create(user=self.user,category=category,subcategory=parent,name="Hidden parent marker")
+                child_tag = Tag.objects.create(user=self.user,category=category,subcategory=child,name="Visible child marker")
+                response = self.client.get(workspace_reverse(f"{record_type}_subcategory",self.user,[category.slug,parent.slug]))
+                self.assertEqual(response.status_code,200)
+                self.assertNotContains(response,'Hidden parent marker')
+                self.assertNotContains(response,f'<ul class="tags" data-category-slug="{category.slug}" data-subcategory-slug="{parent.slug}"')
+                for scope in (child,empty):
+                    self.assertContains(response,f'<ul class="tags" data-category-slug="{category.slug}" data-subcategory-slug="{scope.slug}"')
+                self.assertContains(response,'Visible child marker')
+                self.assertContains(response,'No tags yet.')
+                self.assertTrue(Tag.objects.filter(pk=parent_tag.pk,subcategory=parent).exists())
+                leaf_response = self.client.get(workspace_reverse(f"{record_type}_subcategory",self.user,[category.slug,child.slug]))
+                self.assertContains(leaf_response,'Visible child marker')
+                self.assertNotContains(leaf_response,'class="subcategory-tag-sections"')
+                # A first-level subcategory without children still shows its own tags.
+                standalone = Subcategory.objects.create(user=self.user,category=category,name="Standalone")
+                Tag.objects.create(user=self.user,category=category,subcategory=standalone,name="Standalone marker")
+                standalone_response = self.client.get(workspace_reverse(f"{record_type}_subcategory",self.user,[category.slug,standalone.slug]))
+                self.assertContains(standalone_response,'Standalone marker')
+                self.assertNotContains(standalone_response,'class="subcategory-tag-sections"')
+
+
+    def test_category_with_empty_descendant_tags_does_not_restore_parent_tags(self):
+        for record_type, (_, Category, Subcategory, Tag) in TAXONOMY_MODELS.items():
+            with self.subTest(record_type=record_type):
+                category = Category.objects.create(user=self.user,name="Work")
+                parent = Subcategory.objects.create(user=self.user,category=category,name="Projects")
+                Subcategory.objects.create(user=self.user,category=category,parent=parent,name="Empty child")
+                standalone = Subcategory.objects.create(user=self.user,category=category,name="Empty standalone")
+                Tag.objects.create(user=self.user,category=category,name="Hidden category marker")
+                Tag.objects.create(user=self.user,category=category,subcategory=parent,name="Hidden parent marker")
+                response = self.client.get(workspace_reverse(f"{record_type}_category",self.user,[category.slug]))
+                self.assertNotContains(response,'<ul class="tags"')
+                self.assertNotContains(response,'Hidden category marker')
+                self.assertNotContains(response,'Hidden parent marker')
+                # Empty subcategories can still manage tags on their own pages.
+                standalone_response = self.client.get(workspace_reverse(f"{record_type}_subcategory",self.user,[category.slug,standalone.slug]))
+                self.assertContains(standalone_response,'<ul class="tags"')
+                self.assertContains(standalone_response,'No tags yet.')
+
+
+class TaxonomyPostPreservationTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="preservation-owner")
+        self.client.force_login(self.user)
+
+    def record(self, Record, title, category, subcategory=None):
+        fields = {field.name: "Original body" for field in Record._meta.fields
+                  if field.get_internal_type() in ("TextField", "CKEditor5Field")}
+        fields.update({field.name: date(2026,11,13) for field in Record._meta.fields
+                       if field.get_internal_type() == "DateField" and not field.null})
+        return Record.objects.create(user=self.user,title=title,category=category,subcategory=subcategory,**fields)
+
+    def delete(self, mode, record_type, kind, item):
+        if mode == "model":
+            item.delete()
+        elif mode == "bulk":
+            type(item).objects.filter(pk=item.pk).delete()
+        else:
+            data = {"kind":kind,"slug":item.slug}
+            if kind == "tag":
+                data.update(category_slug=item.category.slug,subcategory_slug=item.subcategory.slug if item.subcategory_id else "")
+            response = self.client.post(workspace_reverse("taxonomy_delete",self.user,[record_type]),data)
+            self.assertEqual(response.status_code,200)
+
+    def test_entire_deletion_ladder_preserves_posts_for_all_types_and_deletion_paths(self):
+        for record_type, (Record,Category,Subcategory,Tag) in TAXONOMY_MODELS.items():
+            for mode in ("model","bulk","sidebar"):
+                with self.subTest(record_type=record_type,mode=mode):
+                    category = Category.objects.create(user=self.user,name=f"Work {mode}")
+                    parent = Subcategory.objects.create(user=self.user,category=category,name=f"Projects {mode}")
+                    child = Subcategory.objects.create(user=self.user,category=category,parent=parent,name=f"Planning {mode}")
+                    unrelated_category = Category.objects.create(user=self.user,name=f"Unrelated {mode}")
+                    category_post = self.record(Record,f"Category {mode}",category)
+                    parent_post = self.record(Record,f"Parent {mode}",category,parent)
+                    child_post = self.record(Record,f"Child {mode}",category,child)
+                    unrelated_post = self.record(Record,f"Unrelated {mode}",unrelated_category)
+                    category_tag = Tag.objects.create(user=self.user,category=category,name=f"Category tag {mode}")
+                    parent_tag = Tag.objects.create(user=self.user,category=category,subcategory=parent,name=f"Parent tag {mode}")
+                    child_tag = Tag.objects.create(user=self.user,category=category,subcategory=child,name=f"Child tag {mode}")
+                    extra_tag = Tag.objects.create(user=self.user,category=category,subcategory=child,name=f"Extra tag {mode}")
+                    category_post.tags.add(category_tag)
+                    parent_post.tags.add(parent_tag)
+                    child_post.tags.add(child_tag,extra_tag)
+                    records = [category_post,parent_post,child_post,unrelated_post]
+                    preserved_fields = [field.attname for field in Record._meta.fields if field.name not in {"category","subcategory"}]
+                    snapshots = {r.pk: {field:getattr(r,field) for field in preserved_fields} for r in records}
+                    def unchanged():
+                        for record in records:
+                            record.refresh_from_db()
+                            self.assertEqual({field:getattr(record,field) for field in preserved_fields},snapshots[record.pk])
+                        self.assertEqual(unrelated_post.category,unrelated_category)
+                    self.delete(mode,record_type,"tag",child_tag)
+                    unchanged()
+                    self.assertEqual(child_post.subcategory,child)
+                    self.assertEqual(child_post.category,category)
+                    self.assertEqual(list(child_post.tags.all()),[extra_tag])
+                    self.delete(mode,record_type,"subcategory",child)
+                    unchanged()
+                    self.assertEqual(child_post.subcategory,parent)
+                    self.assertEqual(parent_post.subcategory,parent)
+                    self.assertFalse(child_post.tags.exists())
+                    self.assertTrue(parent_post.tags.filter(pk=parent_tag.pk).exists())
+                    self.delete(mode,record_type,"subcategory",parent)
+                    unchanged()
+                    for record in (category_post,parent_post,child_post):
+                        self.assertEqual(record.category,category)
+                        self.assertIsNone(record.subcategory)
+                    self.assertTrue(category_post.tags.filter(pk=category_tag.pk).exists())
+                    self.delete(mode,record_type,"category",category)
+                    unchanged()
+                    for record in (category_post,parent_post,child_post):
+                        self.assertEqual(record.category.slug,"uncategorized")
+                        self.assertEqual(record.category.user,self.user)
+                        self.assertIsNone(record.subcategory)
+                        self.assertFalse(record.tags.exists())
+
+    def test_deleting_first_level_subcategory_with_children_keeps_all_posts_in_category(self):
+        for record_type,(Record,Category,Subcategory,_) in TAXONOMY_MODELS.items():
+            with self.subTest(record_type=record_type):
+                category = Category.objects.create(user=self.user,name="Work")
+                parent = Subcategory.objects.create(user=self.user,category=category,name="Projects")
+                child = Subcategory.objects.create(user=self.user,category=category,parent=parent,name="Planning")
+                first = self.record(Record,"Parent post",category,parent)
+                second = self.record(Record,"Child post",category,child)
+                Subcategory.objects.filter(pk__in=[parent.pk,child.pk]).delete()
+                for record in (first,second):
+                    record.refresh_from_db()
+                    self.assertEqual(record.category,category)
+                    self.assertIsNone(record.subcategory)
+
+    def test_bulk_category_deletion_uses_original_queryset_membership(self):
+        first = ArticleCategory.objects.create(user=self.user,name="First")
+        second = ArticleCategory.objects.create(user=self.user,name="Second")
+        posts = [self.record(Article,"Bulk first",first),self.record(Article,"Bulk second",second)]
+        ArticleCategory.objects.filter(articles__title__startswith="Bulk").delete()
+        for post in posts:
+            post.refresh_from_db()
+            self.assertEqual(post.category.slug,"uncategorized")
+            self.assertIsNone(post.subcategory)
+        self.assertFalse(ArticleCategory.objects.filter(pk__in=[first.pk,second.pk]).exists())
+
+    def test_admin_deletion_preview_never_collects_posts_and_does_not_change_data(self):
+        from django.contrib.admin.utils import NestedObjects
+        category = ArticleCategory.objects.create(user=self.user,name="Work")
+        subcategory = ArticleSubcategory.objects.create(user=self.user,category=category,name="Projects")
+        post = self.record(Article,"Keep in preview",category,subcategory)
+        collector = NestedObjects(using="default")
+        collector.collect([category])
+        self.assertNotIn(Article,collector.data)
+        post.refresh_from_db()
+        self.assertEqual(post.category,category)
+        self.assertEqual(post.subcategory,subcategory)
+
+    def test_saved_draft_follows_the_same_deletion_ladder(self):
+        category = ArticleCategory.objects.create(user=self.user,name="Work")
+        parent = ArticleSubcategory.objects.create(user=self.user,category=category,name="Projects")
+        child = ArticleSubcategory.objects.create(user=self.user,category=category,parent=parent,name="Planning")
+        tag = ArticleTag.objects.create(user=self.user,category=category,subcategory=child,name="Priority")
+        draft = RecordDraft.objects.create(user=self.user,record_type="article",data={
+            "title":["Keep this draft"],"content":["Keep the original body"],
+            "category":[str(category.pk)],"subcategory":[str(parent.pk)],
+            "child_subcategory":[str(child.pk)],"tags":[str(tag.pk)],
+        })
+        tag.delete()
+        draft.refresh_from_db()
+        self.assertEqual(draft.data["tags"],[])
+        self.assertEqual(draft.data["child_subcategory"],[str(child.pk)])
+        child.delete()
+        draft.refresh_from_db()
+        self.assertEqual(draft.data["subcategory"],[str(parent.pk)])
+        self.assertEqual(draft.data["child_subcategory"],[""])
+        parent.delete()
+        draft.refresh_from_db()
+        self.assertEqual(draft.data["subcategory"],[""])
+        category.delete()
+        draft.refresh_from_db()
+        self.assertEqual(draft.data["category"],[str(ArticleCategory.objects.get(user=self.user,slug="uncategorized").pk)])
+        self.assertEqual(draft.data["title"],["Keep this draft"])
+        self.assertEqual(draft.data["content"],["Keep the original body"])
+
+    def test_account_deletion_still_deletes_its_own_data(self):
+        category = ArticleCategory.objects.create(user=self.user,name="Work")
+        self.record(Article,"Account post",category)
+        user_id = self.user.pk
+        self.user.delete()
+        self.assertFalse(Article.objects.filter(user_id=user_id).exists())
+        self.assertFalse(ArticleCategory.objects.filter(user_id=user_id).exists())
+
+    def test_uncategorized_is_protected_outside_the_sidebar(self):
+        from django.db.models.deletion import ProtectedError
+        category = ArticleCategory.objects.get(user=self.user,slug="uncategorized")
+        with self.assertRaises(ProtectedError), transaction.atomic():
+            ArticleCategory.objects.filter(pk=category.pk).delete()
+        self.assertTrue(ArticleCategory.objects.filter(pk=category.pk).exists())
+
+    def test_failed_deletion_rolls_back_post_reassignment(self):
+        from django.db.models.signals import pre_delete
+        category = ArticleCategory.objects.create(user=self.user,name="Work")
+        post = self.record(Article,"Preserved after error",category)
+        def fail_deletion(**kwargs):
+            raise RuntimeError("Delete failed")
+        pre_delete.connect(fail_deletion,sender=ArticleCategory,weak=False)
+        try:
+            with self.assertRaises(RuntimeError), transaction.atomic():
+                category.delete()
+        finally:
+            pre_delete.disconnect(fail_deletion,sender=ArticleCategory)
+        post.refresh_from_db()
+        self.assertEqual(post.category,category)
+        self.assertTrue(ArticleCategory.objects.filter(pk=category.pk).exists())
+
+
+class AdminUserManagementTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = User.objects.create_superuser(username="site-admin",email="admin@example.test",password="AdminTestPassw0rd!")
+        cls.target = User.objects.create_user(username="managed-user",email="managed@example.test",password="OriginalTestPassw0rd!")
+        cls.staff = User.objects.create_user(username="staff-without-permissions",is_staff=True)
+
+    def setUp(self):
+        self.client.force_login(self.admin)
+
+    def test_custom_admin_shows_users_and_groups_and_management_pages(self):
+        response = self.client.get(reverse("knowledge_admin:index"))
+        self.assertContains(response,"Users and permissions")
+        self.assertContains(response,reverse("knowledge_admin:core_user_changelist"))
+        self.assertContains(response,reverse("knowledge_admin:auth_group_changelist"))
+        for route,args in [
+            ("core_user_changelist",[]),("core_user_add",[]),
+            ("core_user_change",[self.target.pk]),("auth_user_password_change",[self.target.pk]),
+            ("core_user_delete",[self.target.pk]),("auth_group_changelist",[]),("auth_group_add",[]),
+        ]:
+            with self.subTest(route=route):
+                self.assertEqual(self.client.get(reverse(f"knowledge_admin:{route}",args=args)).status_code,200)
+
+    def test_superuser_can_create_a_user_with_a_hashed_password(self):
+        password = "CreatedUserTestPassw0rd!"
+        response = self.client.post(reverse("knowledge_admin:core_user_add"),{
+            "username":"created-from-admin","usable_password":"true",
+            "password1":password,"password2":password,"_save":"Save",
+        })
+        self.assertEqual(response.status_code,302)
+        user = User.objects.get(username="created-from-admin")
+        self.assertTrue(user.check_password(password))
+        self.assertFalse(user.is_staff)
+        self.assertFalse(user.is_superuser)
+
+    def test_superuser_can_update_and_deactivate_a_user(self):
+        response = self.client.post(reverse("knowledge_admin:core_user_change",args=[self.target.pk]),{
+            "username":self.target.username,"email":"updated@example.test",
+            "first_name":"Updated","last_name":"User",
+            "date_joined_0":self.target.date_joined.strftime("%Y-%m-%d"),
+            "date_joined_1":self.target.date_joined.strftime("%H:%M:%S"),"_save":"Save",
+        })
+        self.assertEqual(response.status_code,302)
+        self.target.refresh_from_db()
+        self.assertEqual(self.target.email,"updated@example.test")
+        self.assertEqual(self.target.first_name,"Updated")
+        self.assertFalse(self.target.is_active)
+        self.assertTrue(self.target.check_password("OriginalTestPassw0rd!"))
+
+    def test_superuser_can_change_a_users_password(self):
+        password = "ChangedUserTestPassw0rd!"
+        response = self.client.post(reverse("knowledge_admin:auth_user_password_change",args=[self.target.pk]),{
+            "usable_password":"true","password1":password,"password2":password,
+        })
+        self.assertEqual(response.status_code,302)
+        self.target.refresh_from_db()
+        self.assertTrue(self.target.check_password(password))
+
+    def test_superuser_can_delete_a_user(self):
+        from .taxonomy import ensure_default_categories
+        ensure_default_categories(self.target)
+        preview = self.client.get(reverse("knowledge_admin:core_user_delete",args=[self.target.pk]))
+        self.assertEqual(preview.status_code,200)
+        self.assertFalse(preview.context["perms_lacking"])
+        self.assertFalse(preview.context["protected"])
+        response = self.client.post(reverse("knowledge_admin:core_user_delete",args=[self.target.pk]),{"post":"yes"})
+        self.assertEqual(response.status_code,302)
+        self.assertFalse(User.objects.filter(pk=self.target.pk).exists())
+
+    def test_staff_without_permissions_cannot_manage_users_or_groups(self):
+        self.client.force_login(self.staff)
+        for route in ("core_user_changelist","core_user_add","auth_group_changelist"):
+            with self.subTest(route=route):
+                self.assertEqual(self.client.get(reverse(f"knowledge_admin:{route}")).status_code,403)
+        self.assertNotContains(self.client.get(reverse("knowledge_admin:index")),"Users and permissions")
+
+    def test_user_view_permission_does_not_grant_create_or_change_permission(self):
+        from django.contrib.auth.models import Permission
+        self.staff.user_permissions.add(Permission.objects.get(content_type__app_label="core",codename="view_user"))
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.get(reverse("knowledge_admin:core_user_changelist")).status_code,200)
+        self.assertEqual(self.client.get(reverse("knowledge_admin:core_user_add")).status_code,403)
+        self.assertEqual(self.client.post(reverse("knowledge_admin:core_user_change",args=[self.target.pk]),{"username":"forbidden"}).status_code,403)
+
+
+    def test_superuser_can_bulk_delete_users_with_uncategorized_categories(self):
+        from .taxonomy import ensure_default_categories
+        for user in (self.target,self.staff):
+            ensure_default_categories(user)
+        admin_categories = {Category:list(Category.objects.filter(user=self.admin).values_list("pk",flat=True))
+                            for _,Category,_,_ in TAXONOMY_MODELS.values()}
+        target_ids = [self.target.pk,self.staff.pk]
+        data = {"action":"delete_selected","_selected_action":[str(pk) for pk in target_ids]}
+        url = reverse("knowledge_admin:core_user_changelist")
+        preview = self.client.post(url,data)
+        self.assertEqual(preview.status_code,200)
+        self.assertFalse(preview.context["perms_lacking"])
+        self.assertFalse(preview.context["protected"])
+        response = self.client.post(url,{**data,"post":"yes"})
+        self.assertEqual(response.status_code,302)
+        self.assertFalse(User.objects.filter(pk__in=target_ids).exists())
+        for Category,ids in admin_categories.items():
+            self.assertFalse(Category.objects.filter(user_id__in=target_ids).exists())
+            self.assertCountEqual(Category.objects.filter(user=self.admin).values_list("pk",flat=True),ids)
+
+    def test_uncategorized_stays_protected_in_admin_for_all_post_types(self):
+        for _,Category,_,_ in TAXONOMY_MODELS.values():
+            with self.subTest(model=Category._meta.model_name):
+                category = Category.objects.get(user=self.admin,slug="uncategorized")
+                url = reverse(f"knowledge_admin:core_{Category._meta.model_name}_delete",args=[category.pk])
+                for response in (self.client.get(url),self.client.post(url,{"post":"yes"})):
+                    self.assertEqual(response.status_code,200)
+                    self.assertTrue(response.context["protected"])
+                    self.assertFalse(response.context["perms_lacking"])
+                self.assertTrue(Category.objects.filter(pk=category.pk).exists())
+                bulk = self.client.post(reverse(f"knowledge_admin:core_{Category._meta.model_name}_changelist"),{
+                    "action":"delete_selected","_selected_action":[str(category.pk)],"post":"yes",
+                })
+                self.assertEqual(bulk.status_code,200)
+                self.assertTrue(bulk.context["protected"])
+                self.assertTrue(Category.objects.filter(pk=category.pk).exists())

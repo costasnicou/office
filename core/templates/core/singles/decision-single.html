@@ -5,37 +5,20 @@
 <div class="grid">
     <div class="grid-left">
         <div class="menu-navigator">
-            <ul class="categories">
-                <h2>Decision Categories</h2>
-                {% for article_category in article_categories %}
-                    <li><a href="{% url 'decision_category' request.user.username article_category.slug %}">{{article_category.name}}</a>
-                        <ul class="sub-categories">
-                            {% for article_sub_category in article_category.sub_categories %}
-                                 <li><a href="{% url 'decision_subcategory' request.user.username article_category.slug article_sub_category.slug %}">{{article_sub_category.name}}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                {% endfor %}
-            </ul>
+            {% include "core/includes/category-sidebar-list.html" %}
 
-            <ul class="tags">
-                <h2>Decision Tags</h2>
-                <div class="tags-wraper">
-                    {% for tag in article_tags %}
-                        <li><a href="{% url 'decision_tag' request.user.username tag.slug %}">{{tag.name}}</a></li>
-                    {% endfor %}
-                </div>
-            </ul>
+
         </div>
     </div>
 
     <div class="grid-right">
         <div class="grid-right-wraper">
             <article class="single-article">
-                 <h1 class="article-title">{{article.title}}</h1>
+                 {% include "core/includes/post-taxonomy.html" with record=article record_type=workspace_record_type %}
+                        <h1 class="article-title">{{article.title}}</h1>
                  <a class="edit-record-btn" href="{% url 'decision_edit' request.user.username article.slug %}" aria-label="Edit Decision" title="Edit Decision"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></a>
                  <div class="article-content">
-                    
+
                     {% if article.bothering and article.bothering|striptags|cut:" "|cut:"&nbsp;" != "" %}
                     <div class="bothering">
                         <h2>What is bothering me? Gather all the data you can on the situation.</h2>
@@ -89,27 +72,28 @@
                  </div>
 
             </article>
-           
-         
+
+
                 <!-- <article class="preview">
                     <div class="icon">
                         <i class="fa-regular fa-newspaper"></i>
                     </div>
 
                     <div class="content">
+                        {% include "core/includes/post-taxonomy.html" with record=article record_type=workspace_record_type %}
                         <h2>{{article.title}}</h2>
                         <p>{{article.content | safe | striptags | truncatewords:70 }}</p>
                         <a class="view-single-btn" href="">View More</a>
                     </div>
 
                 </article>
-            
+
      -->
 
-           
+
 
         </div>
- 
+
 
     </div>
 

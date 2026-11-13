@@ -42,14 +42,14 @@ def is_category_model(model):
     return issubclass(model, BaseCategory)
 
 
-def get_default_category(category_model, user):
-    category = category_model.objects.filter(
+def get_default_category(category_model, user, using=None):
+    category = category_model.objects.using(using).filter(
         Q(slug=DEFAULT_CATEGORY_SLUG) |
         Q(name__iexact=DEFAULT_CATEGORY_NAME),
         user=user,
     ).first()
     if category is None:
-        category = category_model.objects.create(
+        category = category_model.objects.using(using).create(
             user=user,
             name=DEFAULT_CATEGORY_NAME,
             slug=DEFAULT_CATEGORY_SLUG,
@@ -60,7 +60,7 @@ def get_default_category(category_model, user):
     ):
         category.name = DEFAULT_CATEGORY_NAME
         category.slug = DEFAULT_CATEGORY_SLUG
-        category.save(update_fields=["name", "slug"])
+        category.save(using=using, update_fields=["name", "slug"])
     return category
 
 

@@ -1,0 +1,20 @@
+{% with category_url=record_type|add:"_category" subcategory_url=record_type|add:"_subcategory" tag_url=record_type|add:"_tag" %}
+{% if record.category or record.subcategory or record.tags.all %}
+<nav class="post-taxonomy" aria-label="Post category and tags">
+    {% if record.category %}
+    <a class="post-taxonomy-category" href="{% url category_url request.user.username record.category.slug %}" aria-label="Category: {{ record.category.name }}">{{ record.category.name }}</a>
+    {% endif %}
+    {% if record.subcategory.parent %}
+    <span class="post-taxonomy-separator" aria-hidden="true">/</span>
+    <a class="post-taxonomy-subcategory" href="{% url subcategory_url request.user.username record.category.slug record.subcategory.parent.slug %}" aria-label="Subcategory: {{ record.subcategory.parent.name }}">{{ record.subcategory.parent.name }}</a>
+    {% endif %}
+    {% if record.subcategory %}
+    <span class="post-taxonomy-separator" aria-hidden="true">/</span>
+    <a class="post-taxonomy-subcategory" href="{% url subcategory_url request.user.username record.category.slug record.subcategory.slug %}" aria-label="Subcategory: {{ record.subcategory.name }}">{{ record.subcategory.name }}</a>
+    {% endif %}
+    {% for tag in record.tags.all %}
+    <a class="post-taxonomy-tag" href="{% url tag_url request.user.username tag.slug %}" aria-label="Tag: {{ tag.name }}">#{{ tag.name }}</a>
+    {% endfor %}
+</nav>
+{% endif %}
+{% endwith %}

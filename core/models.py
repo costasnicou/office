@@ -76,6 +76,49 @@ class BaseCategory(UserOwnedModel):
     def __str__(self):
         return self.name
 
+class BaseSubcategory(UserOwnedModel):
+    parent = models.ForeignKey(
+        "self", on_delete=models.CASCADE, related_name="children", null=True, blank=True,
+    )
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(blank=True)
+
+    class Meta(UserOwnedModel.Meta):
+        abstract = True
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        super().clean()
+        if self.category_id and self.category.user_id != self.user_id:
+            raise ValidationError({"category": "Choose a category from this workspace."})
+        if self.category_id and self.category.slug == "uncategorized":
+            raise ValidationError({"category": "Uncategorized cannot have subcategories."})
+        if self.parent_id:
+            if self.parent_id == self.pk or self.parent.parent_id:
+                raise ValidationError({"parent": "Only two levels of subcategories are allowed."})
+            if self.parent.category_id != self.category_id or self.parent.user_id != self.user_id:
+                raise ValidationError({"parent": "Choose a parent within this category and workspace."})
+            if self.pk and self.children.exists():
+                raise ValidationError({"parent": "A subcategory with children must remain at the first level."})
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        if not self.slug:
+            base = slugify(self.name)[:40] or "subcategory"
+            self.slug = base
+            suffix = 2
+            while type(self).objects.filter(user_id=self.user_id, slug=self.slug).exclude(pk=self.pk).exists():
+                self.slug = f"{base}-{suffix}"
+                suffix += 1
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        path = f"{self.category.name} / "
+        if self.parent_id:
+            path += f"{self.parent.name} / "
+        return path + self.name
+
+
 class BaseTag(UserOwnedModel):
     name = models.CharField(max_length=255)
     slug = models.SlugField(blank=True)
@@ -91,8 +134,26 @@ class BaseTag(UserOwnedModel):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            base = slugify(self.name)[:40] or "tag"
+            self.slug = base
+            suffix = 2
+            while type(self).objects.filter(user_id=self.user_id, slug=self.slug).exclude(pk=self.pk).exists():
+                self.slug = f"{base}-{suffix}"
+                suffix += 1
         super().save(*args, **kwargs)
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        super().clean()
+        if not self.category_id:
+            raise ValidationError({"category": "A category is required for a tag."})
+        if self.category.user_id != self.user_id:
+            raise ValidationError({"category": "The category must belong to the tag owner."})
+        if self.subcategory_id and (
+            self.subcategory.category_id != self.category_id or
+            self.subcategory.user_id != self.user_id
+        ):
+            raise ValidationError({"subcategory": "Choose a subcategory within this category and workspace."})
 
     def __str__(self):
         return self.name
@@ -101,25 +162,14 @@ class BaseTag(UserOwnedModel):
 class ArticleCategory(BaseCategory):
     pass
 
-class ArticleSubcategory(UserOwnedModel):
+class ArticleSubcategory(BaseSubcategory):
     category = models.ForeignKey(
-        ArticleCategory,
-        on_delete=models.CASCADE,
-        related_name="subcategories"
+        ArticleCategory, on_delete=models.CASCADE, related_name="subcategories",
     )
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(blank=True)
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.category.name} / {self.name}"
 
 class ArticleTag(BaseTag):
-    pass
+    category = models.ForeignKey(ArticleCategory, on_delete=models.CASCADE, related_name="tags")
+    subcategory = models.ForeignKey(ArticleSubcategory, on_delete=models.CASCADE, related_name="tags", null=True, blank=True)
 
 class Article(UserOwnedModel):
     title = models.CharField(max_length=255)
@@ -128,12 +178,12 @@ class Article(UserOwnedModel):
     content = CKEditor5Field('Content', config_name='extends')  # or 'default'
     category = models.ForeignKey(
         ArticleCategory,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="articles"
     )
     subcategory = models.ForeignKey(
         ArticleSubcategory,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="articles",
         blank=True,
         null=True
@@ -157,25 +207,14 @@ class Article(UserOwnedModel):
 class JournalCategory(BaseCategory):
     pass
 
-class JournalSubcategory(UserOwnedModel):
+class JournalSubcategory(BaseSubcategory):
     category = models.ForeignKey(
-        JournalCategory,
-        on_delete=models.CASCADE,
-        related_name="subcategories"
+        JournalCategory, on_delete=models.CASCADE, related_name="subcategories",
     )
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(blank=True)
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.category.name} / {self.name}"
 
 class JournalTag(BaseTag):
-    pass
+    category = models.ForeignKey(JournalCategory, on_delete=models.CASCADE, related_name="tags")
+    subcategory = models.ForeignKey(JournalSubcategory, on_delete=models.CASCADE, related_name="tags", null=True, blank=True)
 
 class Journal(UserOwnedModel):
     title = models.CharField(max_length=255)
@@ -184,13 +223,13 @@ class Journal(UserOwnedModel):
     content = CKEditor5Field('Content', config_name='extends')  # or 'default'
     category = models.ForeignKey(
         JournalCategory,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="journals_by_category",
         null=True
     )
     subcategory = models.ForeignKey(
         JournalSubcategory,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="journals_by_subcategory",
         blank=True,
         null=True
@@ -214,25 +253,14 @@ class Journal(UserOwnedModel):
 class NoteCategory(BaseCategory):
     pass
 
-class NoteSubcategory(UserOwnedModel):
+class NoteSubcategory(BaseSubcategory):
     category = models.ForeignKey(
-        NoteCategory,
-        on_delete=models.CASCADE,
-        related_name="subcategories"
+        NoteCategory, on_delete=models.CASCADE, related_name="subcategories",
     )
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(blank=True)
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.category.name} / {self.name}"
 
 class NoteTag(BaseTag):
-    pass
+    category = models.ForeignKey(NoteCategory, on_delete=models.CASCADE, related_name="tags")
+    subcategory = models.ForeignKey(NoteSubcategory, on_delete=models.CASCADE, related_name="tags", null=True, blank=True)
 
 class Note(UserOwnedModel):
     title = models.CharField(max_length=255)
@@ -241,13 +269,13 @@ class Note(UserOwnedModel):
     content = CKEditor5Field('Content', config_name='extends')  # or 'default'
     category = models.ForeignKey(
         NoteCategory,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="notes_by_category",
         null=True
     )
     subcategory = models.ForeignKey(
         NoteSubcategory,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="notes_by_subcategory",
         blank=True,
         null=True
@@ -271,25 +299,14 @@ class Note(UserOwnedModel):
 class CentralPointCategory(BaseCategory):
     pass
 
-class CentralPointSubcategory(UserOwnedModel):
+class CentralPointSubcategory(BaseSubcategory):
     category = models.ForeignKey(
-        CentralPointCategory,
-        on_delete=models.CASCADE,
-        related_name="subcategories"
+        CentralPointCategory, on_delete=models.CASCADE, related_name="subcategories",
     )
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(blank=True)
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.category.name} / {self.name}"
 
 class CentralPointTag(BaseTag):
-    pass
+    category = models.ForeignKey(CentralPointCategory, on_delete=models.CASCADE, related_name="tags")
+    subcategory = models.ForeignKey(CentralPointSubcategory, on_delete=models.CASCADE, related_name="tags", null=True, blank=True)
 
 class CentralPoint(UserOwnedModel):
     title = models.CharField(max_length=255)
@@ -298,13 +315,13 @@ class CentralPoint(UserOwnedModel):
     content = CKEditor5Field('Content', config_name='extends')  # or 'default'
     category = models.ForeignKey(
         CentralPointCategory,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="centralpoints_by_category",
         null=True
     )
     subcategory = models.ForeignKey(
         CentralPointSubcategory,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="centralpoints_by_subcategory",
         blank=True,
         null=True
@@ -328,25 +345,14 @@ class CentralPoint(UserOwnedModel):
 class StrategyCategory(BaseCategory):
     pass
 
-class StrategySubcategory(UserOwnedModel):
+class StrategySubcategory(BaseSubcategory):
     category = models.ForeignKey(
-        StrategyCategory,
-        on_delete=models.CASCADE,
-        related_name="subcategories"
+        StrategyCategory, on_delete=models.CASCADE, related_name="subcategories",
     )
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(blank=True)
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.category.name} / {self.name}"
 
 class StrategyTag(BaseTag):
-    pass
+    category = models.ForeignKey(StrategyCategory, on_delete=models.CASCADE, related_name="tags")
+    subcategory = models.ForeignKey(StrategySubcategory, on_delete=models.CASCADE, related_name="tags", null=True, blank=True)
 
 class Strategy(UserOwnedModel):
     title = models.CharField(max_length=255)
@@ -363,13 +369,13 @@ class Strategy(UserOwnedModel):
     finalized_strategy = CKEditor5Field('What is your finalized Strategy?', config_name='extends')  # or 'default'
     category = models.ForeignKey(
         StrategyCategory,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="strategies_by_category",
         null=True
     )
     subcategory = models.ForeignKey(
         StrategySubcategory,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="strategies_by_subcategory",
         blank=True,
         null=True
@@ -395,25 +401,14 @@ class Strategy(UserOwnedModel):
 class DecisionCategory(BaseCategory):
     pass
 
-class DecisionSubcategory(UserOwnedModel):
+class DecisionSubcategory(BaseSubcategory):
     category = models.ForeignKey(
-        DecisionCategory,
-        on_delete=models.CASCADE,
-        related_name="subcategories"
+        DecisionCategory, on_delete=models.CASCADE, related_name="subcategories",
     )
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(blank=True)
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.category.name} / {self.name}"
 
 class DecisionTag(BaseTag):
-    pass
+    category = models.ForeignKey(DecisionCategory, on_delete=models.CASCADE, related_name="tags")
+    subcategory = models.ForeignKey(DecisionSubcategory, on_delete=models.CASCADE, related_name="tags", null=True, blank=True)
 
 class Decision(UserOwnedModel):
     title = models.CharField(max_length=255)
@@ -428,13 +423,13 @@ class Decision(UserOwnedModel):
     recommended_solution = CKEditor5Field('Which is the recommended solution?', config_name='extends')  # or 'default'
     category = models.ForeignKey(
         DecisionCategory,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="decisions_by_category",
         null=True
     )
     subcategory = models.ForeignKey(
         DecisionSubcategory,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="decisions_by_subcategory",
         blank=True,
         null=True
@@ -460,25 +455,14 @@ class Decision(UserOwnedModel):
 class GoalCategory(BaseCategory):
     pass
 
-class GoalSubcategory(UserOwnedModel):
+class GoalSubcategory(BaseSubcategory):
     category = models.ForeignKey(
-        GoalCategory,
-        on_delete=models.CASCADE,
-        related_name="subcategories"
+        GoalCategory, on_delete=models.CASCADE, related_name="subcategories",
     )
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(blank=True)
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.category.name} / {self.name}"
 
 class GoalTag(BaseTag):
-    pass
+    category = models.ForeignKey(GoalCategory, on_delete=models.CASCADE, related_name="tags")
+    subcategory = models.ForeignKey(GoalSubcategory, on_delete=models.CASCADE, related_name="tags", null=True, blank=True)
 
 class Goal(UserOwnedModel):
     title = models.CharField(max_length=255)
@@ -503,13 +487,13 @@ class Goal(UserOwnedModel):
     pleasures_action = CKEditor5Field('What pleasures I will gain by following through?', config_name='extends')  # or 'default's
     category = models.ForeignKey(
         GoalCategory,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="goals_by_category",
         null=True
     )
     subcategory = models.ForeignKey(
         GoalSubcategory,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="goals_by_subcategory",
         blank=True,
         null=True

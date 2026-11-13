@@ -26,11 +26,11 @@
 
 # @admin.register(ArticleSubcategory)
 # class ArticleSubcategoryAdmin(admin.ModelAdmin):
-#     list_display = ("name", "category", "slug")
+#     list_display = ("name", "category", "parent", "slug")
 #     list_filter = ("category",)
 #     search_fields = ("name", "slug", "category__name")
 #     prepopulated_fields = {"slug": ("name",)}
-#     autocomplete_fields = ("category",)
+#     autocomplete_fields = ("category", "parent")
 
 # @admin.register(ArticleTag)
 # class ArticleTagAdmin(admin.ModelAdmin):
@@ -77,11 +77,11 @@
 
 # @admin.register(JournalSubcategory)
 # class JournalSubcategoryAdmin(admin.ModelAdmin):
-#     list_display = ("name", "category", "slug")
+#     list_display = ("name", "category", "parent", "slug")
 #     list_filter = ("category",)
 #     search_fields = ("name", "slug", "category__name")
 #     prepopulated_fields = {"slug": ("name",)}
-#     autocomplete_fields = ("category",)
+#     autocomplete_fields = ("category", "parent")
 
 # @admin.register(JournalTag)
 # class JournalTagAdmin(admin.ModelAdmin):
@@ -128,11 +128,11 @@
 
 # @admin.register(NoteSubcategory)
 # class NoteSubcategoryAdmin(admin.ModelAdmin):
-#     list_display = ("name", "category", "slug")
+#     list_display = ("name", "category", "parent", "slug")
 #     list_filter = ("category",)
 #     search_fields = ("name", "slug", "category__name")
 #     prepopulated_fields = {"slug": ("name",)}
-#     autocomplete_fields = ("category",)
+#     autocomplete_fields = ("category", "parent")
 
 # @admin.register(NoteTag)
 # class NoteTagAdmin(admin.ModelAdmin):
@@ -179,11 +179,11 @@
 
 # @admin.register(CentralPointSubcategory)
 # class CentralPointSubcategoryAdmin(admin.ModelAdmin):
-#     list_display = ("name", "category", "slug")
+#     list_display = ("name", "category", "parent", "slug")
 #     list_filter = ("category",)
 #     search_fields = ("name", "slug", "category__name")
 #     prepopulated_fields = {"slug": ("name",)}
-#     autocomplete_fields = ("category",)
+#     autocomplete_fields = ("category", "parent")
 
 # @admin.register(CentralPointTag)
 # class CentralPointTagAdmin(admin.ModelAdmin):
@@ -230,11 +230,11 @@
 
 # @admin.register(StrategySubcategory)
 # class StrategySubcategoryAdmin(admin.ModelAdmin):
-#     list_display = ("name", "category", "slug")
+#     list_display = ("name", "category", "parent", "slug")
 #     list_filter = ("category",)
 #     search_fields = ("name", "slug", "category__name")
 #     prepopulated_fields = {"slug": ("name",)}
-#     autocomplete_fields = ("category",)
+#     autocomplete_fields = ("category", "parent")
 
 # @admin.register(StrategyTag)
 # class StrategyTagAdmin(admin.ModelAdmin):
@@ -281,11 +281,11 @@
 
 # @admin.register(DecisionSubcategory)
 # class DecisionSubcategoryAdmin(admin.ModelAdmin):
-#     list_display = ("name", "category", "slug")
+#     list_display = ("name", "category", "parent", "slug")
 #     list_filter = ("category",)
 #     search_fields = ("name", "slug", "category__name")
 #     prepopulated_fields = {"slug": ("name",)}
-#     autocomplete_fields = ("category",)
+#     autocomplete_fields = ("category", "parent")
 
 # @admin.register(DecisionTag)
 # class DecisionTagAdmin(admin.ModelAdmin):
@@ -332,11 +332,11 @@
 
 # @admin.register(GoalSubcategory)
 # class GoalSubcategoryAdmin(admin.ModelAdmin):
-#     list_display = ("name", "category", "slug")
+#     list_display = ("name", "category", "parent", "slug")
 #     list_filter = ("category",)
 #     search_fields = ("name", "slug", "category__name")
 #     prepopulated_fields = {"slug": ("name",)}
-#     autocomplete_fields = ("category",)
+#     autocomplete_fields = ("category", "parent")
 
 # @admin.register(GoalTag)
 # class GoalTagAdmin(admin.ModelAdmin):
@@ -414,6 +414,8 @@
 # # register the rest the same way...
 from django import forms
 from django.contrib import admin
+from django.contrib.auth.admin import GroupAdmin, UserAdmin
+from django.contrib.auth.models import Group
 from .admin_site import admin_site  # Importing your custom admin site
 from .models import (
     Article, ArticleCategory, ArticleSubcategory, ArticleTag,
@@ -423,6 +425,7 @@ from .models import (
     Strategy, StrategyCategory, StrategySubcategory, StrategyTag,
     Decision, DecisionCategory, DecisionSubcategory, DecisionTag,
     Goal, GoalCategory, GoalSubcategory, GoalTag,
+    User,
 )
 
 # 1. Base Form Factory
@@ -441,6 +444,15 @@ def create_admin_form(model_class):
                 raise forms.ValidationError(
                     "Selected subcategory does not belong to the selected category."
                 )
+            for field_name in ("category", "subcategory"):
+                value = cleaned_data.get(field_name)
+                if value and value.user_id != getattr(cleaned_data.get("user"), "pk", None):
+                    self.add_error(field_name, "Choose an item from the record owner's workspace.")
+            tags = cleaned_data.get("tags", [])
+            if any(tag.category_id != getattr(category, "pk", None) or
+                   tag.subcategory_id != getattr(subcategory, "pk", None) or
+                   tag.user_id != getattr(cleaned_data.get("user"), "pk", None) for tag in tags):
+                self.add_error("tags", "Choose tags from the selected category or subcategory and workspace.")
             return cleaned_data
             
     return DynamicAdminForm
@@ -452,19 +464,26 @@ class BaseCategoryAdmin(admin.ModelAdmin):
     search_fields = ("name", "slug")
     prepopulated_fields = {"slug": ("name",)}
 
+    def get_deleted_objects(self, objs, request):
+        # Protect direct category deletion here, rather than denying category
+        # permissions during the confirmation of a cascading user deletion.
+        deleted, counts, permissions, protected = super().get_deleted_objects(objs, request)
+        protected.extend(str(obj) for obj in objs if obj.slug == "uncategorized")
+        return deleted, counts, permissions, protected
+
 
 class BaseSubcategoryAdmin(admin.ModelAdmin):
-    list_display = ("name", "category", "slug")
+    list_display = ("name", "category", "parent", "slug")
     list_filter = ("category",)
     search_fields = ("name", "slug", "category__name")
     prepopulated_fields = {"slug": ("name",)}
-    autocomplete_fields = ("category",)
+    autocomplete_fields = ("category", "parent")
 
 
 class BaseTagAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug")
+    list_display = ("name", "category", "subcategory", "slug")
+    list_filter = ("category", "subcategory")
     search_fields = ("name", "slug")
-    prepopulated_fields = {"slug": ("name",)}
 
 
 class BaseContentAdmin(admin.ModelAdmin):
@@ -507,3 +526,7 @@ for prefix, main_model, cat_model, subcat_model, tag_model in CONTENT_GROUPS:
     admin_site.register(cat_model, BaseCategoryAdmin)
     admin_site.register(subcat_model, BaseSubcategoryAdmin)
     admin_site.register(tag_model, BaseTagAdmin)
+
+# Register account management on the same custom site served at /admin/.
+admin_site.register(User, UserAdmin)
+admin_site.register(Group, GroupAdmin)

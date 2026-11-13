@@ -38,13 +38,15 @@ const initializeTaxonomyMenu = () => {
         }
     };
 
-    const openModal = ({kind, categorySlug = "", categoryName = "", trigger}) => {
+    const openModal = ({kind, categorySlug = "", categoryName = "", subcategorySlug = "", parentSlug = "", trigger}) => {
         returnFocus = trigger;
         kindInput.value = kind;
         categoryInput.value = categorySlug;
+        form.elements.subcategory_slug.value = subcategorySlug;
+        form.elements.parent_slug.value = parentSlug;
         title.textContent = `Create ${kind}`;
-        context.textContent = kind === "subcategory"
-            ? `Add a subcategory under “${categoryName}”.`
+        context.textContent = (kind === "subcategory" || kind === "tag")
+            ? `Add a ${kind} under “${categoryName}”.`
             : `Add a ${kind} for ${typeLabel} records.`;
         nameInput.placeholder = `${kind[0].toUpperCase()}${kind.slice(1)} name`;
         error.hidden = true;
@@ -90,6 +92,11 @@ const initializeTaxonomyMenu = () => {
             data.append("csrfmiddlewaretoken", csrfToken);
             data.append("kind", kind);
             data.append("slug", slug);
+            if (kind === "tag") {
+                const scope = item.closest(".tags");
+                data.append("category_slug", scope.dataset.categorySlug);
+                data.append("subcategory_slug", scope.dataset.subcategorySlug);
+            }
 
             try {
                 const response = await fetch(deleteEndpoint, {
@@ -131,33 +138,31 @@ const initializeTaxonomyMenu = () => {
             const categorySlug = pathParts[pathParts.length - 1];
             const categoryName = categoryLink.textContent.trim();
             const isDefaultCategory = categorySlug === "uncategorized";
-            let subcategoryList = [...item.children].find(
-                (child) => child.classList &&
-                    child.classList.contains("sub-categories")
-            );
+            let subcategoryList = item.querySelector(".sub-categories");
             if (!subcategoryList) {
                 subcategoryList = document.createElement("ul");
                 subcategoryList.className = "sub-categories";
                 item.append(subcategoryList);
             }
 
-            [...subcategoryList.children].forEach((subcategoryItem) => {
-                const subcategoryLink = [...subcategoryItem.children].find(
-                    (child) => child.tagName === "A"
-                );
-                if (!subcategoryLink) {
-                    return;
-                }
-                const subcategoryParts = new URL(subcategoryLink.href).pathname
-                    .split("/")
-                    .filter(Boolean);
+            subcategoryList.querySelectorAll("li[data-subcategory-slug]").forEach((subcategoryItem) => {
+                const subcategoryLink = [...subcategoryItem.children].find(child => child.tagName === "A");
+                if (!subcategoryLink) return;
                 addDeleteButton(
-                    subcategoryItem,
-                    subcategoryLink,
-                    "subcategory",
-                    subcategoryParts[subcategoryParts.length - 1],
-                    subcategoryLink.textContent.trim(),
+                    subcategoryItem, subcategoryLink, "subcategory",
+                    subcategoryItem.dataset.subcategorySlug, subcategoryLink.textContent.trim(),
                 );
+                if (!subcategoryItem.dataset.parentSlug) {
+                    const children = subcategoryItem.querySelector(".sub-categories");
+                    const control = document.createElement("li");
+                    control.className = "taxonomy-control taxonomy-subcategory-control";
+                    control.append(createButton("Add subcategory", "taxonomy-add-subcategory", {
+                        kind: "subcategory", categorySlug,
+                        categoryName: subcategoryLink.textContent.trim(),
+                        parentSlug: subcategoryItem.dataset.subcategorySlug,
+                    }));
+                    children.append(control);
+                }
             });
 
             if (isDefaultCategory) {
@@ -188,8 +193,7 @@ const initializeTaxonomyMenu = () => {
         categories.append(categoryControl);
     }
 
-    const tags = document.querySelector(".tags");
-    if (tags) {
+    document.querySelectorAll(".tags").forEach((tags) => {
         const tagContainer = tags.querySelector(".tags-wraper") || tags;
         [...tagContainer.children].filter(
             (child) => child.tagName === "LI"
@@ -214,14 +218,14 @@ const initializeTaxonomyMenu = () => {
         const tagControl = document.createElement("li");
         tagControl.className = "taxonomy-control taxonomy-tag-control";
         tagControl.append(createButton(
-            tagContainer.querySelector("li")
+            tagContainer.querySelector("li a")
                 ? "Add tag"
                 : "Create your first tag",
             "taxonomy-add-tag",
-            {kind: "tag"},
+            {kind: "tag", categorySlug: tags.dataset.categorySlug, subcategorySlug: tags.dataset.subcategorySlug, categoryName: tags.dataset.scopeName},
         ));
         tagContainer.append(tagControl);
-    }
+    });
 
     closeButton.addEventListener("click", closeModal);
     backdrop.addEventListener("click", closeModal);

@@ -1750,3 +1750,166 @@ html[lang="el"] .workspace-page {
         margin: 0 auto;
     }
 }
+
+
+/* Keep category navigation available without crowding scoped tag pages. */
+.workspace-page .grid-left .category-navigation {
+  width: 100%;
+  margin-bottom: 24px;
+}
+.workspace-page .grid-left .category-navigation > summary {
+  padding: 10px 0;
+  color: #bdb5a8;
+  font-size: 13px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.workspace-page .grid-left .category-navigation > summary:hover {
+  color: #eee8de;
+}
+.workspace-page .grid-left .category-navigation > summary:focus-visible {
+  outline: 2px solid #bdb5a8;
+  outline-offset: 4px;
+  border-radius: 3px;
+}
+.workspace-page .grid-left .category-navigation .category-navigation-hide,
+.workspace-page .grid-left .category-navigation[open] .category-navigation-show {
+  display: none;
+}
+.workspace-page .grid-left .category-navigation[open] .category-navigation-hide {
+  display: inline;
+}
+.workspace-page .grid-left .category-navigation .categories {
+  margin-top: 14px;
+  margin-bottom: 0;
+}
+
+
+/* Classification links sit above each post title, including preview cards. */
+.workspace-page .post-taxonomy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.workspace-page .post-taxonomy a:link,
+.workspace-page .post-taxonomy a:visited {
+  color: #74634d;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.workspace-page .post-taxonomy a:hover {
+  color: #3b3731;
+  text-decoration: underline;
+}
+.workspace-page .post-taxonomy a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+.workspace-page .post-taxonomy .post-taxonomy-tag {
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: #eee8de;
+}
+.workspace-page .post-taxonomy-separator {
+  color: #9d9385;
+}
+
+
+/* Reveal each category's subcategories only when requested. */
+.workspace-page .grid-left .subcategory-navigation {
+  margin: 0 0 8px 10px;
+}
+.workspace-page .grid-left .subcategory-navigation > summary {
+  padding: 6px 0;
+  color: #bdb5a8;
+  font-size: 12px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.workspace-page .grid-left .subcategory-navigation > summary:hover {
+  color: #eee8de;
+}
+.workspace-page .grid-left .subcategory-navigation > summary:focus-visible {
+  outline: 2px solid #bdb5a8;
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+.workspace-page .grid-left .subcategory-navigation .subcategory-navigation-hide,
+.workspace-page .grid-left .subcategory-navigation[open] .subcategory-navigation-show {
+  display: none;
+}
+.workspace-page .grid-left .subcategory-navigation[open] .subcategory-navigation-hide {
+  display: inline;
+}
+
+
+/* Category overviews group tags by their subcategory scope. */
+.workspace-page .grid-left .subcategory-tag-section {
+  width: 100%;
+  margin-bottom: 28px;
+}
+.workspace-page .grid-left .subcategory-tag-section > .tags {
+  margin-bottom: 16px;
+}
+.workspace-page .grid-left .subcategory-tag-section .tags h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+.workspace-page .grid-left .subcategory-tag-section .tags h2 a:hover {
+  text-decoration: underline;
+}
+.workspace-page .grid-left .child-subcategory-tag-sections {
+  margin-left: 10px;
+  padding-left: 12px;
+  border-left: 1px solid #5c554c;
+}
+
+
+.workspace-page .grid-left .subcategory-tag-group-title {
+  margin: 0 0 14px;
+  color: #bdb5a8;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.workspace-page .grid-left .subcategory-tag-group-title a {
+  color: inherit;
+  text-decoration: none;
+}
+.workspace-page .grid-left .subcategory-tag-group-title a:hover {
+  text-decoration: underline;
+}
+
+
+/* Keep bold post content darker than body text in reading and editing views. */
+.workspace-page .article-content strong,
+.workspace-page .article-content b,
+.workspace-page .record-form .ck-content strong,
+.workspace-page .record-form .ck-content b {
+  color: #111111 !important;
+}
+
+
+/* Float CKEditor's existing toolbar without rebuilding its controls or moving focus. */
+.workspace-page .record-form .ck.ck-editor .ck.ck-toolbar.record-selection-toolbar {
+  position: fixed;
+  width: max-content;
+  justify-content: center;
+  z-index: 10030;
+  box-sizing: border-box;
+  border: 1px solid #c9bda9;
+  border-radius: 8px;
+  background: #fffdf8;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .2);
+}
+
+/* Keep link and contextual editor dialogs above the floating toolbar. */
+.workspace-page .ck-body-wrapper .ck-balloon-panel {
+  z-index: 10040;
+}

@@ -28,6 +28,7 @@
                     </div>
 
                     <div class="content">
+                        {% include "core/includes/post-taxonomy.html" with record=result.record record_type=result.record_type %}
                         <h2>{{ result.record.title }}</h2>
                         <p>{{ result.preview | safe | striptags | truncatewords:70 }}</p>
                         <a class="view-single-btn" href="{% url result.detail_url request.user.username result.record.slug %}">View More</a>

@@ -130,6 +130,7 @@ class Command(BaseCommand):
                     category=owned_default,
                     subcategory=None,
                 )
+                legacy_defaults._taxonomy_replacement_category = owned_default
                 legacy_defaults.delete()
 
             for model in models.values():

@@ -12,6 +12,7 @@ class KnowledgeAdminSite(AdminSite):
 
         # Map model object names to their target custom group
         groups = {
+            "Users and permissions": ["User", "Group"],
             "Articles": ["Article", "ArticleCategory", "ArticleSubcategory", "ArticleTag"],
             "Journals": ["Journal", "JournalCategory", "JournalSubcategory", "JournalTag"],
             "Notes": ["Note", "NoteCategory", "NoteSubcategory", "NoteTag"],

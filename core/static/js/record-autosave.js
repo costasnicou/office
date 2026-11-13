@@ -24,6 +24,9 @@
             const connect = function (editor) {
                 editor.model.document.on("change:data", markDirty);
                 textarea.dataset.autosaveConnected = "1";
+                textarea.dispatchEvent(new CustomEvent("record-editor-ready", {
+                    bubbles: true, detail: {editor: editor},
+                }));
             };
             if (window.editors && window.editors[textarea.id]) {
                 connect(window.editors[textarea.id]);
