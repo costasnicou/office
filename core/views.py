@@ -847,7 +847,7 @@ def scoped_record_listing(request, record_type, category_slug=None, subcategory_
     show_subcategory_tag_sections = bool(subcategory_tag_sections)
     for section in subcategory_tag_sections:
         section["has_children"] = bool(section["children"])
-    if subcategory is None and selected_tag is None:
+    if selected_tag is None:
         # Keep the parent-tag suppression even if all child sections are empty.
         for section in subcategory_tag_sections:
             section["children"] = [child for child in section["children"] if child["tags"]]
