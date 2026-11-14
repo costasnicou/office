@@ -1,0 +1,10 @@
+<section class="record-tag-editor" aria-labelledby="record-tags-title">
+    <h2 id="record-tags-title">Tags for this post</h2>
+    <p>Select existing tags or create new ones at each level. You can choose tags from any combination of levels.</p>
+    {% if form.tags.errors %}<div class="field-errors">{{ form.tags.errors }}</div>{% endif %}
+    <div class="tag-choice-source">{{ form.tags }}</div>
+    <p class="tag-scope-prompt">Choose or create a category above to manage its tags.</p>
+    {% include "core/forms/tag-level.html" with level="category" title="Category tags" new_field=form.new_category_tags %}
+    {% include "core/forms/tag-level.html" with level="subcategory" title="First subcategory tags" new_field=form.new_subcategory_tags %}
+    {% include "core/forms/tag-level.html" with level="child" title="Second subcategory tags" new_field=form.new_child_tags %}
+</section>

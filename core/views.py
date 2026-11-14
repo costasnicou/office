@@ -47,7 +47,12 @@ SEARCH_RECORD_TYPES = (
 
 
 def records_for_user(model, user):
-    return model.objects.filter(user=user).select_related("category", "subcategory__parent").prefetch_related("tags")
+    """Load only tags explicitly assigned to each post, from any category level."""
+    tag_model = model._meta.get_field("tags").remote_field.model
+    tags = tag_model.objects.filter(user=user).select_related("category", "subcategory__parent").order_by("name", "pk")
+    return model.objects.filter(user=user).select_related("category", "subcategory__parent").prefetch_related(
+        Prefetch("tags", queryset=tags),
+    )
 
 
 def _draft_key(slug=None):
@@ -465,7 +470,7 @@ def index(request):
 
 @workspace_login_required
 def article_single(request,slug):
-    article = get_object_or_404(Article, slug=slug, user=request.user)
+    article = get_object_or_404(records_for_user(Article, request.user), slug=slug)
     article_categories = taxonomy_for_user(ArticleCategory, request.user)
     article_tags = taxonomy_for_user(ArticleTag, request.user)
     for category in article_categories:
@@ -516,7 +521,7 @@ def journal_index(request):
 
 @workspace_login_required
 def journal_single(request,slug):
-    article = get_object_or_404(Journal, slug=slug, user=request.user)
+    article = get_object_or_404(records_for_user(Journal, request.user), slug=slug)
     journal_categories = taxonomy_for_user(JournalCategory, request.user)
     journal_tags = taxonomy_for_user(JournalTag, request.user)
     for category in journal_categories:
@@ -566,7 +571,7 @@ def note_index(request):
 
 @workspace_login_required
 def note_single(request,slug):
-    article = get_object_or_404(Note, slug=slug, user=request.user)
+    article = get_object_or_404(records_for_user(Note, request.user), slug=slug)
     note_categories = taxonomy_for_user(NoteCategory, request.user)
     note_tags = taxonomy_for_user(NoteTag, request.user)
     for category in note_categories:
@@ -617,7 +622,7 @@ def centralpoint_index(request):
 
 @workspace_login_required
 def centralpoint_single(request,slug):
-    article = get_object_or_404(CentralPoint, slug=slug, user=request.user)
+    article = get_object_or_404(records_for_user(CentralPoint, request.user), slug=slug)
     article_categories = taxonomy_for_user(CentralPointCategory, request.user)
     article_tags = taxonomy_for_user(CentralPointTag, request.user)
     for category in article_categories:
@@ -671,7 +676,7 @@ def strategy_index(request):
     })
 @workspace_login_required
 def strategy_single(request,slug):
-    article = get_object_or_404(Strategy, slug=slug, user=request.user)
+    article = get_object_or_404(records_for_user(Strategy, request.user), slug=slug)
     article_categories = taxonomy_for_user(StrategyCategory, request.user)
     article_tags = taxonomy_for_user(StrategyTag, request.user)
     for category in article_categories:
@@ -724,7 +729,7 @@ def decision_index(request):
     })
 @workspace_login_required
 def decision_single(request,slug):
-    article = get_object_or_404(Decision, slug=slug, user=request.user)
+    article = get_object_or_404(records_for_user(Decision, request.user), slug=slug)
     article_categories = taxonomy_for_user(DecisionCategory, request.user)
     article_tags = taxonomy_for_user(DecisionTag, request.user)
     for category in article_categories:
@@ -777,7 +782,7 @@ def goal_index(request):
     })
 @workspace_login_required
 def goal_single(request,slug):
-    article = get_object_or_404(Goal, slug=slug, user=request.user)
+    article = get_object_or_404(records_for_user(Goal, request.user), slug=slug)
     article_categories = taxonomy_for_user(GoalCategory, request.user)
     article_tags = taxonomy_for_user(GoalTag, request.user)
     for category in article_categories:
@@ -827,34 +832,6 @@ def scoped_record_listing(request, record_type, category_slug=None, subcategory_
     categories = taxonomy_for_user(category_model, request.user)
     for item in categories:
         item.sub_categories = item.subcategories.filter(user=request.user, parent__isnull=True).prefetch_related("children")
-    subcategory_tag_sections = []
-    if selected_tag is None:
-        scope_queryset = subcategory_model.objects.filter(user=request.user, category=category)
-        if subcategory is not None:
-            scope_queryset = scope_queryset.filter(parent=subcategory)
-        scopes = list(scope_queryset.select_related("parent").prefetch_related(Prefetch(
-            "tags", queryset=tag_model.objects.filter(user=request.user, category=category).order_by("name"),
-        )).order_by("name"))
-        sections = {
-            scope.pk: {"scope": scope, "tags": scope.tags.all(), "children": []}
-            for scope in scopes
-        }
-        for scope in scopes:
-            if scope.parent_id == getattr(subcategory, "pk", None):
-                subcategory_tag_sections.append(sections[scope.pk])
-            elif scope.parent_id in sections:
-                sections[scope.parent_id]["children"].append(sections[scope.pk])
-    show_subcategory_tag_sections = bool(subcategory_tag_sections)
-    for section in subcategory_tag_sections:
-        section["has_children"] = bool(section["children"])
-    if selected_tag is None:
-        # Keep the parent-tag suppression even if all child sections are empty.
-        for section in subcategory_tag_sections:
-            section["children"] = [child for child in section["children"] if child["tags"]]
-        subcategory_tag_sections = [
-            section for section in subcategory_tag_sections
-            if (bool(section["children"]) if section["has_children"] else bool(section["tags"]))
-        ]
     kind = "tags" if selected_tag else ("subcategories" if subcategory else "categories")
     suffix = "tags" if selected_tag else ("subcategory" if subcategory else "category")
     return render(request, f"core/{kind}/{record_type}-{suffix}.html", {
@@ -868,6 +845,4 @@ def scoped_record_listing(request, record_type, category_slug=None, subcategory_
         "tag_scope_subcategory": subcategory,
         "tag_url_name": f"{record_type}_tag",
         "subcategory_url_name": f"{record_type}_subcategory",
-        "subcategory_tag_sections": subcategory_tag_sections,
-        "show_subcategory_tag_sections": show_subcategory_tag_sections,
     })

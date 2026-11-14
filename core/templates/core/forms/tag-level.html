@@ -1,0 +1,11 @@
+<fieldset class="tag-level" data-tag-level="{{ level }}">
+    <legend>{{ title }} <span class="tag-scope-name"></span></legend>
+    <div class="tag-level-options"></div>
+    <p class="tag-level-empty">No tags at this level yet. Create your first below.</p>
+    <div class="form-field{% if new_field.errors %} has-errors{% endif %}">
+        <label class="form-label" for="{{ new_field.id_for_label }}">{{ new_field.label }}</label>
+        {{ new_field }}
+        <small>{{ new_field.help_text }}</small>
+        {% if new_field.errors %}<div class="field-errors">{{ new_field.errors }}</div>{% endif %}
+    </div>
+</fieldset>

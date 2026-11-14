@@ -1,20 +1,2 @@
-{% if show_subcategory_tag_sections %}
-    <div class="subcategory-tag-sections">
-        {% for section in subcategory_tag_sections %}
-        <section class="subcategory-tag-section" aria-label="{{ section.scope.name }} tags">
-            {% if section.has_children %}
-            <h2 class="subcategory-tag-group-title"><a href="{% url subcategory_url_name request.user.username tag_scope_category.slug section.scope.slug %}">{{ section.scope.name }}</a></h2>
-            <div class="child-subcategory-tag-sections">
-                {% for child in section.children %}
-                    {% include "core/includes/tag-list.html" with tag_scope_subcategory=child.scope article_tags=child.tags show_tag_scope_link=True %}
-                {% endfor %}
-            </div>
-            {% else %}
-                {% include "core/includes/tag-list.html" with tag_scope_subcategory=section.scope article_tags=section.tags show_tag_scope_link=True %}
-            {% endif %}
-        </section>
-        {% endfor %}
-    </div>
-{% else %}
-    {% include "core/includes/tag-list.html" %}
-{% endif %}
+{# Tag management always belongs to the currently selected scope. #}
+{% include "core/includes/tag-list.html" %}

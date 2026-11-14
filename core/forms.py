@@ -78,6 +78,9 @@ class ScopedTagCheckboxes(forms.CheckboxSelectMultiple):
         if hasattr(value, "instance"):
             option["attrs"]["data-category"] = value.instance.category_id
             option["attrs"]["data-subcategory"] = value.instance.subcategory_id or ""
+            option["attrs"]["data-tag-name"] = value.instance.name
+            scope = str(value.instance.subcategory) if value.instance.subcategory_id else value.instance.category.name
+            option["label"] = f"{scope}: {value.instance.name}"
         return option
 
 
@@ -106,6 +109,19 @@ class TaxonomyModelForm(forms.ModelForm):
         help_text="Comma-separated tag names to create and attach.",
     )
 
+    new_category_tags = forms.CharField(
+        label="Create category tags", required=False,
+        help_text="Separate names with commas. These tags will be selected for this post when you save.",
+    )
+    new_subcategory_tags = forms.CharField(
+        label="Create tags for this subcategory", required=False,
+        help_text="Separate names with commas. These tags will be selected for this post when you save.",
+    )
+    new_child_tags = forms.CharField(
+        label="Create tags for this subcategory", required=False,
+        help_text="Separate names with commas. These tags will be selected for this post when you save.",
+    )
+
     category_model = None
     subcategory_model = None
     tag_model = None
@@ -127,6 +143,18 @@ class TaxonomyModelForm(forms.ModelForm):
             if selected and selected.parent_id:
                 self.initial["subcategory"] = selected.parent_id
                 self.initial["child_subcategory"] = selected.pk
+        # Show pending names from older drafts in their most specific tag section.
+        if not self.is_bound and self.initial.get("new_tags"):
+            if self.initial.get("child_subcategory") or self.initial.get("new_child_subcategory"):
+                tag_field = "new_child_tags"
+            elif self.initial.get("subcategory") or self.initial.get("new_subcategory"):
+                tag_field = "new_subcategory_tags"
+            else:
+                tag_field = "new_category_tags"
+            self.initial[tag_field] = ", ".join(filter(None, [
+                self.initial.get(tag_field, ""), self.initial["new_tags"],
+            ]))
+            self.initial["new_tags"] = ""
         order = []
         for name in self.fields:
             if name in {"child_subcategory", "new_child_subcategory"}:
@@ -136,7 +164,9 @@ class TaxonomyModelForm(forms.ModelForm):
                 order.append("child_subcategory")
             if name == "new_subcategory":
                 order.append("new_child_subcategory")
-        self.order_fields(order)
+        tag_fields = {"tags", "new_tags", "new_category_tags", "new_subcategory_tags", "new_child_tags"}
+        self.order_fields([name for name in order if name not in tag_fields] +
+                         ["tags", "new_category_tags", "new_subcategory_tags", "new_child_tags", "new_tags"])
         self.fields["category"].required = False
         self.fields["category"].queryset = default_category_first(
             self.category_model.objects.filter(user=self.user)
@@ -150,13 +180,13 @@ class TaxonomyModelForm(forms.ModelForm):
         self.fields["subcategory"].empty_label = "Select an existing subcategory (optional)"
         self.fields["tags"].queryset = self.tag_model.objects.filter(
             user=self.user
-        ).order_by("name")
+        ).select_related("category", "subcategory__parent").order_by("name")
         self.fields["tags"].widget = ScopedTagCheckboxes(
             attrs={"class": "tag-choice-input"}
         )
         self.fields["tags"].widget.choices = self.fields["tags"].choices
         self.fields["tags"].help_text = (
-            "Choose tags from the selected category or subcategory. New tags are created within that scope."
+            "Select tags independently from the category and either subcategory level. Only selected tags belong to this post. Create new tags in the section for their category level."
         )
 
         placeholders = {
@@ -165,6 +195,9 @@ class TaxonomyModelForm(forms.ModelForm):
             "tags": "Select existing tags",
             "new_category": "Or enter a new category",
             "new_subcategory": "Or enter a new subcategory",
+            "new_category_tags": "e.g. time management, habits",
+            "new_subcategory_tags": "e.g. time&space",
+            "new_child_tags": "e.g. space",
             "new_tags": "Or enter new tags separated by commas",
         }
         for field_name, field in self.fields.items():
@@ -214,14 +247,22 @@ class TaxonomyModelForm(forms.ModelForm):
             self.add_error("new_child_subcategory", "Choose or create a first-level subcategory first.")
         if is_default_category and (child or new_child):
             self.add_error("child_subcategory", "Uncategorized cannot have subcategories.")
-        selected_subcategory = child or subcategory
         tags = cleaned_data.get("tags", [])
-        if any(tag.category_id != getattr(category, "pk", None) or
-               tag.subcategory_id != getattr(selected_subcategory, "pk", None) or
-               new_category or new_subcategory or new_child for tag in tags):
-            self.add_error("tags", "Choose tags belonging to the selected category or subcategory.")
-        if any(len(name.strip()) > 255 for name in cleaned_data.get("new_tags", "").split(",")):
-            self.add_error("new_tags", "Tag names must contain 255 characters or fewer.")
+        allowed_scopes = {None}
+        if subcategory and not new_subcategory:
+            allowed_scopes.add(subcategory.pk)
+        if child and not new_child and not new_subcategory:
+            allowed_scopes.add(child.pk)
+        if any(new_category or tag.category_id != getattr(category, "pk", None) or
+               tag.subcategory_id not in allowed_scopes for tag in tags):
+            self.add_error("tags", "Choose tags from this category or its selected subcategory path.")
+        for field in ("new_tags", "new_category_tags", "new_subcategory_tags", "new_child_tags"):
+            if any(len(name.strip()) > 255 for name in cleaned_data.get(field, "").split(",")):
+                self.add_error(field, "Tag names must contain 255 characters or fewer.")
+        if cleaned_data.get("new_subcategory_tags") and not (subcategory or new_subcategory):
+            self.add_error("new_subcategory_tags", "Choose or create a subcategory for these tags.")
+        if cleaned_data.get("new_child_tags") and not (child or new_child):
+            self.add_error("new_child_tags", "Choose or create a second-level subcategory for these tags.")
         if child:
             cleaned_data["subcategory"] = child
         return cleaned_data
@@ -265,12 +306,15 @@ class TaxonomyModelForm(forms.ModelForm):
         record.save()
         record.tags.set(self.cleaned_data.get("tags", []))
 
-        new_tag_names = {
-            name.strip() for name in self.cleaned_data.get("new_tags", "").split(",")
-            if name.strip()
-        }
-        for name in new_tag_names:
-            record.tags.add(self._get_or_create_by_name(self.tag_model, name, category=category, subcategory=subcategory))
+        parent_scope = subcategory.parent if subcategory and subcategory.parent_id else subcategory
+        child_scope = subcategory if subcategory and subcategory.parent_id else None
+        for field, scope in [("new_category_tags", None), ("new_subcategory_tags", parent_scope),
+                             ("new_child_tags", child_scope), ("new_tags", subcategory)]:
+            names = {name.strip() for name in self.cleaned_data.get(field, "").split(",") if name.strip()}
+            for name in names:
+                record.tags.add(self._get_or_create_by_name(
+                    self.tag_model, name, category=category, subcategory=scope,
+                ))
         return record
 
 
